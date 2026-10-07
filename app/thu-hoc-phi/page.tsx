@@ -4,31 +4,48 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
 import { payReceivable } from "@/lib/actions";
+import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { debtLabel } from "@/lib/labels";
 import { debtRemaining, debtStatus } from "@/lib/metrics";
 import { formatVnd } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
+import { usePageQuery } from "@/lib/page-query";
 import type { PayMethod } from "@/types";
 
 export default function DebtsPage() {
+  const role = useAuthStore((s) => s.user?.role);
   const rows = useLiveQuery(() => db.receivables.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
+  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [payId, setPayId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<PayMethod>("transfer");
+  const [billNote, setBillNote] = useState("");
+  const { branch } = usePageQuery();
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return rows.filter((r) => {
       const st = debtStatus(r);
       if (status !== "all" && st !== status) return false;
       const name = students.find((x) => x.id === r.studentId)?.name ?? "";
+      if (branch && r.branchId !== branch) return false;
       if (!s) return true;
       return `${name} ${r.title}`.toLowerCase().includes(s);
     });
-  }, [rows, students, q, status]);
+  }, [rows, students, q, status, branch]);
   const open = rows.find((r) => r.id === payId);
+
+  if (!canSeeMoney(role)) {
+    return (
+      <div>
+        <h1 className="text-xl font-bold">Thu học phí</h1>
+        <p className="mt-2 text-sm text-slate-500">Giáo viên không xem học phí và số điện thoại.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -61,7 +78,7 @@ export default function DebtsPage() {
         <table className="w-full min-w-[760px] text-sm">
           <thead className="sticky top-0 bg-slate-50 text-left">
             <tr>
-              {["Học viên", "Khoản", "Phải thu", "Đã thu", "Còn", "Hạn", "Trạng thái", ""].map((h) => (
+              {["Học viên", "Chi nhánh", "Khoản", "Phải thu", "Đã thu", "Còn", "Hạn", "Trạng thái", ""].map((h) => (
                 <th key={h} className="px-3 py-3 font-semibold">{h}</th>
               ))}
             </tr>
@@ -72,6 +89,7 @@ export default function DebtsPage() {
               return (
                 <tr key={r.id} className="border-t border-slate-100">
                   <td className="px-3 py-3 font-medium">{students.find((s) => s.id === r.studentId)?.name}</td>
+                  <td className="px-3 py-3">{branches.find((b) => b.id === r.branchId)?.name}</td>
                   <td className="px-3 py-3">{r.title}</td>
                   <td className="px-3 py-3">{formatVnd(r.amount)}</td>
                   <td className="px-3 py-3">{formatVnd(r.paid)}</td>
@@ -101,7 +119,7 @@ export default function DebtsPage() {
             className="w-full max-w-md rounded-t-[12px] bg-white p-4 sm:rounded-[12px]"
             onSubmit={(e) => {
               e.preventDefault();
-              void payReceivable({ receivableId: open.id, amount: Number(amount) || 0, method }).then(() => setPayId(null));
+              void payReceivable({ receivableId: open.id, amount: Number(amount) || 0, method, billNote }).then(() => setPayId(null));
             }}
           >
             <h2 className="text-lg font-bold">Thu tiền</h2>
@@ -109,6 +127,9 @@ export default function DebtsPage() {
             <div className="mt-3 space-y-3">
               <Field label="Số tiền">
                 <input className={inputClass} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </Field>
+              <Field label="Bill (tên file, lưu trên máy)">
+                <input className={inputClass} value={billNote} onChange={(e) => setBillNote(e.target.value)} placeholder="bill-chuyen-khoan.jpg" />
               </Field>
               <Field label="Hình thức">
                 <select className={inputClass} value={method} onChange={(e) => setMethod(e.target.value as PayMethod)}>

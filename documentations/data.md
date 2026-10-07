@@ -5,7 +5,7 @@ Mỗi lĩnh vực một thư mục `data/{id}/`.
 Hiện có `nhay`:
 
 - `settings.json` `users.json` `demo-accounts.json`
-- `courses.json` `rooms.json` `classes.json` `packages.json`
+- `branches.json` `courses.json` `rooms.json` `classes.json` `packages.json`
 - `leads.json` `students.json` `enrollments.json`
 - `payments.json` `receivables.json` `attendance.json` `tasks.json`
 - `promotions.json` `holds.json` `bookings.json`

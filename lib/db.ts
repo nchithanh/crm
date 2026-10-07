@@ -1,6 +1,8 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
   Attendance,
+  Branch,
+  ClassSession,
   Course,
   CoursePackage,
   DanceClass,
@@ -13,6 +15,7 @@ import type {
   Receivable,
   Room,
   RoomBooking,
+  SessionAudit,
   Student,
   StudioSettings,
   StudioTask,
@@ -41,6 +44,9 @@ export class DolphinCrmDB extends Dexie {
   promotions!: EntityTable<Promotion, "id">;
   holds!: EntityTable<Hold, "id">;
   bookings!: EntityTable<RoomBooking, "id">;
+  branches!: EntityTable<Branch, "id">;
+  sessions!: EntityTable<ClassSession, "id">;
+  audits!: EntityTable<SessionAudit, "id">;
   meta!: EntityTable<Meta, "key">;
 
   constructor(name: string) {
@@ -65,6 +71,11 @@ export class DolphinCrmDB extends Dexie {
       promotions: "id",
       holds: "id, studentId",
       bookings: "id, roomId, day",
+    });
+    this.version(3).stores({
+      branches: "id",
+      sessions: "id, courseId, classId, day, branchId, teacherId",
+      audits: "id, sessionId",
     });
   }
 }

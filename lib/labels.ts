@@ -32,7 +32,22 @@ export function debtLabel(status: DebtStatus) {
 }
 
 export function roleLabel(role: string) {
-  if (role === "owner") return "Chủ studio";
+  if (role === "owner") return "Quản lý";
   if (role === "reception") return "Lễ tân";
   return "Giáo viên";
+}
+
+export function sessionStatusLabel(status: string) {
+  if (status === "upcoming") return "Sắp học";
+  if (status === "ongoing") return "Đang học";
+  if (status === "completed") return "Đã học";
+  if (status === "cancelled") return "Hủy";
+  return status;
+}
+
+export function holdStatusLabel(status: string) {
+  if (status === "pending") return "Chờ duyệt";
+  if (status === "approved") return "Đang bảo lưu";
+  if (status === "rejected") return "Từ chối";
+  return "Đã hết";
 }

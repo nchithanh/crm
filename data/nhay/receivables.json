@@ -1,18 +1,29 @@
 [
   {
-    "id": "debt1",
+    "id": "debt-s2",
     "studentId": "s2",
-    "title": "Phần còn lại gói 12 buổi",
-    "amount": 2200000,
-    "paid": 700000,
-    "dueOffset": 3
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 0,
+    "dueOffset": -5
   },
   {
-    "id": "debt2",
-    "studentId": "s6",
-    "title": "Phần còn lại gói 12 buổi",
-    "amount": 2200000,
-    "paid": 1400000,
-    "dueOffset": -4
+    "id": "debt-s4",
+    "studentId": "s4",
+    "branchId": "b-c",
+    "title": "Gói 12 tháng còn lại",
+    "amount": 11900000,
+    "paid": 8400000,
+    "dueOffset": 10
+  },
+  {
+    "id": "debt-s8",
+    "studentId": "s8",
+    "branchId": "b-b",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 750000,
+    "dueOffset": -1
   }
 ]

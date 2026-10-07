@@ -5,6 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Card } from "@/components/ui";
 import { db } from "@/lib/db";
 import { weekdayLabel } from "@/lib/utils";
+import { levelLabel } from "@/lib/rules";
 
 export default function ClassesPage() {
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
@@ -29,7 +30,7 @@ export default function ClassesPage() {
                   <Badge tone={count >= c.capacity ? "warn" : "ok"}>{count}/{c.capacity}</Badge>
                 </div>
                 <p className="mt-2 text-sm text-slate-600">
-                  {weekdayLabel(c.weekday)} · {c.start}–{c.end}
+                  {weekdayLabel(c.weekday)} · {c.start}–{c.end} · {levelLabel(c.level)}
                 </p>
                 <p className="text-sm text-slate-500">
                   {users.find((u) => u.id === c.teacherId)?.name} · {c.room}

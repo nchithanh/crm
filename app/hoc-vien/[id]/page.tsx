@@ -5,13 +5,18 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Card } from "@/components/ui";
+import { canSeeContact, canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { attendLabel, studentStatusLabel } from "@/lib/labels";
 import { formatVnd, initials } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 const tabs = ["Thông tin", "Lịch sử lớp", "Thanh toán", "Ghi chú", "Phụ huynh"] as const;
 
 export default function StudentProfilePage() {
+  const role = useAuthStore((s) => s.user?.role);
+  const seeContact = canSeeContact(role);
+  const seeMoney = canSeeMoney(role);
   const { id } = useParams<{ id: string }>();
   const student = useLiveQuery(() => db.students.get(id), [id]);
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
@@ -35,12 +40,12 @@ export default function StudentProfilePage() {
         </span>
         <div>
           <h1 className="text-xl font-bold">{student.name}</h1>
-          <p className="text-sm text-slate-500">{student.phone}</p>
+          <p className="text-sm text-slate-500">{seeContact ? student.phone : "Giáo viên không xem số điện thoại"}</p>
         </div>
         <Badge tone={student.status === "active" ? "ok" : "info"}>{studentStatusLabel(student.status)}</Badge>
       </div>
       <div className="mt-4 flex gap-2 overflow-x-auto" role="tablist">
-        {tabs.map((t) => (
+        {tabs.filter((t) => (t !== "Thanh toán" || seeMoney) && (t !== "Phụ huynh" || seeContact)).map((t) => (
           <button
             key={t}
             type="button"

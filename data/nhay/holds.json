@@ -1,10 +1,22 @@
 [
   {
     "id": "h1",
-    "studentId": "s7",
-    "fromOffset": -8,
-    "toOffset": 6,
-    "reason": "Chấn thương cổ chân",
-    "status": "active"
+    "studentId": "s6",
+    "fromOffset": 1,
+    "toOffset": 21,
+    "reason": "Xin qua Zalo: đi công tác cùng mẹ",
+    "status": "pending",
+    "credits": 5,
+    "needsPackage": true
+  },
+  {
+    "id": "h2",
+    "studentId": "s1",
+    "fromOffset": 3,
+    "toOffset": 17,
+    "reason": "Xin qua Zalo: nghỉ giữa tháng",
+    "status": "pending",
+    "credits": 18,
+    "needsPackage": false
   }
 ]

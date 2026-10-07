@@ -6,6 +6,10 @@ export type LeadStage = "new" | "contacted" | "trial" | "won" | "lost";
 
 export type StudentStatus = "active" | "trial" | "paused";
 
+export type Level = "begin" | "inter" | "advance";
+
+export type SessionStatus = "upcoming" | "ongoing" | "completed" | "cancelled";
+
 export type AttendStatus = "present" | "absent" | "excused";
 
 export type PayMethod = "cash" | "transfer";
@@ -61,6 +65,9 @@ export type Student = {
   status: StudentStatus;
   packageId: string;
   classId: string;
+  courseId: string;
+  branchId: string;
+  level: Level;
   remainingSessions: number;
   debt: number;
   parentName: string;
@@ -69,11 +76,27 @@ export type Student = {
   notes: StudentNote[];
 };
 
+export type Branch = {
+  id: string;
+  name: string;
+  address: string;
+};
+
 export type Course = {
   id: string;
   name: string;
   style: string;
-  level: string;
+  level: Level;
+  slot: string;
+  teacherId: string;
+  branchId: string;
+  roomId: string;
+  classId: string;
+  startDay: string;
+  endDay: string;
+  weekdays: number[];
+  start: string;
+  end: string;
   description: string;
   active: boolean;
 };
@@ -81,9 +104,33 @@ export type Course = {
 export type Room = {
   id: string;
   name: string;
+  branchId: string;
   capacity: number;
   floor: string;
   note: string;
+};
+
+export type ClassSession = {
+  id: string;
+  courseId: string;
+  classId: string;
+  branchId: string;
+  index: number;
+  day: string;
+  start: string;
+  end: string;
+  teacherId: string;
+  roomId: string;
+  status: SessionStatus;
+  note: string;
+};
+
+export type SessionAudit = {
+  id: string;
+  sessionId: string;
+  day: string;
+  actorId: string;
+  text: string;
 };
 
 export type Promotion = {
@@ -102,7 +149,9 @@ export type Hold = {
   fromDay: string;
   toDay: string;
   reason: string;
-  status: "active" | "done";
+  status: "pending" | "approved" | "rejected" | "done";
+  credits: number;
+  needsPackage: boolean;
 };
 
 export type RoomBooking = {
@@ -121,11 +170,12 @@ export type DanceClass = {
   id: string;
   name: string;
   courseId: string;
+  branchId: string;
   teacherId: string;
   roomId: string;
   room: string;
   capacity: number;
-  level: string;
+  level: Level;
   /** 0 = Chủ nhật … 6 = Thứ bảy */
   weekday: number;
   start: string;
@@ -139,14 +189,19 @@ export type Attendance = {
   studentId: string;
   day: string;
   status: AttendStatus;
+  sessionId: string;
+  waived: boolean;
 };
 
 export type CoursePackage = {
   id: string;
   name: string;
   sessions: number;
+  months: number;
   price: number;
   note: string;
+  kind: "course" | "hold";
+  deposit: number;
 };
 
 export type Enrollment = {
@@ -161,15 +216,18 @@ export type Enrollment = {
 export type Payment = {
   id: string;
   studentId: string;
+  branchId: string;
   amount: number;
   method: PayMethod;
   day: string;
   note: string;
+  billNote: string;
 };
 
 export type Receivable = {
   id: string;
   studentId: string;
+  branchId: string;
   title: string;
   amount: number;
   paid: number;

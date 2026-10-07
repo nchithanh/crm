@@ -16,7 +16,7 @@ export default function LoginPage() {
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4">
       <p className="text-sm font-semibold text-emerald-700">Dolphin CRM</p>
       <h1 className="mt-1 text-2xl font-bold">Đăng nhập</h1>
-      <p className="mt-2 text-sm text-slate-500">PIN demo của trung tâm dạy nhảy.</p>
+      <p className="mt-2 text-sm text-slate-500">PIN demo Edu Dance. Học viên không có tài khoản.</p>
       <form
         className="mt-6 space-y-3"
         onSubmit={async (e) => {
@@ -40,7 +40,7 @@ export default function LoginPage() {
         />
         {error ? <p className="text-sm text-rose-600">{error}</p> : null}
         <Button className="w-full" type="submit">
-          Vào studio
+          Vào Edu Dance
         </Button>
       </form>
       <ul className="mt-6 space-y-2 text-sm text-slate-500">

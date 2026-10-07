@@ -53,7 +53,7 @@ export default function PackagesPage() {
           <Field label="Gói">
             <select className={inputClass} value={packageId} onChange={(e) => setPackageId(e.target.value)}>
               <option value="">Chọn</option>
-              {packages.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {packages.filter((p) => p.kind === "course").map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </Field>
           <Field label="Lớp">

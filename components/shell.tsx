@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </span>
         <span>
           <span className="block text-sm font-bold">Dolphin CRM</span>
-          <span className="block text-xs text-slate-400">Trung tâm dạy nhảy</span>
+          <span className="block text-xs text-slate-400">Demo Edu Dance</span>
         </span>
       </Link>
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
@@ -114,7 +114,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <top.icon size={16} />
           {top.label}
         </Link>
-        {groups.map((group) => (
+        {groups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => user?.role !== "teacher" || (item.href !== "/thu-hoc-phi" && item.href !== "/doanh-thu")),
+          }))
+          .filter((group) => group.items.length > 0)
+          .map((group) => (
           <div key={group.title}>
             <p className="px-2 pb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
               {group.title}
@@ -162,7 +168,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu size={18} />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">Dolphin Dance Studio</p>
+            <p className="truncate text-sm font-semibold">Edu Dance</p>
             <p className="truncate text-xs text-slate-400">
               {user?.name} · {user ? roleLabel(user.role) : ""}
             </p>

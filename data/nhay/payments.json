@@ -1,9 +1,42 @@
 [
-  { "id": "pay1", "studentId": "s1", "amount": 1600000, "method": "transfer", "offset": -40, "note": "Gói 8 buổi" },
-  { "id": "pay2", "studentId": "s2", "amount": 700000, "method": "cash", "offset": -20, "note": "Trả một phần gói 12" },
-  { "id": "pay3", "studentId": "s3", "amount": 1600000, "method": "transfer", "offset": -18, "note": "Gói 8 buổi" },
-  { "id": "pay4", "studentId": "s5", "amount": 1800000, "method": "transfer", "offset": -12, "note": "Gói tháng" },
-  { "id": "pay5", "studentId": "s6", "amount": 1400000, "method": "cash", "offset": -8, "note": "Trả một phần gói 12" },
-  { "id": "pay6", "studentId": "s8", "amount": 1600000, "method": "transfer", "offset": -5, "note": "Gói 8 buổi" },
-  { "id": "pay7", "studentId": "s1", "amount": 200000, "method": "cash", "offset": -1, "note": "Phí trang phục" }
+  {
+    "id": "pay1",
+    "studentId": "s1",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -40,
+    "note": "Gói 3 tháng",
+    "billNote": "bill-s1.jpg"
+  },
+  {
+    "id": "pay2",
+    "studentId": "s3",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -2,
+    "note": "Cọc gói 6 tháng",
+    "billNote": "coc-s3.jpg"
+  },
+  {
+    "id": "pay3",
+    "studentId": "s3",
+    "branchId": "b-b",
+    "amount": 6300000,
+    "method": "cash",
+    "offset": -1,
+    "note": "Phần còn lại gói 6 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay4",
+    "studentId": "s4",
+    "branchId": "b-c",
+    "amount": 2500000,
+    "method": "transfer",
+    "offset": 0,
+    "note": "Cọc gói 12 tháng",
+    "billNote": "coc-s4.jpg"
+  }
 ]

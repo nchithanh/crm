@@ -4,7 +4,7 @@
 | --- | --- |
 | `/chon-linh-vuc` | Chọn lĩnh vực. Hiện một mục: dạy nhảy |
 | `/login` | PIN |
-| `/` | Tổng quan: KPI, phễu, doanh thu 30 ngày, việc hôm nay. Logo sidebar trỏ về đây |
+| `/` | Tổng quan: 6 KPI, doanh thu, phễu lead, lớp hôm nay, việc cần xử lý. Lọc chi nhánh gắn sang trang liên quan |
 | `/lich` | Lịch tuần + danh sách. Ô lớp mở `/lop-hoc/[id]` |
 | `/hoc-vien` | Bảng lọc + drawer hồ sơ |
 | `/hoc-vien/[id]` | Tab thông tin, lịch sử, thanh toán, ghi chú, phụ huynh |

@@ -1,6 +1,6 @@
 [
-  { "id": "t1", "title": "Gọi lại Mai Phương Thảo xác nhận học thử", "done": false, "offset": 0 },
-  { "id": "t2", "title": "Nhắc học phí Lê Bảo Nam", "done": false, "offset": 0 },
+  { "id": "t1", "title": "Duyệt bảo lưu Tô Phương (gói 1 tháng)", "done": false, "offset": 0 },
+  { "id": "t2", "title": "Nhắc học phí Phan Bình — Nhà Lan", "done": false, "offset": 0 },
   { "id": "t3", "title": "Soạn sĩ số lớp tối nay", "done": true, "offset": 0 },
   { "id": "t4", "title": "Gửi lịch tuần cho giáo viên", "done": false, "offset": 0 }
 ]

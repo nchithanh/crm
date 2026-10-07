@@ -14,11 +14,15 @@ import rooms from "@/data/nhay/rooms.json";
 import promotions from "@/data/nhay/promotions.json";
 import holds from "@/data/nhay/holds.json";
 import bookings from "@/data/nhay/bookings.json";
+import branches from "@/data/nhay/branches.json";
 import { db } from "@/lib/db";
+import { sessionDates, sessionStatus } from "@/lib/schedule";
 import { dayFromOffset } from "@/lib/utils";
 import type { VerticalId } from "@/lib/vertical";
 import type {
   Attendance,
+  ClassSession,
+  Course,
   CoursePackage,
   DanceClass,
   Enrollment,
@@ -35,7 +39,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "2";
+const SEED_VERSION = "4";
 
 /**
  * Bundle JSON theo lĩnh vực. Thêm ngành = thêm folder `data/{id}` và một nhánh ở đây.
@@ -61,6 +65,7 @@ function bundle(id: VerticalId) {
     promotions,
     holds,
     bookings,
+    branches,
   };
 }
 
@@ -77,6 +82,9 @@ export async function ensureSeed(id: VerticalId) {
     status: s.status as Student["status"],
     packageId: s.packageId,
     classId: s.classId,
+    courseId: s.courseId,
+    branchId: s.branchId,
+    level: s.level as Student["level"],
     remainingSessions: s.remainingSessions,
     debt: s.debt,
     parentName: s.parentName,
@@ -112,17 +120,20 @@ export async function ensureSeed(id: VerticalId) {
 
   const paymentRows: Payment[] = raw.payments.map((p) => ({
     id: p.id,
-    studentId: p.studentId,
-    amount: p.amount,
-    method: p.method as Payment["method"],
-    day: dayFromOffset(p.offset),
-    note: p.note,
+      studentId: p.studentId,
+      branchId: p.branchId,
+      amount: p.amount,
+      method: p.method as Payment["method"],
+      day: dayFromOffset(p.offset),
+      note: p.note,
+      billNote: p.billNote,
   }));
 
   const receivableRows: Receivable[] = raw.receivables.map((r) => ({
     id: r.id,
-    studentId: r.studentId,
-    title: r.title,
+      studentId: r.studentId,
+      branchId: r.branchId,
+      title: r.title,
     amount: r.amount,
     paid: r.paid,
     dueDay: dayFromOffset(r.dueOffset),
@@ -143,6 +154,8 @@ export async function ensureSeed(id: VerticalId) {
       studentId: a.studentId,
       day,
       status: a.status as Attendance["status"],
+      sessionId: a.sessionId,
+      waived: a.waived,
     };
   });
 
@@ -153,6 +166,8 @@ export async function ensureSeed(id: VerticalId) {
     toDay: dayFromOffset(h.toOffset),
     reason: h.reason,
     status: h.status as Hold["status"],
+    credits: h.credits,
+    needsPackage: h.needsPackage,
   }));
 
   const bookingRows: RoomBooking[] = raw.bookings.map((b) => ({
@@ -177,6 +192,49 @@ export async function ensureSeed(id: VerticalId) {
     note: p.note,
   }));
 
+  const courseRows: Course[] = [];
+  const sessionRows: ClassSession[] = [];
+  for (const rawCourse of raw.courses) {
+    const startDay = dayFromOffset(rawCourse.startOffset);
+    const days = sessionDates(startDay, rawCourse.weekdays, 8);
+    const endDay = days[days.length - 1] ?? startDay;
+    courseRows.push({
+      id: rawCourse.id,
+      name: rawCourse.name,
+      style: rawCourse.style,
+      level: rawCourse.level as Course["level"],
+      slot: rawCourse.slot,
+      teacherId: rawCourse.teacherId,
+      branchId: rawCourse.branchId,
+      roomId: rawCourse.roomId,
+      classId: rawCourse.classId,
+      startDay,
+      endDay,
+      weekdays: rawCourse.weekdays,
+      start: rawCourse.start,
+      end: rawCourse.end,
+      description: rawCourse.description,
+      active: rawCourse.active,
+    });
+    days.forEach((day, i) => {
+      const index = i + 1;
+      sessionRows.push({
+        id: `${rawCourse.id}-s${index}`,
+        courseId: rawCourse.id,
+        classId: rawCourse.classId,
+        branchId: rawCourse.branchId,
+        index,
+        day,
+        start: rawCourse.start,
+        end: rawCourse.end,
+        teacherId: rawCourse.teacherId,
+        roomId: rawCourse.roomId,
+        status: sessionStatus(day, index, rawCourse.cancelIndex),
+        note: rawCourse.cancelIndex === index ? "Nghỉ lễ" : "",
+      });
+    });
+  }
+
   await db.transaction(
     "rw",
     [
@@ -196,6 +254,9 @@ export async function ensureSeed(id: VerticalId) {
       db.promotions,
       db.holds,
       db.bookings,
+      db.branches,
+      db.sessions,
+      db.audits,
       db.meta,
     ],
     async () => {
@@ -215,10 +276,16 @@ export async function ensureSeed(id: VerticalId) {
       await db.promotions.clear();
       await db.holds.clear();
       await db.bookings.clear();
+      await db.branches.clear();
+      await db.sessions.clear();
+      await db.audits.clear();
       await db.settings.add(raw.settings as StudioSettings);
       await db.users.bulkAdd(raw.users as User[]);
       await db.packages.bulkAdd(raw.packages as CoursePackage[]);
       await db.classes.bulkAdd(raw.classes as DanceClass[]);
+      await db.courses.bulkAdd(courseRows);
+      await db.sessions.bulkAdd(sessionRows);
+      await db.branches.bulkAdd(raw.branches);
       await db.students.bulkAdd(studentRows);
       await db.leads.bulkAdd(leadRows);
       await db.enrollments.bulkAdd(enrollmentRows);
@@ -226,7 +293,6 @@ export async function ensureSeed(id: VerticalId) {
       await db.receivables.bulkAdd(receivableRows);
       await db.tasks.bulkAdd(taskRows);
       await db.attendance.bulkAdd(attendanceRows);
-      await db.courses.bulkAdd(raw.courses);
       await db.rooms.bulkAdd(raw.rooms);
       await db.promotions.bulkAdd(promotionRows);
       await db.holds.bulkAdd(holdRows);
