@@ -26,4 +26,4 @@
 | `/dat-phong` | Đặt phòng thuê |
 | `/ai` | Gợi ý từ dữ liệu mẫu, chưa nối mô hình |
 
-Redirect: `/khach-tiem-nang` → `/cham-soc`, `/goi` → `/goi-buoi`, `/cong-no` → `/thu-hoc-phi`, `/lich/:id` → `/lop-hoc/:id`.
+Redirect: `/khach-tiem-nang` → `/cham-soc`, `/goi` → `/goi-buoi`, `/cong-no` → `/thu-hoc-phi`, `/lich/:id` → `/lop-hoc/:id`. Dev dùng redirect của Next. Bản GitHub Pages chuyển trên trình duyệt vì site tĩnh không chạy redirect server.
