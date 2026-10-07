@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f7f8;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --muted: #64748b;
+  --border: #e7e5e4;
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-300: #fdba74;
+  --brand-400: #fb923c;
+  --brand-500: #f97316;
+  --brand-600: #ea580c;
+  --brand-700: #c2410c;
+  --brand-950: #431407;
+  --radius-card: 12px;
+}
+
+html[data-vertical="nhay"] {
+  --brand-500: #f97316;
+}
+
+.bg-emerald-50 { background-color: var(--brand-50) !important; }
+.bg-emerald-100 { background-color: var(--brand-100) !important; }
+.bg-emerald-500 { background-color: var(--brand-500) !important; }
+.bg-emerald-600 { background-color: var(--brand-600) !important; }
+.text-emerald-600 { color: var(--brand-600) !important; }
+.text-emerald-700 { color: var(--brand-700) !important; }
+.border-emerald-500 { border-color: var(--brand-500) !important; }
+.ring-emerald-500 { --tw-ring-color: var(--brand-500) !important; }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, "Be Vietnam Pro", system-ui, sans-serif;
+}
+
+button, input, select, textarea { font: inherit; }
+
+a { color: inherit; text-decoration: none; }
+
+button.bg-emerald-500,
+a.bg-emerald-500 {
+  color: #fff !important;
+}

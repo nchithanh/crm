@@ -1,0 +1,47 @@
+[
+  {
+    "id": "u_owner",
+    "name": "Lê Minh Châu",
+    "email": "chau@dolphindance.vn",
+    "phone": "0901 200 301",
+    "role": "owner",
+    "pin": "1234",
+    "avatarColor": "#F97316"
+  },
+  {
+    "id": "u_reception",
+    "name": "Phạm Thu Hà",
+    "email": "ha@dolphindance.vn",
+    "phone": "0902 200 302",
+    "role": "reception",
+    "pin": "1111",
+    "avatarColor": "#0EA5E9"
+  },
+  {
+    "id": "u_bao",
+    "name": "Nguyễn Quốc Bảo",
+    "email": "bao@dolphindance.vn",
+    "phone": "0903 200 303",
+    "role": "teacher",
+    "pin": "2222",
+    "avatarColor": "#7C3AED"
+  },
+  {
+    "id": "u_phuong",
+    "name": "Trịnh Mai Phương",
+    "email": "phuong@dolphindance.vn",
+    "phone": "0904 200 304",
+    "role": "teacher",
+    "pin": "3333",
+    "avatarColor": "#DB2777"
+  },
+  {
+    "id": "u_nam",
+    "name": "Lê Hoàng Nam",
+    "email": "nam@dolphindance.vn",
+    "phone": "0905 200 305",
+    "role": "teacher",
+    "pin": "4444",
+    "avatarColor": "#059669"
+  }
+]

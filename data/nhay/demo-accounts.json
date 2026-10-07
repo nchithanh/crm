@@ -1,0 +1,5 @@
+[
+  { "role": "owner", "name": "Lê Minh Châu", "pin": "1234", "hint": "Chủ studio" },
+  { "role": "reception", "name": "Phạm Thu Hà", "pin": "1111", "hint": "Lễ tân" },
+  { "role": "teacher", "name": "Nguyễn Quốc Bảo", "pin": "2222", "hint": "Giáo viên" }
+]

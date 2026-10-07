@@ -1,0 +1,9 @@
+[
+  { "id": "pay1", "studentId": "s1", "amount": 1600000, "method": "transfer", "offset": -40, "note": "Gói 8 buổi" },
+  { "id": "pay2", "studentId": "s2", "amount": 700000, "method": "cash", "offset": -20, "note": "Trả một phần gói 12" },
+  { "id": "pay3", "studentId": "s3", "amount": 1600000, "method": "transfer", "offset": -18, "note": "Gói 8 buổi" },
+  { "id": "pay4", "studentId": "s5", "amount": 1800000, "method": "transfer", "offset": -12, "note": "Gói tháng" },
+  { "id": "pay5", "studentId": "s6", "amount": 1400000, "method": "cash", "offset": -8, "note": "Trả một phần gói 12" },
+  { "id": "pay6", "studentId": "s8", "amount": 1600000, "method": "transfer", "offset": -5, "note": "Gói 8 buổi" },
+  { "id": "pay7", "studentId": "s1", "amount": 200000, "method": "cash", "offset": -1, "note": "Phí trang phục" }
+]

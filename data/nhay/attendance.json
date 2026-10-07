@@ -1,0 +1,9 @@
+[
+  { "classId": "c-hiphop", "studentId": "s1", "offset": -7, "status": "present" },
+  { "classId": "c-kpop", "studentId": "s2", "offset": -7, "status": "absent" },
+  { "classId": "c-kpop", "studentId": "s6", "offset": -7, "status": "present" },
+  { "classId": "c-contemp", "studentId": "s3", "offset": -6, "status": "present" },
+  { "classId": "c-ballet", "studentId": "s8", "offset": -6, "status": "excused" },
+  { "classId": "c-ballet", "studentId": "s4", "offset": -2, "status": "present" },
+  { "classId": "c-hiphop-adv", "studentId": "s5", "offset": -5, "status": "present" }
+]

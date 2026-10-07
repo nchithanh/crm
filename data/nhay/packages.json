@@ -1,0 +1,23 @@
+[
+  {
+    "id": "p8",
+    "name": "Gói 8 buổi",
+    "sessions": 8,
+    "price": 1600000,
+    "note": "Dùng trong 6 tuần"
+  },
+  {
+    "id": "p12",
+    "name": "Gói 12 buổi",
+    "sessions": 12,
+    "price": 2200000,
+    "note": "Dùng trong 8 tuần"
+  },
+  {
+    "id": "pmonth",
+    "name": "Gói tháng",
+    "sessions": 8,
+    "price": 1800000,
+    "note": "8 buổi trong 30 ngày"
+  }
+]

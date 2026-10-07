@@ -1,0 +1,86 @@
+[
+  {
+    "id": "c-hiphop",
+    "name": "Hip-hop Kids",
+    "teacherId": "u_bao",
+    "room": "Phòng 1",
+    "capacity": 12,
+    "level": "Thiếu nhi",
+    "weekday": 1,
+    "start": "18:00",
+    "end": "19:15",
+    "active": true
+  },
+  {
+    "id": "c-contemp",
+    "name": "Contemporary",
+    "teacherId": "u_phuong",
+    "room": "Phòng 2",
+    "capacity": 10,
+    "level": "Cơ bản",
+    "weekday": 2,
+    "start": "19:00",
+    "end": "20:15",
+    "active": true
+  },
+  {
+    "id": "c-kpop",
+    "name": "K-pop Cover",
+    "teacherId": "u_nam",
+    "room": "Sảnh gương",
+    "capacity": 14,
+    "level": "Mọi lứa",
+    "weekday": 3,
+    "start": "18:30",
+    "end": "19:45",
+    "active": true
+  },
+  {
+    "id": "c-ballet",
+    "name": "Ballet cơ bản",
+    "teacherId": "u_phuong",
+    "room": "Phòng 1",
+    "capacity": 8,
+    "level": "Cơ bản",
+    "weekday": 4,
+    "start": "17:30",
+    "end": "18:45",
+    "active": true
+  },
+  {
+    "id": "c-hiphop-adv",
+    "name": "Hip-hop nâng cao",
+    "teacherId": "u_bao",
+    "room": "Phòng 2",
+    "capacity": 10,
+    "level": "Nâng cao",
+    "weekday": 5,
+    "start": "19:00",
+    "end": "20:30",
+    "active": true
+  },
+  {
+    "id": "c-kpop-sat",
+    "name": "K-pop sáng T7",
+    "teacherId": "u_nam",
+    "room": "Sảnh gương",
+    "capacity": 12,
+    "level": "Cơ bản",
+    "weekday": 6,
+    "start": "09:00",
+    "end": "10:15",
+    "active": true
+  },
+  {
+    "id": "c-sun",
+    "name": "Contemporary Chủ nhật",
+    "teacherId": "u_phuong",
+    "room": "Phòng 2",
+    "capacity": 10,
+    "level": "Cơ bản",
+    "weekday": 0,
+    "start": "10:00",
+    "end": "11:15",
+    "active": true
+  }
+]

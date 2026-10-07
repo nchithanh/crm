@@ -1,0 +1,107 @@
+[
+  {
+    "id": "ld1",
+    "name": "Mai Phương Thảo",
+    "phone": "0931 300 401",
+    "source": "Facebook",
+    "stage": "new",
+    "interest": "Hip-hop Kids",
+    "ownerId": "u_reception",
+    "offset": 0,
+    "note": "Mẹ hỏi lịch tối thứ 2.",
+    "activities": [{ "offset": 0, "text": "Để lại form Facebook." }]
+  },
+  {
+    "id": "ld2",
+    "name": "Đỗ Gia Bảo",
+    "phone": "0932 300 402",
+    "source": "Zalo",
+    "stage": "new",
+    "interest": "K-pop Cover",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Học sinh cấp 2.",
+    "activities": [{ "offset": -1, "text": "Nhắn Zalo hỏi học phí." }]
+  },
+  {
+    "id": "ld3",
+    "name": "Lý Hà My",
+    "phone": "0933 300 403",
+    "source": "Giới thiệu",
+    "stage": "contacted",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -3,
+    "note": "Đã gọi, hẹn xem phòng.",
+    "activities": [
+      { "offset": -4, "text": "Phụ huynh của Bùi Lan Chi giới thiệu." },
+      { "offset": -3, "text": "Đã gọi, hẹn ghé studio." }
+    ]
+  },
+  {
+    "id": "ld4",
+    "name": "Phan Tuấn Kiệt",
+    "phone": "0934 300 404",
+    "source": "Walk-in",
+    "stage": "contacted",
+    "interest": "Hip-hop nâng cao",
+    "ownerId": "u_owner",
+    "offset": -6,
+    "note": "Đã nhảy nơi khác 1 năm.",
+    "activities": [{ "offset": -6, "text": "Ghé studio hỏi lịch thầy Bảo." }]
+  },
+  {
+    "id": "ld5",
+    "name": "Ngô Khánh Linh",
+    "phone": "0914 100 204",
+    "source": "Facebook",
+    "stage": "trial",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -2,
+    "note": "Đã học thử, chờ chốt gói.",
+    "activities": [
+      { "offset": -5, "text": "Đặt lịch học thử." },
+      { "offset": -2, "text": "Học thử xong. Phụ huynh muốn xem gói 8 buổi." }
+    ]
+  },
+  {
+    "id": "ld6",
+    "name": "Trịnh Ngọc Ánh",
+    "phone": "0936 300 406",
+    "source": "TikTok",
+    "stage": "trial",
+    "interest": "K-pop Cover",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Học thử tối thứ 4.",
+    "activities": [{ "offset": -1, "text": "Xác nhận học thử K-pop." }]
+  },
+  {
+    "id": "ld7",
+    "name": "Võ Minh Khôi",
+    "phone": "0937 300 407",
+    "source": "Website",
+    "stage": "won",
+    "interest": "Contemporary",
+    "ownerId": "u_owner",
+    "offset": -12,
+    "note": "Đã đóng gói 8 buổi.",
+    "activities": [
+      { "offset": -14, "text": "Đăng ký form." },
+      { "offset": -12, "text": "Chốt gói 8 buổi, vào lớp Contemporary." }
+    ]
+  },
+  {
+    "id": "ld8",
+    "name": "Cao Nhật Lan",
+    "phone": "0938 300 408",
+    "source": "Facebook",
+    "stage": "lost",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -9,
+    "note": "Chọn studio gần nhà hơn.",
+    "activities": [{ "offset": -9, "text": "Phụ huynh báo không học." }]
+  }
+]

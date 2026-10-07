@@ -1,0 +1,10 @@
+[
+  { "id": "en1", "studentId": "s1", "packageId": "p8", "classId": "c-hiphop", "offset": -40, "sessions": 8 },
+  { "id": "en2", "studentId": "s2", "packageId": "p12", "classId": "c-kpop", "offset": -60, "sessions": 12 },
+  { "id": "en3", "studentId": "s3", "packageId": "p8", "classId": "c-contemp", "offset": -20, "sessions": 8 },
+  { "id": "en4", "studentId": "s4", "packageId": "p8", "classId": "c-ballet", "offset": -2, "sessions": 1 },
+  { "id": "en5", "studentId": "s5", "packageId": "pmonth", "classId": "c-hiphop-adv", "offset": -15, "sessions": 8 },
+  { "id": "en6", "studentId": "s6", "packageId": "p12", "classId": "c-kpop", "offset": -25, "sessions": 12 },
+  { "id": "en7", "studentId": "s7", "packageId": "p8", "classId": "c-contemp", "offset": -50, "sessions": 8 },
+  { "id": "en8", "studentId": "s8", "packageId": "p8", "classId": "c-ballet", "offset": -30, "sessions": 8 }
+]

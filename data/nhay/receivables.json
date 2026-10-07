@@ -1,0 +1,18 @@
+[
+  {
+    "id": "debt1",
+    "studentId": "s2",
+    "title": "Phần còn lại gói 12 buổi",
+    "amount": 2200000,
+    "paid": 700000,
+    "dueOffset": 3
+  },
+  {
+    "id": "debt2",
+    "studentId": "s6",
+    "title": "Phần còn lại gói 12 buổi",
+    "amount": 2200000,
+    "paid": 1400000,
+    "dueOffset": -4
+  }
+]
