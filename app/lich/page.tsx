@@ -18,7 +18,7 @@ export default function SchedulePage() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Lịch học</h1>
+        <h1 className="text-xl font-bold">Lịch</h1>
         <div className="flex gap-2">
           <Button variant={mode === "week" ? "primary" : "outline"} onClick={() => setMode("week")}>Tuần</Button>
           <Button variant={mode === "list" ? "primary" : "outline"} onClick={() => setMode("list")}>Danh sách</Button>
@@ -36,7 +36,7 @@ export default function SchedulePage() {
                   const count = students.filter((s) => s.classId === c.id && s.status !== "paused").length;
                   const teacher = users.find((u) => u.id === c.teacherId);
                   return (
-                    <Link key={c.id} href={`/lich/${c.id}`} className="block">
+                    <Link key={c.id} href={`/lop-hoc/${c.id}`} className="block">
                       <Card className="p-3">
                         <p className="text-xs text-slate-400">{c.start}–{c.end}</p>
                         <p className="font-semibold">{c.name}</p>
@@ -73,7 +73,7 @@ export default function SchedulePage() {
                     <td className="px-3 py-3">{c.room}</td>
                     <td className="px-3 py-3">{weekdayLabel(c.weekday)} {c.start}</td>
                     <td className="px-3 py-3">{count}/{c.capacity}</td>
-                    <td className="px-3 py-3"><Link href={`/lich/${c.id}`} className="font-semibold text-emerald-700">Sĩ số</Link></td>
+                    <td className="px-3 py-3"><Link href={`/lop-hoc/${c.id}`} className="font-semibold text-emerald-700">Sĩ số</Link></td>
                   </tr>
                 );
               })}

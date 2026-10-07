@@ -1,0 +1,5 @@
+[
+  { "id": "r1", "name": "Phòng 1", "capacity": 12, "floor": "Tầng 2", "note": "Gương một mặt, loa nhỏ" },
+  { "id": "r2", "name": "Phòng 2", "capacity": 10, "floor": "Tầng 2", "note": "Sàn gỗ, điều hòa" },
+  { "id": "r3", "name": "Sảnh gương", "capacity": 16, "floor": "Tầng 1", "note": "Cho thuê cuối tuần" }
+]

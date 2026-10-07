@@ -69,10 +69,60 @@ export type Student = {
   notes: StudentNote[];
 };
 
+export type Course = {
+  id: string;
+  name: string;
+  style: string;
+  level: string;
+  description: string;
+  active: boolean;
+};
+
+export type Room = {
+  id: string;
+  name: string;
+  capacity: number;
+  floor: string;
+  note: string;
+};
+
+export type Promotion = {
+  id: string;
+  name: string;
+  discountLabel: string;
+  startDay: string;
+  endDay: string;
+  active: boolean;
+  note: string;
+};
+
+export type Hold = {
+  id: string;
+  studentId: string;
+  fromDay: string;
+  toDay: string;
+  reason: string;
+  status: "active" | "done";
+};
+
+export type RoomBooking = {
+  id: string;
+  roomId: string;
+  renter: string;
+  phone: string;
+  day: string;
+  start: string;
+  end: string;
+  fee: number;
+  status: "booked" | "done" | "cancelled";
+};
+
 export type DanceClass = {
   id: string;
   name: string;
+  courseId: string;
   teacherId: string;
+  roomId: string;
   room: string;
   capacity: number;
   level: string;

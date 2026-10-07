@@ -129,14 +129,14 @@ export default function DashboardPage() {
         <Card className="p-4">
           <h2 className="mb-3 text-base font-semibold">Thao tác nhanh</h2>
           <div className="flex flex-col gap-2">
-            <Link href="/khach-tiem-nang" className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-500 px-4 text-sm font-semibold">
-              Thêm lead
+            <Link href="/cham-soc" className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-500 px-4 text-sm font-semibold">
+              Chăm sóc lead
             </Link>
             <Link href="/diem-danh" className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold">
-              Điểm danh
+              Điểm danh tay
             </Link>
-            <Link href="/cong-no" className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold">
-              Ghi nhận thu
+            <Link href="/thu-hoc-phi" className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-4 text-sm font-semibold">
+              Thu học phí
             </Link>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">

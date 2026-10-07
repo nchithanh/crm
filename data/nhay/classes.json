@@ -2,7 +2,9 @@
   {
     "id": "c-hiphop",
     "name": "Hip-hop Kids",
+    "courseId": "k-hiphop",
     "teacherId": "u_bao",
+    "roomId": "r1",
     "room": "Phòng 1",
     "capacity": 12,
     "level": "Thiếu nhi",
@@ -14,7 +16,9 @@
   {
     "id": "c-contemp",
     "name": "Contemporary",
+    "courseId": "k-contemp",
     "teacherId": "u_phuong",
+    "roomId": "r2",
     "room": "Phòng 2",
     "capacity": 10,
     "level": "Cơ bản",
@@ -26,7 +30,9 @@
   {
     "id": "c-kpop",
     "name": "K-pop Cover",
+    "courseId": "k-kpop",
     "teacherId": "u_nam",
+    "roomId": "r3",
     "room": "Sảnh gương",
     "capacity": 14,
     "level": "Mọi lứa",
@@ -38,7 +44,9 @@
   {
     "id": "c-ballet",
     "name": "Ballet cơ bản",
+    "courseId": "k-ballet",
     "teacherId": "u_phuong",
+    "roomId": "r1",
     "room": "Phòng 1",
     "capacity": 8,
     "level": "Cơ bản",
@@ -50,7 +58,9 @@
   {
     "id": "c-hiphop-adv",
     "name": "Hip-hop nâng cao",
+    "courseId": "k-hiphop",
     "teacherId": "u_bao",
+    "roomId": "r2",
     "room": "Phòng 2",
     "capacity": 10,
     "level": "Nâng cao",
@@ -62,7 +72,9 @@
   {
     "id": "c-kpop-sat",
     "name": "K-pop sáng T7",
+    "courseId": "k-kpop",
     "teacherId": "u_nam",
+    "roomId": "r3",
     "room": "Sảnh gương",
     "capacity": 12,
     "level": "Cơ bản",
@@ -74,7 +86,9 @@
   {
     "id": "c-sun",
     "name": "Contemporary Chủ nhật",
+    "courseId": "k-contemp",
     "teacherId": "u_phuong",
+    "roomId": "r2",
     "room": "Phòng 2",
     "capacity": 10,
     "level": "Cơ bản",

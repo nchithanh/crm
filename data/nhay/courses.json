@@ -1,0 +1,6 @@
+[
+  { "id": "k-hiphop", "name": "Hip-hop", "style": "Urban", "level": "Kids → Nâng cao", "description": "Nhịp, footwork, combo theo giáo án 8 buổi.", "active": true },
+  { "id": "k-contemp", "name": "Contemporary", "style": "Sàn", "level": "Cơ bản", "description": "Thả trọng lượng, sàn, cụm động tác chậm.", "active": true },
+  { "id": "k-kpop", "name": "K-pop Cover", "style": "Cover", "level": "Mọi lứa", "description": "Cover choreo, chia formation theo sĩ số.", "active": true },
+  { "id": "k-ballet", "name": "Ballet", "style": "Cổ điển", "level": "Cơ bản", "description": "Barre, giữa phòng, tư thế cơ bản.", "active": true }
+]

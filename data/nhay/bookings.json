@@ -1,0 +1,24 @@
+[
+  {
+    "id": "b1",
+    "roomId": "r3",
+    "renter": "Nhóm cover trường Lê Quý Đôn",
+    "phone": "0988 221 100",
+    "offset": 2,
+    "start": "14:00",
+    "end": "16:00",
+    "fee": 500000,
+    "status": "booked"
+  },
+  {
+    "id": "b2",
+    "roomId": "r2",
+    "renter": "Mai Phương (tập riêng)",
+    "phone": "0903 111 009",
+    "offset": -3,
+    "start": "20:30",
+    "end": "21:30",
+    "fee": 250000,
+    "status": "done"
+  }
+]

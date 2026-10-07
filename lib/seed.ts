@@ -9,6 +9,11 @@ import payments from "@/data/nhay/payments.json";
 import receivables from "@/data/nhay/receivables.json";
 import tasks from "@/data/nhay/tasks.json";
 import attendance from "@/data/nhay/attendance.json";
+import courses from "@/data/nhay/courses.json";
+import rooms from "@/data/nhay/rooms.json";
+import promotions from "@/data/nhay/promotions.json";
+import holds from "@/data/nhay/holds.json";
+import bookings from "@/data/nhay/bookings.json";
 import { db } from "@/lib/db";
 import { dayFromOffset } from "@/lib/utils";
 import type { VerticalId } from "@/lib/vertical";
@@ -17,9 +22,12 @@ import type {
   CoursePackage,
   DanceClass,
   Enrollment,
+  Hold,
   Lead,
   Payment,
+  Promotion,
   Receivable,
+  RoomBooking,
   Student,
   StudioSettings,
   StudioTask,
@@ -27,7 +35,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "1";
+const SEED_VERSION = "2";
 
 /**
  * Bundle JSON theo lĩnh vực. Thêm ngành = thêm folder `data/{id}` và một nhánh ở đây.
@@ -48,6 +56,11 @@ function bundle(id: VerticalId) {
     receivables,
     tasks,
     attendance,
+    courses,
+    rooms,
+    promotions,
+    holds,
+    bookings,
   };
 }
 
@@ -133,6 +146,37 @@ export async function ensureSeed(id: VerticalId) {
     };
   });
 
+  const holdRows: Hold[] = raw.holds.map((h) => ({
+    id: h.id,
+    studentId: h.studentId,
+    fromDay: dayFromOffset(h.fromOffset),
+    toDay: dayFromOffset(h.toOffset),
+    reason: h.reason,
+    status: h.status as Hold["status"],
+  }));
+
+  const bookingRows: RoomBooking[] = raw.bookings.map((b) => ({
+    id: b.id,
+    roomId: b.roomId,
+    renter: b.renter,
+    phone: b.phone,
+    day: dayFromOffset(b.offset),
+    start: b.start,
+    end: b.end,
+    fee: b.fee,
+    status: b.status as RoomBooking["status"],
+  }));
+
+  const promotionRows: Promotion[] = raw.promotions.map((p) => ({
+    id: p.id,
+    name: p.name,
+    discountLabel: p.discountLabel,
+    startDay: dayFromOffset(p.startOffset),
+    endDay: dayFromOffset(p.endOffset),
+    active: p.active,
+    note: p.note,
+  }));
+
   await db.transaction(
     "rw",
     [
@@ -147,6 +191,11 @@ export async function ensureSeed(id: VerticalId) {
       db.receivables,
       db.tasks,
       db.attendance,
+      db.courses,
+      db.rooms,
+      db.promotions,
+      db.holds,
+      db.bookings,
       db.meta,
     ],
     async () => {
@@ -161,6 +210,11 @@ export async function ensureSeed(id: VerticalId) {
       await db.receivables.clear();
       await db.tasks.clear();
       await db.attendance.clear();
+      await db.courses.clear();
+      await db.rooms.clear();
+      await db.promotions.clear();
+      await db.holds.clear();
+      await db.bookings.clear();
       await db.settings.add(raw.settings as StudioSettings);
       await db.users.bulkAdd(raw.users as User[]);
       await db.packages.bulkAdd(raw.packages as CoursePackage[]);
@@ -172,6 +226,11 @@ export async function ensureSeed(id: VerticalId) {
       await db.receivables.bulkAdd(receivableRows);
       await db.tasks.bulkAdd(taskRows);
       await db.attendance.bulkAdd(attendanceRows);
+      await db.courses.bulkAdd(raw.courses);
+      await db.rooms.bulkAdd(raw.rooms);
+      await db.promotions.bulkAdd(promotionRows);
+      await db.holds.bulkAdd(holdRows);
+      await db.bookings.bulkAdd(bookingRows);
       await db.meta.put({ key: SEED_KEY, value: SEED_VERSION });
     },
   );

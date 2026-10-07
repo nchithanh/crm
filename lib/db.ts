@@ -1,13 +1,18 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
   Attendance,
+  Course,
   CoursePackage,
   DanceClass,
   Enrollment,
+  Hold,
   Lead,
   Meta,
   Payment,
+  Promotion,
   Receivable,
+  Room,
+  RoomBooking,
   Student,
   StudioSettings,
   StudioTask,
@@ -31,6 +36,11 @@ export class DolphinCrmDB extends Dexie {
   payments!: EntityTable<Payment, "id">;
   receivables!: EntityTable<Receivable, "id">;
   tasks!: EntityTable<StudioTask, "id">;
+  courses!: EntityTable<Course, "id">;
+  rooms!: EntityTable<Room, "id">;
+  promotions!: EntityTable<Promotion, "id">;
+  holds!: EntityTable<Hold, "id">;
+  bookings!: EntityTable<RoomBooking, "id">;
   meta!: EntityTable<Meta, "key">;
 
   constructor(name: string) {
@@ -48,6 +58,13 @@ export class DolphinCrmDB extends Dexie {
       receivables: "id, studentId, dueDay",
       tasks: "id, day",
       meta: "key",
+    });
+    this.version(2).stores({
+      courses: "id",
+      rooms: "id",
+      promotions: "id",
+      holds: "id, studentId",
+      bookings: "id, roomId, day",
     });
   }
 }

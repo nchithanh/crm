@@ -99,6 +99,21 @@ export async function payReceivable(input: {
   });
 }
 
+export async function addPackage(input: {
+  name: string;
+  sessions: number;
+  price: number;
+  note: string;
+}) {
+  await db.packages.add({
+    id: uid("pkg"),
+    name: input.name.trim(),
+    sessions: input.sessions,
+    price: input.price,
+    note: input.note.trim(),
+  });
+}
+
 export async function enrollStudent(input: {
   studentId: string;
   packageId: string;

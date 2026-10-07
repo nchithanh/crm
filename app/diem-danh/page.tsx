@@ -28,7 +28,7 @@ export default function AttendancePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Điểm danh</h1>
+      <h1 className="text-xl font-bold">Điểm danh tay</h1>
       <p className="mt-1 text-sm text-slate-500">
         {klass ? `${weekdayLabel(klass.weekday)} · ${klass.start} · ${today}` : "Chọn lớp"}
       </p>
@@ -49,10 +49,11 @@ export default function AttendancePage() {
                   <p className="font-semibold">{s.name}</p>
                   <p className="text-xs text-slate-500">Còn {s.remainingSessions} buổi</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:flex">
                   {marks.map((m) => (
                     <Button
                       key={m}
+                      className="min-h-12 px-2"
                       variant={row?.status === m ? "primary" : "outline"}
                       onClick={() => void setAttendance({ classId: current, studentId: s.id, day: today, status: m })}
                     >

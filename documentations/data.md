@@ -1,12 +1,14 @@
 # Data
 
-Mỗi lĩnh vực một thư mục `fe/data/{id}/`.
+Mỗi lĩnh vực một thư mục `data/{id}/`.
 
 Hiện có `nhay`:
 
 - `settings.json` `users.json` `demo-accounts.json`
-- `leads.json` `students.json` `classes.json` `packages.json`
-- `enrollments.json` `payments.json` `receivables.json` `attendance.json` `tasks.json`
+- `courses.json` `rooms.json` `classes.json` `packages.json`
+- `leads.json` `students.json` `enrollments.json`
+- `payments.json` `receivables.json` `attendance.json` `tasks.json`
+- `promotions.json` `holds.json` `bookings.json`
 
 Ngày trong JSON là `offset` so với hôm nay (0 = hôm nay, âm = ngày trước). Lúc seed mới đổi thành `YYYY-MM-DD`.
 
