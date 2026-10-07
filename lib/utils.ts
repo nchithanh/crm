@@ -27,6 +27,26 @@ export function weekdayLabel(weekday: number) {
   return ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"][weekday] ?? "";
 }
 
+export function ageYears(birthDay: string, today = new Date()) {
+  if (!birthDay) return null;
+  const [y, m, d] = birthDay.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  let age = today.getFullYear() - y;
+  const now = (today.getMonth() + 1) * 100 + today.getDate();
+  if (now < m * 100 + d) age -= 1;
+  return age;
+}
+
+export function isMinor(birthDay: string) {
+  const age = ageYears(birthDay);
+  return age !== null && age < 18;
+}
+
+export function zaloHref(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return digits ? `https://zalo.me/${digits}` : "";
+}
+
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/);
   const a = parts[0]?.[0] ?? "";

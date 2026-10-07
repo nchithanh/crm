@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
 import {
   CalendarDays,
   ClipboardCheck,
@@ -24,10 +25,14 @@ import {
   BookOpen,
   HeartHandshake,
   LineChart,
+  Plus,
 } from "lucide-react";
+import { canSeeMoney } from "@/lib/access";
+import { db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useAuthStore } from "@/stores/auth-store";
+import { useStudioBranch } from "@/stores/branch-store";
 
 const top = { href: "/lich", label: "Lịch", icon: CalendarDays };
 
@@ -90,6 +95,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
+  const { branchId, setBranchId } = useStudioBranch();
+  const seeReport = canSeeMoney(user?.role);
+  const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [open, setOpen] = useState(false);
 
   const linkClass = (href: string) =>
@@ -163,26 +172,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-2 border-b border-slate-200 bg-white px-3 py-3">
-          <button className="inline-flex h-11 w-11 items-center justify-center rounded-full border lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
-            <Menu size={18} />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">Edu Dance</p>
-            <p className="truncate text-xs text-slate-400">
-              {user?.name} · {user ? roleLabel(user.role) : ""}
-            </p>
+        <header className="border-b border-slate-200 bg-white px-3 py-2">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 items-center gap-2 lg:flex-1">
+              <button className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
+                <Menu size={18} />
+              </button>
+              <Link href="/" className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#F97316] text-sm font-bold text-white">D</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold">Edu Dance</span>
+                  <span className="block truncate text-xs text-slate-400">{user?.name} · {user ? roleLabel(user.role) : ""}</span>
+                </span>
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select className="min-h-12 rounded-[12px] border border-slate-200 bg-white px-3 text-sm" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+                <option value="all">Mọi chi nhánh</option>
+                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+              <Link href={`/diem-danh${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white">
+                <Receipt size={16} /> Điểm danh
+              </Link>
+              <Link href={`/ghi-danh${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full bg-slate-900 px-4 text-sm font-semibold text-white">
+                <Plus size={16} /> Đăng ký
+              </Link>
+              {seeReport ? (
+                <Link href={`/doanh-thu${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                  <LineChart size={16} /> Báo cáo
+                </Link>
+              ) : null}
+              <button
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full hover:bg-slate-100"
+                aria-label="Đăng xuất"
+                onClick={() => {
+                  logout();
+                  router.replace("/login");
+                }}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
-          <button
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-slate-100"
-            aria-label="Đăng xuất"
-            onClick={() => {
-              logout();
-              router.replace("/login");
-            }}
-          >
-            <LogOut size={18} />
-          </button>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
       </div>

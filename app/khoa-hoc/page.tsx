@@ -5,12 +5,13 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Card } from "@/components/ui";
 import { db } from "@/lib/db";
 import { levelLabel } from "@/lib/rules";
-import { usePageQuery } from "@/lib/page-query";
+import { useStudioBranch } from "@/stores/branch-store";
 
 export default function CoursesPage() {
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
-  const { branch } = usePageQuery();
+  const { branchId } = useStudioBranch();
+  const branch = branchId === "all" ? null : branchId;
   const rows = useMemo(
     () => courses.filter((k) => !branch || k.branchId === branch),
     [courses, branch],

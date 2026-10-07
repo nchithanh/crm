@@ -37,6 +37,7 @@ export type StudioSettings = {
 export type Activity = {
   day: string;
   text: string;
+  kind?: "call" | "zalo" | "note";
 };
 
 export type Lead = {
@@ -50,6 +51,9 @@ export type Lead = {
   day: string;
   note: string;
   activities: Activity[];
+  nextAction?: string;
+  reminderDay?: string;
+  convertedStudentId?: string;
 };
 
 export type StudentNote = {
@@ -61,6 +65,8 @@ export type Student = {
   id: string;
   name: string;
   phone: string;
+  email: string;
+  birthDay: string;
   avatarColor: string;
   status: StudentStatus;
   packageId: string;
@@ -72,6 +78,7 @@ export type Student = {
   debt: number;
   parentName: string;
   parentPhone: string;
+  flagged: boolean;
   joinedDay: string;
   notes: StudentNote[];
 };
@@ -152,6 +159,9 @@ export type Hold = {
   status: "pending" | "approved" | "rejected" | "done";
   credits: number;
   needsPackage: boolean;
+  approverId?: string;
+  rejectReason?: string;
+  decidedDay?: string;
 };
 
 export type RoomBooking = {
@@ -222,6 +232,7 @@ export type Payment = {
   day: string;
   note: string;
   billNote: string;
+  billImage?: string;
 };
 
 export type Receivable = {

@@ -17,7 +17,7 @@ import bookings from "@/data/nhay/bookings.json";
 import branches from "@/data/nhay/branches.json";
 import { db } from "@/lib/db";
 import { sessionDates, sessionStatus } from "@/lib/schedule";
-import { dayFromOffset } from "@/lib/utils";
+import { dayFromOffset, localDayKey } from "@/lib/utils";
 import type { VerticalId } from "@/lib/vertical";
 import type {
   Attendance,
@@ -39,7 +39,14 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "4";
+const SEED_VERSION = "7";
+
+function birthFromYears(years: number) {
+  const d = new Date();
+  d.setHours(12, 0, 0, 0);
+  d.setFullYear(d.getFullYear() - years);
+  return localDayKey(d);
+}
 
 /**
  * Bundle JSON theo lĩnh vực. Thêm ngành = thêm folder `data/{id}` và một nhánh ở đây.
@@ -78,6 +85,8 @@ export async function ensureSeed(id: VerticalId) {
     id: s.id,
     name: s.name,
     phone: s.phone,
+    email: s.email,
+    birthDay: birthFromYears(s.birthYears),
     avatarColor: s.avatarColor,
     status: s.status as Student["status"],
     packageId: s.packageId,
@@ -89,6 +98,7 @@ export async function ensureSeed(id: VerticalId) {
     debt: s.debt,
     parentName: s.parentName,
     parentPhone: s.parentPhone,
+    flagged: Boolean(s.flagged),
     joinedDay: dayFromOffset(s.joinedOffset),
     notes: s.notes.map((n) => ({ day: dayFromOffset(n.offset), text: n.text })),
   }));

@@ -1,10 +1,194 @@
 [
-  { "id": "e1", "studentId": "s1", "packageId": "p3", "classId": "c-hh-begin", "offset": -40, "sessions": 24 },
-  { "id": "e2", "studentId": "s2", "packageId": "p1", "classId": "c-hh-begin", "offset": -20, "sessions": 8 },
-  { "id": "e3", "studentId": "s3", "packageId": "p6", "classId": "c-kp-inter", "offset": -60, "sessions": 48 },
-  { "id": "e4", "studentId": "s4", "packageId": "p12", "classId": "c-ct-adv", "offset": -10, "sessions": 96 },
-  { "id": "e5", "studentId": "s5", "packageId": "p3", "classId": "c-hh-inter", "offset": -30, "sessions": 24 },
-  { "id": "e6", "studentId": "s6", "packageId": "p1", "classId": "c-hh-begin", "offset": -15, "sessions": 8 },
-  { "id": "e7", "studentId": "s7", "packageId": "p1", "classId": "c-hh-begin", "offset": -12, "sessions": 8 },
-  { "id": "e8", "studentId": "s8", "packageId": "p1", "classId": "c-kp-inter", "offset": -18, "sessions": 8 }
+  {
+    "id": "e1",
+    "studentId": "s1",
+    "packageId": "p3",
+    "classId": "c-hh-begin",
+    "offset": -40,
+    "sessions": 24
+  },
+  {
+    "id": "e2",
+    "studentId": "s2",
+    "packageId": "p1",
+    "classId": "c-hh-begin",
+    "offset": -20,
+    "sessions": 8
+  },
+  {
+    "id": "e3",
+    "studentId": "s3",
+    "packageId": "p6",
+    "classId": "c-kp-inter",
+    "offset": -60,
+    "sessions": 48
+  },
+  {
+    "id": "e4",
+    "studentId": "s4",
+    "packageId": "p12",
+    "classId": "c-ct-adv",
+    "offset": -10,
+    "sessions": 96
+  },
+  {
+    "id": "e5",
+    "studentId": "s5",
+    "packageId": "p3",
+    "classId": "c-hh-inter",
+    "offset": -30,
+    "sessions": 24
+  },
+  {
+    "id": "e6",
+    "studentId": "s6",
+    "packageId": "p1",
+    "classId": "c-hh-begin",
+    "offset": -15,
+    "sessions": 8
+  },
+  {
+    "id": "e7",
+    "studentId": "s7",
+    "packageId": "p1",
+    "classId": "c-hh-begin",
+    "offset": -12,
+    "sessions": 8
+  },
+  {
+    "id": "e8",
+    "studentId": "s8",
+    "packageId": "p1",
+    "classId": "c-kp-inter",
+    "offset": -18,
+    "sessions": 8
+  },
+  {
+    "id": "e9",
+    "studentId": "s9",
+    "packageId": "p3",
+    "classId": "c-hh-begin",
+    "offset": -25,
+    "sessions": 24
+  },
+  {
+    "id": "e10",
+    "studentId": "s10",
+    "packageId": "p1",
+    "classId": "c-hh-begin",
+    "offset": -8,
+    "sessions": 8
+  },
+  {
+    "id": "e11",
+    "studentId": "s11",
+    "packageId": "p1",
+    "classId": "c-hh-begin",
+    "offset": -22,
+    "sessions": 8
+  },
+  {
+    "id": "e12",
+    "studentId": "s12",
+    "packageId": "p3",
+    "classId": "c-hh-begin",
+    "offset": -35,
+    "sessions": 24
+  },
+  {
+    "id": "e13",
+    "studentId": "s13",
+    "packageId": "p6",
+    "classId": "c-kp-inter",
+    "offset": -45,
+    "sessions": 48
+  },
+  {
+    "id": "e14",
+    "studentId": "s14",
+    "packageId": "p1",
+    "classId": "c-kp-inter",
+    "offset": -14,
+    "sessions": 8
+  },
+  {
+    "id": "e15",
+    "studentId": "s15",
+    "packageId": "p3",
+    "classId": "c-kp-inter",
+    "offset": -28,
+    "sessions": 24
+  },
+  {
+    "id": "e16",
+    "studentId": "s16",
+    "packageId": "p6",
+    "classId": "c-kp-inter",
+    "offset": -9,
+    "sessions": 48
+  },
+  {
+    "id": "e17",
+    "studentId": "s17",
+    "packageId": "p1",
+    "classId": "c-kp-inter",
+    "offset": -11,
+    "sessions": 8
+  },
+  {
+    "id": "e18",
+    "studentId": "s18",
+    "packageId": "p12",
+    "classId": "c-ct-adv",
+    "offset": -50,
+    "sessions": 96
+  },
+  {
+    "id": "e19",
+    "studentId": "s19",
+    "packageId": "p3",
+    "classId": "c-ct-adv",
+    "offset": -16,
+    "sessions": 24
+  },
+  {
+    "id": "e20",
+    "studentId": "s20",
+    "packageId": "p6",
+    "classId": "c-ct-adv",
+    "offset": -33,
+    "sessions": 48
+  },
+  {
+    "id": "e21",
+    "studentId": "s21",
+    "packageId": "p3",
+    "classId": "c-ct-adv",
+    "offset": -21,
+    "sessions": 24
+  },
+  {
+    "id": "e22",
+    "studentId": "s22",
+    "packageId": "p3",
+    "classId": "c-hh-inter",
+    "offset": -19,
+    "sessions": 24
+  },
+  {
+    "id": "e23",
+    "studentId": "s23",
+    "packageId": "p1",
+    "classId": "c-hh-inter",
+    "offset": -42,
+    "sessions": 8
+  },
+  {
+    "id": "e24",
+    "studentId": "s24",
+    "packageId": "p3",
+    "classId": "c-hh-inter",
+    "offset": -6,
+    "sessions": 24
+  }
 ]

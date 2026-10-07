@@ -1,6 +1,194 @@
 [
-  { "classId": "c-hh-begin", "studentId": "s1", "offset": -5, "status": "present", "sessionId": "", "waived": false },
-  { "classId": "c-hh-begin", "studentId": "s2", "offset": -5, "status": "absent", "sessionId": "", "waived": false },
-  { "classId": "c-kp-inter", "studentId": "s3", "offset": -1, "status": "present", "sessionId": "", "waived": false },
-  { "classId": "c-kp-inter", "studentId": "s8", "offset": -1, "status": "excused", "sessionId": "", "waived": false }
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s1",
+    "offset": -5,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s2",
+    "offset": -5,
+    "status": "absent",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s3",
+    "offset": -1,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s8",
+    "offset": -1,
+    "status": "excused",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s1",
+    "offset": 0,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s9",
+    "offset": 0,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s10",
+    "offset": 0,
+    "status": "absent",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s12",
+    "offset": 0,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s9",
+    "offset": -5,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s11",
+    "offset": -5,
+    "status": "excused",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-begin",
+    "studentId": "s6",
+    "offset": -5,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s13",
+    "offset": -1,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s14",
+    "offset": -1,
+    "status": "absent",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s15",
+    "offset": -1,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s16",
+    "offset": -1,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-kp-inter",
+    "studentId": "s17",
+    "offset": -1,
+    "status": "excused",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-inter",
+    "studentId": "s5",
+    "offset": -3,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-inter",
+    "studentId": "s22",
+    "offset": -3,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-inter",
+    "studentId": "s23",
+    "offset": -3,
+    "status": "absent",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-hh-inter",
+    "studentId": "s24",
+    "offset": -3,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-ct-adv",
+    "studentId": "s4",
+    "offset": -4,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-ct-adv",
+    "studentId": "s18",
+    "offset": -4,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-ct-adv",
+    "studentId": "s20",
+    "offset": -4,
+    "status": "absent",
+    "sessionId": "",
+    "waived": false
+  },
+  {
+    "classId": "c-ct-adv",
+    "studentId": "s21",
+    "offset": -4,
+    "status": "present",
+    "sessionId": "",
+    "waived": false
+  }
 ]

@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { debtRemaining } from "@/lib/metrics";
 import { formatVnd, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import { usePageQuery } from "@/lib/page-query";
+import { useStudioBranch } from "@/stores/branch-store";
 
 export default function RevenuePage() {
   const role = useAuthStore((s) => s.user?.role);
@@ -16,7 +16,8 @@ export default function RevenuePage() {
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const receivables = useLiveQuery(() => db.receivables.toArray(), []) ?? [];
-  const { branch } = usePageQuery();
+  const { branchId } = useStudioBranch();
+  const branch = branchId === "all" ? null : branchId;
   const month = localDayKey().slice(0, 7);
   const monthRows = payments.filter((p) => p.day.startsWith(month) && (!branch || p.branchId === branch));
   const total = monthRows.reduce((s, p) => s + p.amount, 0);
