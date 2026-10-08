@@ -67,3 +67,20 @@ export function initials(name: string) {
 export function uid(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
 }
+
+/** Relative label for YYYY-MM-DD vs today (vi/en short). */
+export function relativeDayLabel(day: string, lang: "vi" | "en" = "vi") {
+  if (!day) return "";
+  const today = localDayKey();
+  const [ty, tm, td] = today.split("-").map(Number);
+  const [dy, dm, dd] = day.split("-").map(Number);
+  if (!ty || !dy) return day;
+  const a = Date.UTC(ty, tm - 1, td);
+  const b = Date.UTC(dy, dm - 1, dd);
+  const diff = Math.round((a - b) / 86400000);
+  if (diff === 0) return lang === "en" ? "Today" : "Hôm nay";
+  if (diff === 1) return lang === "en" ? "Yesterday" : "Hôm qua";
+  if (diff > 1 && diff < 7) return lang === "en" ? `${diff}d ago` : `${diff} ngày trước`;
+  if (diff < 0 && diff > -7) return lang === "en" ? `In ${-diff}d` : `Sau ${-diff} ngày`;
+  return day;
+}

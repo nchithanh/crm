@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Star } from "lucide-react";
@@ -13,7 +14,7 @@ import { usePageQuery } from "@/lib/page-query";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
 import { studentBadges } from "@/lib/student-badges";
-import { formatVnd, initials, isMinor, localDayKey, zaloHref } from "@/lib/utils";
+import { cn, formatVnd, initials, isMinor, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { Level, Student } from "@/types";
@@ -25,6 +26,12 @@ function parentText(st: Student, seeContact: boolean) {
   const kid = isMinor(st.birthDay) || (!st.birthDay && Boolean(st.parentName));
   if (!kid || !st.parentName) return "—";
   return seeContact ? `${st.parentName} · ${st.parentPhone}` : st.parentName;
+}
+
+function remainTone(n: number) {
+  if (n <= 3) return "font-semibold text-rose-600";
+  if (n <= 5) return "font-semibold text-amber-600";
+  return "font-semibold text-slate-800";
 }
 
 function exportCsv(rows: Student[], seeContact: boolean, seeMoney: boolean, className: (id: string) => string, branchName: (id: string) => string, header: string[]) {
@@ -146,10 +153,20 @@ export default function StudentsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">{t.students.title}</h1>
-      <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
-      <div className="mt-4 grid gap-2 md:grid-cols-4 xl:grid-cols-8">
-        <input className={`${inputClass} md:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold">{t.students.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
+        </div>
+        {seeMoney || seeContact ? (
+          <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+            {t.students.emptyCta}
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="mt-4 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
+        <input className={`${inputClass} md:col-span-2 xl:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
           <option value="all">{t.common.level}</option>
           <option value="begin">Begin</option>
@@ -176,17 +193,11 @@ export default function StudentsPage() {
           <option value="yes">{t.students.lowRemain}</option>
         </select>
       </div>
+
       {picked.length > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[12px] border border-slate-200 bg-white px-3 py-2">
-          <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+          <span className="text-sm font-semibold text-slate-800">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={openZalo}>{t.students.sendZalo}</Button> : null}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void setStudentsFlag(picked.map((st) => st.id), !picked.every((st) => st.flagged))}
-          >
-            {t.students.flag}
-          </Button>
           <Button
             type="button"
             variant="outline"
@@ -201,72 +212,106 @@ export default function StudentsPage() {
           >
             {t.students.export}
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void setStudentsFlag(picked.map((st) => st.id), !picked.every((st) => st.flagged))}
+          >
+            {t.students.flag}
+          </Button>
         </div>
       ) : null}
-      <div className="mt-4 max-h-[min(70dvh,760px)] overflow-auto rounded-[12px] border border-slate-200 bg-white shadow-sm">
-        <table className="w-full min-w-[980px] text-sm">
-          <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-white text-left">
-            <tr>
-              <th className="w-10 px-3 py-3">
-                <input
-                  type="checkbox"
-                  aria-label={t.students.selectAll}
-                  checked={allChecked}
-                  onChange={(e) => setSelected(e.target.checked ? rows.map((st) => st.id) : [])}
-                />
-              </th>
-              {columns.filter((c) => c.show).map((c) => (
-                <th key={c.key} className={`px-3 py-3 ${c.key === "remain" || c.key === "debt" ? "text-right" : ""}`}>
-                  <button type="button" className="font-semibold" onClick={() => toggleSort(c.key)}>
-                    {c.label}{sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                  </button>
+
+      {rows.length === 0 ? (
+        <div className="mt-6 flex flex-col items-center rounded-[12px] border border-dashed border-[#E2E8F0] bg-white px-6 py-14 text-center">
+          <p className="text-sm text-slate-500">{t.students.empty}</p>
+          <Link href="/ghi-danh" className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+            {t.students.emptyCta}
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-4 max-h-[min(70dvh,760px)] overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-slate-50 text-left">
+              <tr>
+                <th className="w-10 px-3 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label={t.students.selectAll}
+                    checked={allChecked}
+                    onChange={(e) => setSelected(e.target.checked ? rows.map((st) => st.id) : [])}
+                  />
                 </th>
-              ))}
-              <th className="px-3 py-3 font-semibold">{t.students.status}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((st) => {
-              const badges = studentBadges(st, holds, seeMoney, lang);
-              return (
-                <tr key={st.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
-                  <td className="px-3 py-3">
-                    <input
-                      type="checkbox"
-                      aria-label={fill(t.students.selectOne, { name: st.name })}
-                      checked={selected.includes(st.id)}
-                      onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
-                    />
-                  </td>
-                  <td className="px-3 py-3">
-                    <button type="button" className="flex items-center gap-2 text-left" onClick={() => setOpenId(st.id)}>
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
-                      <span>
-                        <span className="flex items-center gap-1 font-semibold">
-                          {st.name}
-                          {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
-                        </span>
-                        <span className="text-xs text-slate-400">{seeContact ? st.phone : t.common.noPhone}</span>
-                      </span>
+                {columns.filter((c) => c.show).map((c) => (
+                  <th key={c.key} className={cn("px-3 py-3", c.key === "remain" || c.key === "debt" ? "text-right" : "")}>
+                    <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort(c.key)}>
+                      {c.label}{sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                     </button>
-                  </td>
-                  <td className="px-3 py-3">{branches.find((b) => b.id === st.branchId)?.name}</td>
-                  <td className="px-3 py-3">{levelLabel(st.level)}</td>
-                  <td className="px-3 py-3">{classes.find((c) => c.id === st.classId)?.name}</td>
-                  <td className={`px-3 py-3 text-right font-semibold tabular-nums ${st.remainingSessions <= 3 ? "text-rose-600" : ""}`}>{st.remainingSessions}</td>
-                  {seeMoney ? <td className="px-3 py-3 text-right tabular-nums">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
-                  <td className="px-3 py-3">{parentText(st, seeContact)}</td>
-                  <td className="px-3 py-3">
-                    <span className="flex flex-wrap gap-1">
-                      {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  </th>
+                ))}
+                <th className="px-3 py-3 font-semibold text-slate-600">{t.students.status}</th>
+                <th className="w-36 px-3 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((st) => {
+                const badges = studentBadges(st, holds, seeMoney, lang);
+                return (
+                  <tr
+                    key={st.id}
+                    className="group cursor-pointer border-t border-slate-100 hover:bg-[var(--brand-50)]"
+                    onClick={() => setOpenId(st.id)}
+                  >
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        aria-label={fill(t.students.selectOne, { name: st.name })}
+                        checked={selected.includes(st.id)}
+                        onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2 text-left">
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
+                        <span>
+                          <span className="flex items-center gap-1 font-semibold text-slate-900">
+                            {st.name}
+                            {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
+                          </span>
+                          <span className="text-xs text-slate-400">{seeContact ? st.phone : t.common.noPhone}</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === st.branchId)?.name}</td>
+                    <td className="px-3 py-3 text-slate-600">{levelLabel(st.level)}</td>
+                    <td className="px-3 py-3 text-slate-600">{classes.find((c) => c.id === st.classId)?.name}</td>
+                    <td className={cn("px-3 py-3 text-right tabular-nums", remainTone(st.remainingSessions))}>{st.remainingSessions}</td>
+                    {seeMoney ? <td className="px-3 py-3 text-right tabular-nums text-slate-700">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
+                    <td className="px-3 py-3 text-slate-600">{parentText(st, seeContact)}</td>
+                    <td className="px-3 py-3">
+                      <span className="flex flex-wrap gap-1">
+                        {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-2 opacity-0 transition group-hover:opacity-100">
+                        <button type="button" className="text-xs font-semibold text-[var(--brand-600)]" onClick={() => setOpenId(st.id)}>
+                          {t.students.view}
+                        </button>
+                        {seeMoney ? (
+                          <Link href={`/thu-hoc-phi?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
+                            {t.students.collectQuick}
+                          </Link>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {openId ? <StudentDrawer key={openId} studentId={openId} onClose={closeDrawer} /> : null}
     </div>
   );

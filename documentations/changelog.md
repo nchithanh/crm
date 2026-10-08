@@ -2,6 +2,7 @@
 
 ## 2026-10-08
 
+- Học viên: list production (click hàng → drawer, buổi còn đỏ/amber, hover Xem/Thu, empty CTA, bulk bar). Drawer denser: copy SĐT, Esc, progress điểm danh, Xin bảo lưu, timeline relative.
 - Login: CTA Download App mở popup hướng dẫn thêm app vào màn hình chính (ảnh 5 bước).
 - Bỏ select lọc chi nhánh trên tab (Thu học phí, Điểm danh, Học viên, Lịch, Tác vụ) — theo chi nhánh sidebar/menu.
 - Phân quyền nav: giáo viên chỉ thấy tab liên quan (Tổng quan, Lịch, Học viên, Khóa, Lớp, Điểm danh, Tác vụ). Mobile đổi Đăng ký → Tác vụ. Chặn URL ngoài quyền.

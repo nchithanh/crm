@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, inputClass } from "@/components/ui";
 import { payReceivable } from "@/lib/actions";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
+import { usePageQuery } from "@/lib/page-query";
 import { debtRemaining } from "@/lib/metrics";
 import { formatVnd } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -43,11 +44,23 @@ export default function DebtsPage() {
   const [billImage, setBillImage] = useState("");
   const [billName, setBillName] = useState("");
   const { branchId } = useStudioBranch();
+  const { student: studentFromQuery } = usePageQuery();
   const [fromDay, setFromDay] = useState("");
   const [toDay, setToDay] = useState("");
   const [methodFilter, setMethodFilter] = useState<"all" | PayMethod>("all");
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+
+  useEffect(() => {
+    if (!studentFromQuery || students.length === 0) return;
+    const st = students.find((s) => s.id === studentFromQuery);
+    if (!st) return;
+    const first = rows.find((r) => r.studentId === st.id && debtRemaining(r) > 0);
+    setStudentId(st.id);
+    setQ(st.name);
+    setReceivableId(first?.id ?? "");
+    setAmount(first ? String(debtRemaining(first)) : "");
+  }, [studentFromQuery, students, rows]);
 
   const matches = students.filter((s) => {
     if (branchId !== "all" && s.branchId !== branchId) return false;

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { X } from "lucide-react";
-import { Badge, Button, inputClass } from "@/components/ui";
+import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
-import { addStudentNote, moveStudentClass } from "@/lib/actions";
+import { addStudentNote, moveStudentClass, requestHold } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
@@ -14,23 +14,16 @@ import { attendLabel, holdStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { debtRemaining } from "@/lib/metrics";
 import { studentBadges } from "@/lib/student-badges";
-import { ageYears, formatVnd, initials, isMinor } from "@/lib/utils";
+import { ageYears, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
-const tabs = [
-  { id: "info", label: "Thông tin" },
-  { id: "courses", label: "Khóa đang học" },
-  { id: "attendance", label: "Lịch sử điểm danh" },
-  { id: "money", label: "Thanh toán & Công nợ" },
-  { id: "hold", label: "Bảo lưu" },
-  { id: "activity", label: "Hoạt động" },
-] as const;
-
-type TabId = (typeof tabs)[number]["id"];
+const tabIds = ["info", "courses", "attendance", "money", "hold", "activity"] as const;
+type TabId = (typeof tabIds)[number];
 
 export function StudentDrawer({ studentId, onClose }: { studentId: string; onClose: () => void }) {
   const { lang, t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
+  const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const seeContact = canSeeContact(role);
   const seeMoney = canSeeMoney(role);
   const student = useLiveQuery(() => db.students.get(studentId), [studentId]);
@@ -43,17 +36,33 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const payments = useLiveQuery(() => db.payments.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
   const receivables = useLiveQuery(() => db.receivables.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
   const attendance = useLiveQuery(() => db.attendance.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
+  const allStudents = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const [tab, setTab] = useState<TabId>("info");
   const [note, setNote] = useState("");
   const [classId, setClassId] = useState("");
   const [moveError, setMoveError] = useState("");
   const [moving, setMoving] = useState(false);
+  const [attendClass, setAttendClass] = useState("all");
+  const [copied, setCopied] = useState(false);
+  const [holdFrom, setHoldFrom] = useState(localDayKey());
+  const [holdTo, setHoldTo] = useState(dayFromOffset(14));
+  const [holdReason, setHoldReason] = useState("");
+  const [holdMsg, setHoldMsg] = useState("");
+  const [holdBusy, setHoldBusy] = useState(false);
 
-  const visibleTabs = tabs.filter((t) => t.id !== "money" || seeMoney);
-  const marks = useMemo(
-    () => [...attendance].sort((a, b) => b.day.localeCompare(a.day)).slice(0, 20),
-    [attendance],
-  );
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
+  const marks = useMemo(() => {
+    const rows = attendClass === "all" ? attendance : attendance.filter((a) => a.classId === attendClass);
+    return [...rows].sort((a, b) => b.day.localeCompare(a.day)).slice(0, 20);
+  }, [attendance, attendClass]);
   const counted = attendance.filter((a) => !a.waived);
   const present = counted.filter((a) => a.status === "present").length;
   const rate = counted.length === 0 ? 0 : Math.round((present / counted.length) * 100);
@@ -62,11 +71,11 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const activity = useMemo(() => {
     if (!student) return [];
     const rows = [
-      ...student.notes.map((n, i) => ({ id: `n${i}`, day: n.day, text: `Ghi chú: ${n.text}` })),
+      ...student.notes.map((n, i) => ({ id: `n${i}`, day: n.day, text: `${t.drawer.notes}: ${n.text}` })),
       ...enrollments.map((e) => ({
         id: e.id,
         day: e.day,
-        text: `Ghi danh ${packages.find((p) => p.id === e.packageId)?.name ?? ""} · ${classes.find((c) => c.id === e.classId)?.name ?? ""} · ${e.sessions} buổi`,
+        text: `${t.drawer.enrollMore} · ${packages.find((p) => p.id === e.packageId)?.name ?? ""} · ${classes.find((c) => c.id === e.classId)?.name ?? ""} · ${e.sessions}`,
       })),
       ...attendance.map((a) => ({
         id: a.id,
@@ -74,7 +83,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
         text: fill(t.drawer.marked, { className: classes.find((c) => c.id === a.classId)?.name ?? "", status: attendLabel(a.status, lang) }),
       })),
       ...(seeMoney
-        ? payments.map((p) => ({ id: p.id, day: p.day, text: `Thanh toán ${formatVnd(p.amount)} · ${p.note || "Học phí"}` }))
+        ? payments.map((p) => ({ id: p.id, day: p.day, text: `${t.drawer.collect} ${formatVnd(p.amount)} · ${p.note || (p.method === "transfer" ? t.common.transfer : t.common.cash)}` }))
         : []),
       ...holds.map((h) => ({ id: h.id, day: h.fromDay, text: fill(t.drawer.holdLine, { status: holdStatusLabel(h.status, lang), reason: h.reason }) })),
     ];
@@ -84,7 +93,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   if (student === undefined) {
     return (
       <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-        <aside className="h-full w-full max-w-xl bg-white p-6 text-sm text-slate-500">Đang tải hồ sơ…</aside>
+        <aside className="h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
       </div>
     );
   }
@@ -98,6 +107,10 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const kid = isMinor(student.birthDay);
   const badges = studentBadges(student, holds, seeMoney, lang);
   const currentHold = holds.find((h) => h.status === "approved" || h.status === "pending");
+  const canRequestHold = !currentHold && student.status !== "paused";
+  const rosterInClass = student.classId
+    ? allStudents.filter((s) => s.classId === student.classId && s.status !== "paused").length
+    : 0;
 
   async function saveNote() {
     await addStudentNote(studentId, note);
@@ -113,121 +126,208 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
     if (!error) setClassId("");
   }
 
+  const phone = student.phone;
+
+  async function copyPhone() {
+    if (!seeContact || !phone) return;
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function submitHold() {
+    setHoldBusy(true);
+    setHoldMsg("");
+    const code = await requestHold({
+      studentId,
+      fromDay: holdFrom,
+      toDay: holdTo,
+      reason: holdReason,
+    });
+    setHoldBusy(false);
+    if (code === "fields" || code) {
+      setHoldMsg(code === "fields" ? t.drawer.holdError : code);
+      return;
+    }
+    setHoldMsg(t.drawer.holdSent);
+    setHoldReason("");
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-      <button className="absolute inset-0" aria-label="Đóng hồ sơ" onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-xl flex-col bg-white shadow-xl">
-        <header className="border-b border-slate-100 px-5 py-4">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.drawer.close} onClick={onClose} />
+      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-xl">
+        <header className="border-b border-[#E2E8F0] px-5 py-4">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student.avatarColor }}>
               {initials(student.name)}
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <h2 className="text-lg font-bold">{student.name}</h2>
-                <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-slate-100" aria-label="Đóng" onClick={onClose}>
+                <h2 className="text-lg font-bold text-slate-900">{student.name}</h2>
+                <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] hover:bg-slate-100" aria-label={t.drawer.close} onClick={onClose}>
                   <X size={18} />
                 </button>
               </div>
-              <p className="text-sm text-slate-500">{seeContact ? student.phone : "Giáo viên không xem số điện thoại"}</p>
+              {seeContact ? (
+                <button type="button" className="mt-0.5 text-left text-sm text-slate-500 hover:text-[var(--brand-600)]" onClick={() => void copyPhone()}>
+                  {student.phone || "—"}{copied ? ` · ${t.students.copied}` : ""}
+                </button>
+              ) : (
+                <p className="mt-0.5 text-sm text-slate-400">{t.drawer.phoneHidden}</p>
+              )}
               <div className="mt-2 flex flex-wrap gap-1">
                 {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
-                {student.flagged ? <Badge tone="warn">Đã đánh dấu</Badge> : null}
+                {student.flagged ? <Badge tone="warn">{t.students.flagged}</Badge> : null}
               </div>
             </div>
           </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {seeMoney ? (
+              <Link href={`/thu-hoc-phi?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+                {t.drawer.collect}
+              </Link>
+            ) : null}
+            <Link href="/ghi-danh" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+              {t.drawer.enrollMore}
+            </Link>
+            <Button type="button" variant="ghost" onClick={onClose}>{t.drawer.close}</Button>
+          </div>
           <div className="mt-4 flex gap-1 overflow-x-auto" role="tablist">
-            {visibleTabs.map((item) => (
+            {visibleTabs.map((id) => (
               <button
-                key={item.id}
+                key={id}
                 type="button"
                 role="tab"
-                aria-selected={tab === item.id}
-                onClick={() => setTab(item.id)}
-                className={tab === item.id ? "shrink-0 border-b-2 border-[var(--brand-500)] px-2 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 border-b-2 border-transparent px-2 py-2 text-sm text-slate-500"}
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
+                className={tab === id ? "shrink-0 border-b-2 border-[var(--brand-500)] px-2.5 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 border-b-2 border-transparent px-2.5 py-2 text-sm text-slate-500"}
               >
-                {t.drawer[item.id]}
+                {t.drawer[id]}
               </button>
             ))}
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {tab === "info" ? (
             <div className="space-y-4 text-sm">
               <dl className="grid grid-cols-2 gap-3">
-                <div><dt className="text-slate-500">Email</dt><dd className="font-semibold">{seeContact ? student.email || "—" : "Ẩn"}</dd></div>
-                <div><dt className="text-slate-500">Ngày sinh</dt><dd className="font-semibold">{student.birthDay || "—"}{age !== null ? ` · ${age} tuổi` : ""}</dd></div>
-                <div><dt className="text-slate-500">Chi nhánh</dt><dd className="font-semibold">{branch?.name ?? "—"}</dd></div>
-                <div><dt className="text-slate-500">Vào học</dt><dd className="font-semibold">{student.joinedDay}</dd></div>
+                <div><dt className="text-slate-500">{t.drawer.fullName}</dt><dd className="font-semibold">{student.name}</dd></div>
+                <div>
+                  <dt className="text-slate-500">{t.students.phone}</dt>
+                  <dd className="font-semibold">{seeContact ? student.phone || "—" : "—"}</dd>
+                </div>
+                <div><dt className="text-slate-500">{t.drawer.email}</dt><dd className="font-semibold">{seeContact ? student.email || "—" : "—"}</dd></div>
+                <div><dt className="text-slate-500">{t.drawer.birthDay}</dt><dd className="font-semibold">{student.birthDay || "—"}{age !== null ? ` · ${age}` : ""}</dd></div>
+                <div><dt className="text-slate-500">{t.drawer.branch}</dt><dd className="font-semibold">{branch?.name ?? "—"}</dd></div>
+                <div><dt className="text-slate-500">{t.drawer.joined}</dt><dd className="font-semibold">{student.joinedDay}</dd></div>
               </dl>
-              {kid && seeContact ? (
+              {(kid || student.parentName) ? (
                 <section className="rounded-[12px] bg-slate-50 p-3">
-                  <h3 className="text-xs font-semibold uppercase text-slate-500">Phụ huynh</h3>
-                  <p className="mt-1 font-semibold">{student.parentName || "Chưa lưu tên"}</p>
-                  <p className="text-slate-500">{student.parentPhone || "Chưa có số"}</p>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.parent}</h3>
+                  {kid ? <p className="mt-0.5 text-xs text-slate-400">{t.drawer.parentRequired}</p> : null}
+                  <p className="mt-1 font-semibold">{student.parentName || "—"}</p>
+                  <p className="text-slate-500">{seeContact ? student.parentPhone || "—" : "—"}</p>
                 </section>
               ) : null}
               <section>
-                <h3 className="text-xs font-semibold uppercase text-slate-500">Ghi chú nội bộ</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.notes}</h3>
                 <ul className="mt-2 space-y-2">
-                  {student.notes.length === 0 ? <li className="text-slate-500">Chưa có ghi chú.</li> : null}
+                  {student.notes.length === 0 ? <li className="text-slate-500">{t.drawer.notesEmpty}</li> : null}
                   {student.notes.map((n, i) => (
-                    <li key={i} className="rounded-[12px] border border-slate-100 px-3 py-2">
+                    <li key={i} className="rounded-[12px] border border-[#E2E8F0] px-3 py-2">
                       <p>{n.text}</p>
-                      <p className="mt-1 text-xs text-slate-400">{n.day}</p>
+                      <p className="mt-1 text-xs text-slate-400">{relativeDayLabel(n.day, lang)} · {n.day}</p>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-3 flex gap-2">
-                  <input className={inputClass} placeholder="Thêm ghi chú nội bộ" value={note} onChange={(e) => setNote(e.target.value)} />
-                  <Button type="button" onClick={() => void saveNote()} disabled={!note.trim()}>Lưu</Button>
+                  <input className={inputClass} placeholder={t.drawer.notePlaceholder} value={note} onChange={(e) => setNote(e.target.value)} />
+                  <Button type="button" onClick={() => void saveNote()} disabled={!note.trim()}>{t.common.save}</Button>
                 </div>
               </section>
             </div>
           ) : null}
+
           {tab === "courses" ? (
             <div className="space-y-3 text-sm">
-              <article className="rounded-[12px] border border-slate-200 p-3">
-                <p className="font-semibold">{course?.name ?? klass?.name ?? "Chưa gắn khóa"}</p>
+              <article className="rounded-[12px] border border-[#E2E8F0] p-3">
+                <p className="font-semibold text-slate-900">{course?.name ?? klass?.name ?? t.drawer.noCourse}</p>
                 <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {klass?.name} · {branch?.name}</p>
-                <p className="mt-2">Gói {pack?.name ?? "—"} · còn <b className={student.remainingSessions <= 3 ? "text-rose-600" : ""}>{student.remainingSessions}</b> buổi</p>
+                <p className="mt-2">
+                  {t.drawer.package} {pack?.name ?? "—"} ·{" "}
+                  <b className={student.remainingSessions <= 3 ? "text-rose-600" : student.remainingSessions <= 5 ? "text-amber-600" : ""}>
+                    {fill(t.drawer.sessionsLeft, { n: student.remainingSessions })}
+                  </b>
+                </p>
+                {klass ? (
+                  <p className="mt-1 text-xs text-slate-400">
+                    {fill(t.drawer.capacity, { n: rosterInClass, cap: klass.capacity })}
+                  </p>
+                ) : null}
               </article>
-              {enrollments.length > 1 ? (
-                <ul className="space-y-1 text-slate-600">
-                  {enrollments.map((e) => (
-                    <li key={e.id}>{e.day} · {packages.find((p) => p.id === e.packageId)?.name} · {classes.find((c) => c.id === e.classId)?.name}</li>
+              {enrollments.length > 0 ? (
+                <ul className="space-y-2">
+                  {[...enrollments].sort((a, b) => b.day.localeCompare(a.day)).map((e) => (
+                    <li key={e.id} className="rounded-[12px] border border-slate-100 px-3 py-2 text-slate-600">
+                      <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.packageId)?.name ?? "—"}</span>
+                      {" · "}{classes.find((c) => c.id === e.classId)?.name}
+                      {" · "}{e.sessions} · {e.day}
+                    </li>
                   ))}
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">Ghi danh thêm</Link>
+                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
               </div>
-              <div className="rounded-[12px] border border-slate-100 p-3">
-                <p className="text-xs font-semibold uppercase text-slate-500">Đổi lớp</p>
+              <div className="rounded-[12px] border border-[#E2E8F0] p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.changeClass}</p>
                 <select className={`${inputClass} mt-2`} value={classId} onChange={(e) => setClassId(e.target.value)}>
-                  <option value="">Chọn lớp mới</option>
+                  <option value="">{t.drawer.pickClass}</option>
                   {classes.filter((c) => c.id !== student.classId).map((c) => (
                     <option key={c.id} value={c.id}>{c.name} · {branches.find((b) => b.id === c.branchId)?.name}</option>
                   ))}
                 </select>
                 {moveError ? <p className="mt-2 text-rose-600">{moveError}</p> : null}
-                <Button type="button" className="mt-2" variant="outline" disabled={!classId || moving} onClick={() => void changeClass()}>Đổi lớp</Button>
+                <Button type="button" className="mt-2" variant="outline" disabled={!classId || moving} onClick={() => void changeClass()}>{t.drawer.changeClass}</Button>
               </div>
             </div>
           ) : null}
+
           {tab === "attendance" ? (
             <div className="text-sm">
-              <p className="text-2xl font-bold tabular-nums">{rate}%</p>
-              <p className="text-slate-500">{present}/{counted.length} buổi có mặt</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.attendRate}</p>
+              <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">{rate}%</p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: `${rate}%` }} />
+              </div>
+              <p className="mt-1 text-slate-500">{fill(t.drawer.ofSessions, { present, total: counted.length })}</p>
+              <Field label={t.drawer.filterCourse}>
+                <select className={inputClass} value={attendClass} onChange={(e) => setAttendClass(e.target.value)}>
+                  <option value="all">{t.drawer.allCourses}</option>
+                  {[...new Set(attendance.map((a) => a.classId))].map((id) => (
+                    <option key={id} value={id}>{classes.find((c) => c.id === id)?.name ?? id}</option>
+                  ))}
+                </select>
+              </Field>
               <table className="mt-3 w-full">
                 <thead className="text-left text-xs text-slate-500">
-                  <tr><th className="py-2">Ngày</th><th>Lớp</th><th>Trạng thái</th></tr>
+                  <tr>
+                    <th className="py-2">{t.drawer.day}</th>
+                    <th>{t.drawer.classCol}</th>
+                    <th>{t.drawer.statusCol}</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  {marks.length === 0 ? <tr><td className="py-2 text-slate-500" colSpan={3}>Chưa có điểm danh.</td></tr> : null}
+                  {marks.length === 0 ? <tr><td className="py-2 text-slate-500" colSpan={3}>{t.drawer.noAttend}</td></tr> : null}
                   {marks.map((a) => (
                     <tr key={a.id} className="border-t border-slate-100">
-                      <td className="py-2">{a.day}</td>
+                      <td className="py-2 tabular-nums">{a.day}</td>
                       <td>{classes.find((c) => c.id === a.classId)?.name}</td>
                       <td>{attendLabel(a.status, lang)}{a.waived ? ` · ${t.drawer.notDeducted}` : ""}</td>
                     </tr>
@@ -236,55 +336,100 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
               </table>
             </div>
           ) : null}
+
           {tab === "money" && seeMoney ? (
             <div className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">Đã thu</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
-                <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">Còn nợ</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
+                <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
+                <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href="/thu-hoc-phi" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">Thu học phí</Link>
-              <ul className="space-y-2">
-                {payments.length === 0 ? <li className="text-slate-500">Chưa có phiếu thu.</li> : null}
-                {[...payments].sort((a, b) => b.day.localeCompare(a.day)).map((p) => (
-                  <li key={p.id} className="flex justify-between gap-3 border-t border-slate-100 py-2">
-                    <span>{p.day} · {p.note || (p.method === "transfer" ? "Chuyển khoản" : "Tiền mặt")}</span>
-                    <b className="tabular-nums">{formatVnd(p.amount)}</b>
-                  </li>
-                ))}
-              </ul>
+              <Link href={`/thu-hoc-phi?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <div className="overflow-auto rounded-[12px] border border-[#E2E8F0]">
+                <table className="w-full min-w-[320px] text-sm">
+                  <thead className="bg-slate-50 text-left text-xs text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">{t.drawer.day}</th>
+                      <th className="px-3 py-2 text-right">{t.drawer.amount}</th>
+                      <th className="px-3 py-2">{t.drawer.method}</th>
+                      <th className="px-3 py-2">{t.drawer.note}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length === 0 ? (
+                      <tr><td className="px-3 py-3 text-slate-500" colSpan={4}>{t.drawer.noPayments}</td></tr>
+                    ) : (
+                      [...payments].sort((a, b) => b.day.localeCompare(a.day)).map((p) => (
+                        <tr key={p.id} className="border-t border-slate-100">
+                          <td className="px-3 py-2 tabular-nums">{p.day}</td>
+                          <td className="px-3 py-2 text-right font-semibold tabular-nums">{formatVnd(p.amount)}</td>
+                          <td className="px-3 py-2">{p.method === "transfer" ? t.common.transfer : t.common.cash}</td>
+                          <td className="px-3 py-2 text-slate-500">{p.note || "—"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : null}
+
           {tab === "hold" ? (
             <div className="space-y-3 text-sm">
               {currentHold ? (
-                <article className="rounded-[12px] border border-slate-200 p-3">
-                  <Badge tone={currentHold.status === "approved" ? "info" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
+                <article className="rounded-[12px] border border-[#E2E8F0] p-3">
+                  <Badge tone={currentHold.status === "approved" ? "warn" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
                   <p className="mt-2 font-semibold">{currentHold.fromDay} → {currentHold.toDay}</p>
                   <p className="text-slate-500">{currentHold.reason}</p>
-                  <p className="mt-1">{currentHold.credits} buổi giữ chỗ</p>
+                  <p className="mt-1">{currentHold.credits} · {holdStatusLabel(currentHold.status, lang)}</p>
+                  {currentHold.approverId ? (
+                    <p className="mt-1 text-xs text-slate-400">
+                      {t.drawer.approver}: {users.find((u) => u.id === currentHold.approverId)?.name ?? currentHold.approverId}
+                      {currentHold.decidedDay ? ` · ${currentHold.decidedDay}` : ""}
+                    </p>
+                  ) : null}
                 </article>
               ) : (
-                <p className="text-slate-500">Không đang bảo lưu.</p>
+                <p className="text-slate-500">{t.drawer.noHold}</p>
               )}
-              <h3 className="text-xs font-semibold uppercase text-slate-500">Lịch sử</h3>
+              {canRequestHold ? (
+                <div className="grid gap-2 rounded-[12px] border border-[#E2E8F0] bg-slate-50 p-3">
+                  <Field label={t.drawer.holdFrom}>
+                    <input className={inputClass} type="date" value={holdFrom} onChange={(e) => setHoldFrom(e.target.value)} />
+                  </Field>
+                  <Field label={t.drawer.holdTo}>
+                    <input className={inputClass} type="date" value={holdTo} onChange={(e) => setHoldTo(e.target.value)} />
+                  </Field>
+                  <Field label={t.drawer.holdReason}>
+                    <input className={inputClass} value={holdReason} onChange={(e) => setHoldReason(e.target.value)} />
+                  </Field>
+                  {holdMsg ? <p className={`text-sm ${holdMsg === t.drawer.holdSent ? "text-green-700" : "text-rose-700"}`}>{holdMsg}</p> : null}
+                  <Button type="button" disabled={holdBusy} onClick={() => void submitHold()}>{t.drawer.requestHold}</Button>
+                </div>
+              ) : null}
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.holdHistory}</h3>
               <ul className="space-y-2">
-                {holds.length === 0 ? <li className="text-slate-500">Chưa có phiếu bảo lưu.</li> : null}
+                {holds.length === 0 ? <li className="text-slate-500">{t.drawer.noHoldHistory}</li> : null}
                 {[...holds].sort((a, b) => b.fromDay.localeCompare(a.fromDay)).map((h) => (
                   <li key={h.id} className="border-t border-slate-100 py-2">
-                    {h.fromDay} → {h.toDay} · {holdStatusLabel(h.status, lang)} · {h.reason}
+                    <p className="font-medium">{h.fromDay} → {h.toDay} · {holdStatusLabel(h.status, lang)}</p>
+                    <p className="text-slate-500">{h.reason}</p>
+                    {h.approverId ? (
+                      <p className="text-xs text-slate-400">{t.drawer.approver}: {users.find((u) => u.id === h.approverId)?.name ?? h.approverId}</p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
             </div>
           ) : null}
+
           {tab === "activity" ? (
             <ul className="space-y-3 text-sm">
-              {activity.length === 0 ? <li className="text-slate-500">Chưa có hoạt động.</li> : null}
+              {activity.length === 0 ? <li className="text-slate-500">{t.drawer.noActivity}</li> : null}
               {activity.map((a) => (
                 <li key={a.id} className="relative border-l border-slate-200 pl-3">
                   <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
                   <p>{a.text}</p>
-                  <p className="text-xs text-slate-400">{a.day}</p>
+                  <p className="text-xs text-slate-400">{relativeDayLabel(a.day, lang)} · {a.day}</p>
                 </li>
               ))}
             </ul>

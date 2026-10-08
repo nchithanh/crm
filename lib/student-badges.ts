@@ -12,7 +12,7 @@ export function studentBadges(student: Student, holds: Hold[], seeMoney: boolean
   const pending = holds.some((h) => h.studentId === student.id && h.status === "pending");
   const badges: StudentBadge[] = [];
   if (student.status === "paused") badges.push({ label: label.badgePaused, tone: "neutral" });
-  else if (approved) badges.push({ label: label.badgeHold, tone: "info" });
+  else if (approved) badges.push({ label: label.badgeHold, tone: "warn" });
   else if (student.status === "trial") badges.push({ label: copy[lang].status.trial, tone: "info" });
   else badges.push({ label: label.badgeStudy, tone: "ok" });
   if (pending && !approved && student.status !== "paused") badges.push({ label: label.badgeHold, tone: "warn" });

@@ -450,6 +450,38 @@ export async function enrollMidCourse(input: {
   return "";
 }
 
+export async function requestHold(input: {
+  studentId: string;
+  fromDay: string;
+  toDay: string;
+  reason: string;
+  credits?: number;
+}) {
+  const student = await db.students.get(input.studentId);
+  if (!student) return "Không thấy học viên.";
+  if (student.status === "paused") return "Học viên đang nghỉ.";
+  const open = await db.holds
+    .where("studentId")
+    .equals(input.studentId)
+    .filter((h) => h.status === "pending" || h.status === "approved")
+    .first();
+  if (open) return "Đã có phiếu bảo lưu đang mở.";
+  const reason = input.reason.trim();
+  if (!input.fromDay || !input.toDay || !reason) return "fields";
+  if (input.toDay < input.fromDay) return "Ngày kết thúc phải sau ngày bắt đầu.";
+  await db.holds.add({
+    id: uid("hold"),
+    studentId: input.studentId,
+    fromDay: input.fromDay,
+    toDay: input.toDay,
+    reason,
+    status: "pending",
+    credits: input.credits ?? Math.min(4, Math.max(1, student.remainingSessions || 1)),
+    needsPackage: false,
+  });
+  return "";
+}
+
 export async function decideHold(id: string, status: "approved" | "rejected", role: Role, actorId: string, rejectReason = "") {
   if (role !== "owner") return "Chỉ Quản lý duyệt bảo lưu.";
   const hold = await db.holds.get(id);

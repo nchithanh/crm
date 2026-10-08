@@ -6,7 +6,7 @@
 | `/login` | PIN: card logo giữa, demo dạng hàng, đổi lĩnh vực, CTA Download App (popup hướng dẫn PWA) |
 | `/` | Tổng quan: KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh chọn trong sidebar / menu. Mobile owner/lễ tân: Tổng quan · Lịch · Điểm danh · Đăng ký · Support. Giáo viên: Tác vụ thay Đăng ký. Máy tính: Support FAB + CTA theo role |
 | `/lich` | Lịch tuần (lưới 07:00–22:00), tháng, theo phòng / giáo viên / chi nhánh. Kéo thả có chặn trùng. Drawer điểm danh, đổi giáo viên, đổi phòng, hủy buổi |
-| `/hoc-vien` | Bảng sắp xếp, lọc, chọn nhiều, xuất CSV. Drawer hồ sơ: thông tin, khóa, điểm danh, thanh toán, bảo lưu, hoạt động |
+| `/hoc-vien` | Bảng sticky, lọc theo sidebar chi nhánh + Level/Status/Lớp/Nợ/Buổi. Click hàng mở drawer ~520px (6 tab). Bulk Zalo/Excel/Đánh dấu. GV ẩn SĐT/tiền |
 | `/hoc-vien/[id]` | Mở lại danh sách và drawer của học viên đó |
 | `/khoa-hoc` | Khóa học. Nút Xem mở danh sách buổi. Quản lý và lễ tân tạo khóa (kèm lớp và 8 buổi) và sửa tên, giờ, giáo viên, phòng, mở/tạm dừng |
 | `/lop-hoc` | Danh sách lớp. Nút Xem mở sĩ số. Sửa sĩ số, giáo viên, phòng, giờ |
