@@ -2,6 +2,7 @@
 
 ## 2026-10-09
 
+- Pages export: `generateStaticParams` trên mọi `/[id]` (seed ids + class `{courseId}-cN`) — fix CI `output: export`.
 - Mobile bottom: bỏ Support; owner/lễ tân **Học phí** ở giữa → `/finance/collect`; giáo viên 4 tab (không Support).
 - Thu học phí: lưới Tiền mặt / CK / QR / Nợ; QR demo + Chia sẻ / Gửi Zalo; dialog xác nhận + success kiểu POS.
 - Ghi danh: bỏ thu ngay ở bước 4; sau xác nhận CTA **Thu học phí** → `/finance/collect?student=` (+ xem HV / ghi danh tiếp).
