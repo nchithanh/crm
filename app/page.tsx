@@ -22,6 +22,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { debtRemaining } from "@/lib/metrics";
@@ -392,21 +393,19 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-xl font-bold">Tổng quan</h1>
         <p className="mt-1 text-sm text-slate-500">Edu Dance · dữ liệu mẫu</p>
-        <div className={`mt-3 grid gap-2 ${showMoney ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-          <Link href={`/diem-danh${q}`} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#F97316] px-4 text-base font-semibold text-white">
-            <Check size={18} /> Điểm danh nhanh
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <Link href={`/diem-danh${q}`} className={ctaPrimary}>
+            <Check size={16} /> Điểm danh nhanh
           </Link>
-          <Link href={`/ghi-danh${q}`} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-slate-900 px-4 text-base font-semibold text-white">
-            <Plus size={18} /> Đăng ký học viên
+          <Link href={`/ghi-danh${q}`} className={ctaOutline}>
+            <Plus size={16} /> Đăng ký học viên
           </Link>
           {showMoney ? (
-            <Link href={`/doanh-thu${q}`} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-base font-semibold text-slate-800">
-              <LineChart size={18} /> Xem báo cáo
+            <Link href={`/doanh-thu${q}`} className={ctaGhost}>
+              <LineChart size={16} /> Xem báo cáo
             </Link>
           ) : null}
-        </div>
-        <div className="mt-3 flex justify-end">
-          <select className="min-h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-sm" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
+          <select className="ml-auto h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-700" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
             <option value="today">Hôm nay</option>
             <option value="d7">7 ngày</option>
             <option value="d30">30 ngày</option>
@@ -420,9 +419,11 @@ export default function DashboardPage() {
           const Icon = card.icon;
           const body = (
             <>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs text-slate-500">{card.label}</p>
-                <Icon size={16} className="text-slate-400" />
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-medium text-slate-500">{card.label}</p>
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-orange-50 text-[#EA580C]">
+                  <Icon size={16} />
+                </span>
               </div>
               <p className={`mt-2 text-2xl font-bold tabular-nums ${card.warn ? "text-amber-700" : ""}`}>{card.value}</p>
               <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") ? "text-green-600" : card.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
@@ -434,7 +435,7 @@ export default function DashboardPage() {
               ) : null}
             </>
           );
-          const className = "block rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md";
+          const className = "block rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md";
           return card.href ? (
             <Link key={card.label} href={card.href} className={className}>{body}</Link>
           ) : (
@@ -449,7 +450,7 @@ export default function DashboardPage() {
             <h2 className="text-base font-semibold">Doanh thu {chartSpan} ngày</h2>
             <div className="flex gap-1">
               {([7, 30] as const).map((n) => (
-                <button key={n} type="button" className={`min-h-9 rounded-full px-3 text-xs font-semibold ${chartSpan === n ? "bg-slate-900 text-white" : "border border-slate-200"}`} onClick={() => setChartSpan(n)}>
+                <button key={n} type="button" className={`h-9 rounded-full px-3 text-xs font-semibold ${chartSpan === n ? "bg-[#F97316] text-white" : "border border-slate-200 bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
                   {n} ngày
                 </button>
               ))}

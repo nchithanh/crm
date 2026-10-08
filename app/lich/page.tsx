@@ -299,7 +299,7 @@ export default function SchedulePage() {
             </Button>
           ))}
           {group !== "day" ? weekDays.map((day) => (
-            <button key={day} type="button" className={day === focusDay ? "min-h-11 rounded-full bg-slate-900 px-3 text-sm font-semibold text-white" : "min-h-11 rounded-full border border-slate-200 bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
+            <button key={day} type="button" className={day === focusDay ? "h-11 rounded-full bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-11 rounded-full border border-slate-200 bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
               {weekdayLabel(new Date(`${day}T12:00:00`).getDay()).replace("Thứ ", "T")} {day.slice(8)}
             </button>
           )) : null}

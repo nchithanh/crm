@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
+import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useAuthStore } from "@/stores/auth-store";
@@ -101,24 +102,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [open, setOpen] = useState(false);
 
+  const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
+  const studio = settings?.name || "Edu Dance";
+
   const linkClass = (href: string) =>
     cn(
-      "flex min-h-11 items-center gap-2 rounded-[12px] px-3 text-sm font-medium",
-      active(href, path) ? "bg-emerald-50 text-emerald-700" : "text-slate-600 hover:bg-slate-50",
+      "flex h-10 items-center gap-2 rounded-[12px] px-3 text-sm font-medium",
+      active(href, path) ? "bg-orange-50 text-[#C2410C]" : "text-slate-600 hover:bg-slate-50",
     );
 
   const nav = (
     <div className="flex h-full flex-col">
-      <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-4">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] bg-emerald-500 text-sm font-bold text-white">
-          D
-        </span>
-        <span>
-          <span className="block text-sm font-bold">Dolphin CRM</span>
-          <span className="block text-xs text-slate-400">Demo Edu Dance</span>
-        </span>
-      </Link>
-      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+      <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 py-4">
         <Link href={top.href} onClick={() => setOpen(false)} className={linkClass(top.href)}>
           <top.icon size={16} />
           {top.label}
@@ -131,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           .filter((group) => group.items.length > 0)
           .map((group) => (
           <div key={group.title}>
-            <p className="px-2 pb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+            <p className="border-t border-slate-100 px-2 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -172,38 +167,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-slate-200 bg-white px-3 py-2">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-            <div className="flex min-w-0 items-center gap-2 lg:flex-1">
-              <button className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:px-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <button className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
                 <Menu size={18} />
               </button>
               <Link href="/" className="flex min-w-0 items-center gap-2">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] bg-[#F97316] text-sm font-bold text-white">D</span>
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F97316] text-sm font-bold text-white">D</span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">Edu Dance</span>
-                  <span className="block truncate text-xs text-slate-400">{user?.name} · {user ? roleLabel(user.role) : ""}</span>
+                  <span className="block truncate text-sm font-bold leading-tight text-slate-900">Dolphin CRM</span>
+                  <span className="block truncate text-xs text-slate-500">{studio} · {user ? roleLabel(user.role) : ""}</span>
                 </span>
               </Link>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <select className="min-h-12 rounded-[12px] border border-slate-200 bg-white px-3 text-sm" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <select className="h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-700" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
                 <option value="all">Mọi chi nhánh</option>
                 {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
-              <Link href={`/diem-danh${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white">
+              <Link href={`/diem-danh${branchQuery}`} className={ctaPrimary}>
                 <Receipt size={16} /> Điểm danh
               </Link>
-              <Link href={`/ghi-danh${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full bg-slate-900 px-4 text-sm font-semibold text-white">
+              <Link href={`/ghi-danh${branchQuery}`} className={ctaOutline}>
                 <Plus size={16} /> Đăng ký
               </Link>
               {seeReport ? (
-                <Link href={`/doanh-thu${branchQuery}`} className="inline-flex min-h-12 items-center gap-1 rounded-full px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                <Link href={`/doanh-thu${branchQuery}`} className={ctaGhost}>
                   <LineChart size={16} /> Báo cáo
                 </Link>
               ) : null}
               <button
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full hover:bg-slate-100"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
                 aria-label="Đăng xuất"
                 onClick={() => {
                   logout();
@@ -223,7 +218,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             const on = active(item.href, path);
             return (
-              <Link key={item.href} href={item.href} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium", on ? "text-emerald-700" : "text-slate-400")}>
+              <Link key={item.href} href={item.href} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium", on ? "text-[#C2410C]" : "text-slate-400")}>
                 <Icon size={18} />
                 {item.label}
               </Link>

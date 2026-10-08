@@ -141,7 +141,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={tab === t.id ? "shrink-0 border-b-2 border-slate-900 px-2 py-2 text-sm font-semibold" : "shrink-0 border-b-2 border-transparent px-2 py-2 text-sm text-slate-500"}
+                className={tab === t.id ? "shrink-0 border-b-2 border-[#F97316] px-2 py-2 text-sm font-semibold text-[#C2410C]" : "shrink-0 border-b-2 border-transparent px-2 py-2 text-sm text-slate-500"}
               >
                 {t.label}
               </button>

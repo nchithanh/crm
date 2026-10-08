@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f7f8;
+  --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
   --muted: #64748b;
@@ -42,9 +42,10 @@ html, body {
 
 button, input, select, textarea { font: inherit; }
 
-a { color: inherit; text-decoration: none; }
+a { text-decoration: none; }
 
 button.bg-emerald-500,
-a.bg-emerald-500 {
-  color: #fff !important;
+a.bg-emerald-500,
+a[class*="bg-[#F97316]"] {
+  color: #fff;
 }

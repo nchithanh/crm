@@ -1,6 +1,13 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+export const ctaPrimary =
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white hover:bg-[#EA580C]";
+export const ctaOutline =
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#F97316] bg-white px-4 text-sm font-semibold text-[#C2410C] hover:bg-orange-50";
+export const ctaGhost =
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100";
+
 export function Button({
   className,
   variant = "primary",
@@ -11,10 +18,10 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold disabled:opacity-50",
-        variant === "primary" && "bg-emerald-500 text-white hover:bg-emerald-600",
-        variant === "outline" && "border border-slate-200 bg-white hover:bg-slate-50",
-        variant === "ghost" && "hover:bg-slate-100",
+        "disabled:opacity-50",
+        variant === "primary" && ctaPrimary,
+        variant === "outline" && ctaOutline,
+        variant === "ghost" && ctaGhost,
         className,
       )}
       {...props}
@@ -41,7 +48,7 @@ export function Badge({
     <span
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
-        tone === "ok" && "bg-emerald-50 text-emerald-700",
+        tone === "ok" && "bg-green-50 text-green-700",
         tone === "warn" && "bg-amber-50 text-amber-700",
         tone === "danger" && "bg-rose-50 text-rose-700",
         tone === "info" && "bg-sky-50 text-sky-700",
@@ -69,4 +76,4 @@ export function Field({
 }
 
 export const inputClass =
-  "min-h-11 w-full rounded-[12px] border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500";
+  "h-11 w-full rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#F97316]";

@@ -2,7 +2,7 @@
 
 ## 2026-10-07
 
-- Header mọi trang: chọn chi nhánh, nút Điểm danh, + Đăng ký, Báo cáo. Tổng quan có hàng 3 nút lớn cùng hướng. Seed `7` để nạp lại data mẫu.
+- Header và nút theo hệ POS: primary cam, secondary viền cam, ghost. Bỏ nút nền đen. Sidebar mục đang mở nền cam nhạt.
 
 - Data mẫu dày hơn: 24 học viên, 20 lead, thêm phiếu thu, nợ, điểm danh, bảo lưu, tác vụ, đặt phòng. Seed `6`.
 - Chăm sóc: pipeline kéo thả, lead lạnh, chuyển thành học viên. Thu học phí theo học viên, thu một phần và in phiếu.

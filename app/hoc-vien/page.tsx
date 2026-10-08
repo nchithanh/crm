@@ -217,7 +217,7 @@ export default function StudentsPage() {
                 />
               </th>
               {columns.filter((c) => c.show).map((c) => (
-                <th key={c.key} className="px-3 py-3">
+                <th key={c.key} className={`px-3 py-3 ${c.key === "remain" || c.key === "debt" ? "text-right" : ""}`}>
                   <button type="button" className="font-semibold" onClick={() => toggleSort(c.key)}>
                     {c.label}{sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                   </button>
@@ -254,8 +254,8 @@ export default function StudentsPage() {
                   <td className="px-3 py-3">{branches.find((b) => b.id === st.branchId)?.name}</td>
                   <td className="px-3 py-3">{levelLabel(st.level)}</td>
                   <td className="px-3 py-3">{classes.find((c) => c.id === st.classId)?.name}</td>
-                  <td className={`px-3 py-3 font-semibold tabular-nums ${st.remainingSessions <= 3 ? "text-rose-600" : ""}`}>{st.remainingSessions}</td>
-                  {seeMoney ? <td className="px-3 py-3 tabular-nums">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
+                  <td className={`px-3 py-3 text-right font-semibold tabular-nums ${st.remainingSessions <= 3 ? "text-rose-600" : ""}`}>{st.remainingSessions}</td>
+                  {seeMoney ? <td className="px-3 py-3 text-right tabular-nums">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
                   <td className="px-3 py-3">{parentText(st, seeContact)}</td>
                   <td className="px-3 py-3">
                     <span className="flex flex-wrap gap-1">

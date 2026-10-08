@@ -257,7 +257,7 @@ function LeadDrawer({
         <h3 className="mt-5 text-sm font-semibold">Thêm hoạt động</h3>
         <div className="mt-2 flex gap-2">
           {(["call", "zalo", "note"] as const).map((item) => (
-            <button key={item} type="button" className={kind === item ? "min-h-11 rounded-full bg-slate-900 px-3 text-sm text-white" : "min-h-11 rounded-full border border-slate-200 px-3 text-sm"} onClick={() => setKind(item)}>
+            <button key={item} type="button" className={kind === item ? "h-11 rounded-full bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-11 rounded-full border border-slate-200 bg-white px-3 text-sm"} onClick={() => setKind(item)}>
               {item === "call" ? "Gọi" : item === "zalo" ? "Zalo" : "Ghi chú"}
             </button>
           ))}
