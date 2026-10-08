@@ -39,8 +39,8 @@ jobs:
         if: github.event_name != 'pull_request'
         run: npm run build
         env:
+          # Custom domain crm.dolphin-software.io.vn serves at site root — no /crm basePath.
           GITHUB_PAGES: "true"
-          GITHUB_PAGES_BASE_PATH: "/crm"
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
