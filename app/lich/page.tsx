@@ -74,7 +74,7 @@ export default function SchedulePage() {
   const [group, setGroup] = useState<Group>("day");
   const [weekOffset, setWeekOffset] = useState(0);
   const [monthOffset, setMonthOffset] = useState(0);
-  const { branchId, setBranchId } = useStudioBranch();
+  const { branchId } = useStudioBranch();
   const [roomId, setRoomId] = useState("all");
   const [teacherId, setTeacherId] = useState("all");
   const [courseId, setCourseId] = useState("all");
@@ -266,10 +266,6 @@ export default function SchedulePage() {
       </div>
 
       <div className="mt-3 flex gap-2 overflow-x-auto">
-        <select className={`${inputClass} w-auto shrink-0`} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          <option value="all">{t.common.branch}</option>
-          {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
         <select className={`${inputClass} w-auto shrink-0`} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="all">{t.common.room}</option>
           {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -420,11 +416,11 @@ export default function SchedulePage() {
               <label className="block text-sm"><span className="text-slate-500">{t.schedule.day}</span>
                 <input className={`${inputClass} mt-1`} type="date" value={draft.day} onChange={(e) => setDraft((d) => ({ ...d, day: e.target.value }))} />
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block text-sm"><span className="text-slate-500">{t.schedule.start}</span>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
+                <label className="block min-w-0 text-sm"><span className="text-slate-500">{t.schedule.start}</span>
                   <input className={`${inputClass} mt-1`} type="time" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
                 </label>
-                <label className="block text-sm"><span className="text-slate-500">{t.schedule.end}</span>
+                <label className="block min-w-0 text-sm"><span className="text-slate-500">{t.schedule.end}</span>
                   <input className={`${inputClass} mt-1`} type="time" value={draft.end} onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))} />
                 </label>
               </div>

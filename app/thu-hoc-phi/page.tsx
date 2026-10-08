@@ -42,7 +42,7 @@ export default function DebtsPage() {
   const [note, setNote] = useState("");
   const [billImage, setBillImage] = useState("");
   const [billName, setBillName] = useState("");
-  const { branchId, setBranchId } = useStudioBranch();
+  const { branchId } = useStudioBranch();
   const [fromDay, setFromDay] = useState("");
   const [toDay, setToDay] = useState("");
   const [methodFilter, setMethodFilter] = useState<"all" | PayMethod>("all");
@@ -110,10 +110,6 @@ export default function DebtsPage() {
       <h1 className="text-xl font-bold">{t.money.title}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.money.lead}</p>
       <div className="mt-3 flex gap-2 overflow-x-auto">
-        <select className={`${inputClass} w-auto shrink-0`} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          <option value="all">{t.common.branch}</option>
-          {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
         <input className={`${inputClass} w-auto shrink-0`} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label={t.pages.fromDay} />
         <input className={`${inputClass} w-auto shrink-0`} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.pages.toDay} />
         <select className={`${inputClass} w-auto shrink-0`} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>

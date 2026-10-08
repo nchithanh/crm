@@ -68,9 +68,9 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block text-sm">
+    <label className="block min-w-0 text-sm">
       <span className="text-slate-500">{label}</span>
-      <div className="mt-1">{children}</div>
+      <div className="mt-1 min-w-0">{children}</div>
     </label>
   );
 }

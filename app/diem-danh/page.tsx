@@ -49,12 +49,11 @@ export default function AttendancePage() {
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
-  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const holds = useLiveQuery(() => db.holds.toArray(), []) ?? [];
   const attendance = useLiveQuery(() => db.attendance.toArray(), []) ?? [];
   const today = localDayKey();
   const { classId: classFromQuery } = usePageQuery();
-  const { branchId, setBranchId } = useStudioBranch();
+  const { branchId } = useStudioBranch();
   const [pick, setPick] = useState("");
   const [q, setQ] = useState("");
   const [flash, setFlash] = useState<Record<string, AttendStatus>>({});
@@ -157,11 +156,7 @@ export default function AttendancePage() {
     <div className="pb-28">
       <h1 className="text-xl font-bold">{t.attend.title}</h1>
       <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">{t.attend.rule}</p>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <select className={inputClass} value={branchId} onChange={(e) => { setBranchId(e.target.value); setPick(""); }}>
-          <option value="all">{t.common.allBranches}</option>
-          {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
+      <div className="mt-3">
         <select className={inputClass} value={session ? session.id : currentClassId ? `class:${currentClassId}` : ""} onChange={(e) => setPick(e.target.value)}>
           {daySessions.map((s) => {
             const t = users.find((u) => u.id === s.teacherId);

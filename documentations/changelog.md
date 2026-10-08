@@ -2,6 +2,11 @@
 
 ## 2026-10-08
 
+- Login: CTA Download App mở popup hướng dẫn thêm app vào màn hình chính (ảnh 5 bước).
+- Bỏ select lọc chi nhánh trên tab (Thu học phí, Điểm danh, Học viên, Lịch, Tác vụ) — theo chi nhánh sidebar/menu.
+- Phân quyền nav: giáo viên chỉ thấy tab liên quan (Tổng quan, Lịch, Học viên, Khóa, Lớp, Điểm danh, Tác vụ). Mobile đổi Đăng ký → Tác vụ. Chặn URL ngoài quyền.
+- Login: layout kiểu card (logo giữa, label PIN, demo dạng hàng card, đổi lĩnh vực). Giữ màu brand lĩnh vực và nút bo 10px.
+- Mobile: input/select/textarea cố định 16px (hết zoom iOS); `type=time` xếp dọc trên mobile và `min-w-0` chống tràn.
 - Tác vụ: 5 stage Board — Todo, In progress, Verify, Feedback, Done. Remap nhóm việc seed. Seed `12`.
 - Tác vụ: nhóm việc (parent/campaign) — lọc, badge, gán trong drawer, tạo nhóm mới. Seed `11`.
 - Tác vụ: drawer có lịch sử comment và nút Gọi / Zalo tới người nhận. Seed `10`.

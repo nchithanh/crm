@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   CalendarDays,
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { SupportIcon } from "@/components/support-icon";
-import { canSeeMoney } from "@/lib/access";
+import { canAccessPath, canSeeMoney, canSeeNavHref } from "@/lib/access";
 import { db } from "@/lib/db";
 import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
+import type { Role } from "@/types";
 
 const top = [
   { href: "/", key: "overview" as const, icon: LayoutDashboard },
@@ -87,13 +88,29 @@ const ai = { href: "/ai", key: "ai" as const, icon: Sparkles };
 
 const ZALO_FOUNDER = "https://zalo.me/0779937633";
 
-const mobile = [
-  { href: "/", key: "overview" as const, icon: LayoutDashboard },
-  { href: "/lich", key: "schedule" as const, icon: CalendarDays },
-  { href: "/diem-danh", key: "attendShort" as const, icon: Receipt },
-  { href: "/ghi-danh", key: "enrollShort" as const, icon: Plus },
-  { href: ZALO_FOUNDER, key: "support" as const, external: true as const },
-];
+type MobileItem =
+  | { href: string; key: "overview" | "schedule" | "attendShort" | "enrollShort" | "tasks"; icon: typeof LayoutDashboard }
+  | { href: string; key: "support"; external: true };
+
+function mobileForRole(role: Role | undefined): MobileItem[] {
+  const base: MobileItem[] = [
+    { href: "/", key: "overview", icon: LayoutDashboard },
+    { href: "/lich", key: "schedule", icon: CalendarDays },
+    { href: "/diem-danh", key: "attendShort", icon: Receipt },
+  ];
+  if (role === "teacher") {
+    return [
+      ...base,
+      { href: "/tac-vu", key: "tasks", icon: ListTodo },
+      { href: ZALO_FOUNDER, key: "support", external: true },
+    ];
+  }
+  return [
+    ...base,
+    { href: "/ghi-danh", key: "enrollShort", icon: Plus },
+    { href: ZALO_FOUNDER, key: "support", external: true },
+  ];
+}
 
 function active(href: string, path: string) {
   if (href === "/") return path === "/";
@@ -108,21 +125,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const { branchId, setBranchId } = useStudioBranch();
   const seeReport = canSeeMoney(user?.role);
+  const canEnroll = user?.role === "owner" || user?.role === "reception";
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [open, setOpen] = useState(false);
+  const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const studio = settings?.name || "Edu Dance";
   const { lang, t, setLang } = useI18n();
+
+  useEffect(() => {
+    if (!user?.role) return;
+    if (!canAccessPath(user.role, path)) {
+      router.replace("/");
+    }
+  }, [user?.role, path, router]);
+
+  const visibleGroups = useMemo(
+    () =>
+      groups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => canSeeNavHref(user?.role, item.href)),
+        }))
+        .filter((group) => group.items.length > 0),
+    [user?.role],
+  );
 
   const ctas = (extra: string) => (
     <>
       <Link href={`/diem-danh${branchQuery}`} className={cn(ctaPrimary, extra)}>
         <Receipt size={16} /> {t.header.attend}
       </Link>
-      <Link href={`/ghi-danh${branchQuery}`} className={cn(ctaOutline, extra)}>
-        <Plus size={16} /> {t.header.enroll}
-      </Link>
+      {canEnroll ? (
+        <Link href={`/ghi-danh${branchQuery}`} className={cn(ctaOutline, extra)}>
+          <Plus size={16} /> {t.header.enroll}
+        </Link>
+      ) : null}
       {seeReport ? (
         <Link href={`/doanh-thu${branchQuery}`} className={cn(ctaGhost, extra)}>
           <LineChart size={16} /> {t.header.report}
@@ -164,23 +203,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         <div className="space-y-0.5">
-          {top.map((item) => {
-            const Icon = item.icon;
-            return (
-            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-              <Icon size={16} />
-              {t.nav[item.key]}
-            </Link>
-            );
-          })}
+          {top
+            .filter((item) => canSeeNavHref(user?.role, item.href))
+            .map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
+                  <Icon size={16} />
+                  {t.nav[item.key]}
+                </Link>
+              );
+            })}
         </div>
-        {groups
-          .map((group) => ({
-            ...group,
-            items: group.items.filter((item) => user?.role !== "teacher" || (item.href !== "/thu-hoc-phi" && item.href !== "/doanh-thu")),
-          }))
-          .filter((group) => group.items.length > 0)
-          .map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title}>
             <p className="mt-2 border-t border-[#E2E8F0] px-2.5 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase">
               {t.nav[group.title]}
@@ -200,10 +235,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </ul>
           </div>
         ))}
-        <Link href={ai.href} onClick={() => setOpen(false)} className={linkClass(ai.href)}>
-          <Sparkles size={16} />
-          {t.nav[ai.key]}
-        </Link>
+        {canSeeNavHref(user?.role, ai.href) ? (
+          <Link href={ai.href} onClick={() => setOpen(false)} className={linkClass(ai.href)}>
+            <Sparkles size={16} />
+            {t.nav[ai.key]}
+          </Link>
+        ) : null}
       </nav>
     </div>
   );
@@ -263,23 +300,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden">
         <div className="grid grid-cols-5">
           {mobile.map((item) => {
-            const className = cn(
-              "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
-              !("external" in item) && active(item.href, path) ? "text-[var(--brand-600)]" : "text-slate-400",
-            );
-            if ("external" in item && item.external) {
+            if ("external" in item) {
               return (
-                <a key={item.href} href={item.href} target="_blank" rel="noreferrer" className={className}>
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium text-slate-400"
+                >
                   <SupportIcon className="h-[18px] w-[18px] opacity-70" />
-                  {t.nav[item.key]}
+                  {t.nav.support}
                 </a>
               );
             }
             const Icon = item.icon;
+            const label = item.key === "tasks" ? t.nav.tasks : t.nav[item.key];
             return (
-              <Link key={item.href} href={item.href} className={className}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
+                  active(item.href, path) ? "text-[var(--brand-600)]" : "text-slate-400",
+                )}
+              >
                 <Icon size={18} />
-                {t.nav[item.key]}
+                {label}
               </Link>
             );
           })}

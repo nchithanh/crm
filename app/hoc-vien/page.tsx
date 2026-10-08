@@ -56,7 +56,7 @@ export default function StudentsPage() {
   const holds = useLiveQuery(() => db.holds.toArray(), []) ?? [];
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const { branchId, setBranchId } = useStudioBranch();
+  const { branchId } = useStudioBranch();
   const [level, setLevel] = useState<Level | "all">("all");
   const [classId, setClassId] = useState("all");
   const [debt, setDebt] = useState<"all" | "yes">("all");
@@ -150,10 +150,6 @@ export default function StudentsPage() {
       <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
       <div className="mt-4 grid gap-2 md:grid-cols-4 xl:grid-cols-8">
         <input className={`${inputClass} md:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
-        <select className={inputClass} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          <option value="all">{t.common.branch}</option>
-          {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
         <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
           <option value="all">{t.common.level}</option>
           <option value="begin">Begin</option>

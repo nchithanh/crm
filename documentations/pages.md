@@ -3,8 +3,8 @@
 | Path | Ghi chú |
 | --- | --- |
 | `/chon-linh-vuc` | Chọn lĩnh vực trước login: Edu Dance, Edu English, Edu Music, Edu Swim. Mỗi mục một IndexedDB |
-| `/login` | PIN |
-| `/` | Tổng quan: KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh chọn trong sidebar / menu. Mobile: menu đáy Tổng quan · Lịch · Điểm danh · Đăng ký · Support (Zalo). Máy tính: icon Support góc dưới phải + CTA header |
+| `/login` | PIN: card logo giữa, demo dạng hàng, đổi lĩnh vực, CTA Download App (popup hướng dẫn PWA) |
+| `/` | Tổng quan: KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh chọn trong sidebar / menu. Mobile owner/lễ tân: Tổng quan · Lịch · Điểm danh · Đăng ký · Support. Giáo viên: Tác vụ thay Đăng ký. Máy tính: Support FAB + CTA theo role |
 | `/lich` | Lịch tuần (lưới 07:00–22:00), tháng, theo phòng / giáo viên / chi nhánh. Kéo thả có chặn trùng. Drawer điểm danh, đổi giáo viên, đổi phòng, hủy buổi |
 | `/hoc-vien` | Bảng sắp xếp, lọc, chọn nhiều, xuất CSV. Drawer hồ sơ: thông tin, khóa, điểm danh, thanh toán, bảo lưu, hoạt động |
 | `/hoc-vien/[id]` | Mở lại danh sách và drawer của học viên đó |
@@ -17,7 +17,7 @@
 | `/ghi-danh` | Wizard ghi danh giữa khóa: luật level, buổi còn của khóa, giá theo tỷ lệ gói, vẫn vào lớp khi nợ |
 | `/promotion` | Chương trình mẫu của studio |
 | `/cham-soc` | Pipeline lead: kanban kéo thả, lead lạnh, drawer, bảng lọc, gán hàng loạt, Zalo mẫu |
-| `/thu-hoc-phi` | Thu theo học viên: một phần, ảnh bill, lọc chi nhánh/ngày/hình thức, phiếu in |
+| `/thu-hoc-phi` | Thu theo học viên: một phần, ảnh bill, lọc ngày/hình thức (chi nhánh theo sidebar), phiếu in |
 | `/bao-luu` | Bảo lưu theo tab chờ duyệt, đang giữ, đã hết. Drawer duyệt cho Quản lý. Học viên đã duyệt ra khỏi điểm danh, vẫn giữ chỗ |
 | `/doanh-thu` | Tiền đã thu |
 | `/diem-danh` | Điểm danh tay: chọn buổi, nút lớn, trừ buổi ngay, hoàn tác, bảo lưu bị khóa, tóm tắt cuối buổi |

@@ -69,7 +69,27 @@ html, body {
   font-family: Inter, "Be Vietnam Pro", system-ui, sans-serif;
 }
 
-button, input, select, textarea { font: inherit; }
+/* Keep family/line from parent, but force ≥16px so iOS does not zoom on focus.
+   Unlayered rules beat Tailwind utilities — do not use `font: inherit` here. */
+button {
+  font-family: inherit;
+  line-height: inherit;
+}
+input,
+select,
+textarea {
+  font-family: inherit;
+  line-height: inherit;
+  font-size: 16px;
+  max-width: 100%;
+}
+input[type="time"],
+input[type="date"],
+input[type="datetime-local"] {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
 a { text-decoration: none; }
 

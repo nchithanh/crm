@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n";
 import { taskPriorities, taskPriorityLabel, taskStatusLabel, taskStatuses } from "@/lib/labels";
 import { cn, initials, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import { useStudioBranch } from "@/stores/branch-store";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type Mode = "list" | "board";
@@ -28,6 +29,7 @@ export default function TasksPage() {
   const parents = useLiveQuery(() => db.taskParents.toArray(), []) ?? [];
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
+  const { branchId: studioBranch } = useStudioBranch();
   const staff = users.filter((u) => u.role === "owner" || u.role === "reception" || u.role === "teacher");
   const today = localDayKey();
   const statuses = taskStatuses(lang);
@@ -37,7 +39,6 @@ export default function TasksPage() {
   const [assigneeFilter, setAssigneeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">("all");
-  const [branchFilter, setBranchFilter] = useState("all");
   const [parentFilter, setParentFilter] = useState("all");
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export default function TasksPage() {
         if (assigneeFilter !== "all" && assigneeFilter !== "mine" && task.assigneeId !== assigneeFilter) return false;
         if (statusFilter !== "all" && task.status !== statusFilter) return false;
         if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
-        if (branchFilter !== "all" && task.branchId !== branchFilter) return false;
+        if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
         if (parentFilter === "none" && task.parentId) return false;
         if (parentFilter !== "all" && parentFilter !== "none" && task.parentId !== parentFilter) return false;
         if (overdueOnly && !(task.status !== "done" && task.dueDay < today)) return false;
@@ -68,7 +69,7 @@ export default function TasksPage() {
         if (a.dueDay !== b.dueDay) return a.dueDay.localeCompare(b.dueDay);
         return a.title.localeCompare(b.title);
       });
-  }, [tasks, canEdit, me?.id, assigneeFilter, statusFilter, priorityFilter, branchFilter, parentFilter, overdueOnly, today]);
+  }, [tasks, canEdit, me?.id, assigneeFilter, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
 
   const open = tasks.find((task) => task.id === openId) ?? null;
 
@@ -142,12 +143,6 @@ export default function TasksPage() {
           <option value="all">{t.task.priority}</option>
           {priorities.map((p) => (
             <option key={p.id} value={p.id}>{p.label}</option>
-          ))}
-        </select>
-        <select className={`${inputClass} max-w-[9rem] shrink-0`} aria-label={t.common.branch} value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
-          <option value="all">{t.common.allBranches}</option>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
         <button
@@ -325,7 +320,8 @@ function TaskDrawer({
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? "todo");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "medium");
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? "");
-  const [branchId, setBranchId] = useState(task?.branchId ?? "");
+  const { branchId: studioBranch } = useStudioBranch();
+  const [branchId, setBranchId] = useState(task?.branchId ?? (studioBranch !== "all" ? studioBranch : ""));
   const [parentId, setParentId] = useState(task?.parentId ?? "");
   const [dueDay, setDueDay] = useState(task?.dueDay ?? localDayKey());
   const [note, setNote] = useState(task?.note ?? "");
