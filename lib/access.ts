@@ -31,10 +31,17 @@ export function canManageTasks(role: Role | undefined) {
 /** Paths giáo viên được vào (prefix match). Owner / lễ tân: mọi path app. */
 const TEACHER_PATHS = [
   "/",
-  "/lich",
-  "/hoc-vien",
-  "/khoa-hoc",
-  "/lop-hoc",
+  "/schedule",
+  "/students",
+  "/courses",
+  "/classes",
+  "/attendance",
+  "/tasks",
+  // legacy VI during transition
+  "/schedule",
+  "/students",
+  "/courses",
+  "/classes",
   "/diem-danh",
   "/tac-vu",
 ] as const;

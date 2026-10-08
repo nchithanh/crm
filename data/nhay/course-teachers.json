@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ct1",
+    "courseId": "k-hh-begin",
+    "teacherId": "u_bao",
+    "role": "main"
+  },
+  {
+    "id": "ct2",
+    "courseId": "k-kp-inter",
+    "teacherId": "u_nam",
+    "role": "main"
+  },
+  {
+    "id": "ct3",
+    "courseId": "k-ct-adv",
+    "teacherId": "u_phuong",
+    "role": "main"
+  },
+  {
+    "id": "ct4",
+    "courseId": "k-hh-inter",
+    "teacherId": "u_bao",
+    "role": "main"
+  },
+  {
+    "id": "ct5",
+    "courseId": "k-am-7",
+    "teacherId": "u_bao",
+    "role": "main"
+  },
+  {
+    "id": "ct6",
+    "courseId": "k-am-8",
+    "teacherId": "u_nam",
+    "role": "main"
+  },
+  {
+    "id": "ct-assist-1",
+    "courseId": "k-hh-begin",
+    "teacherId": "u_phuong",
+    "role": "assistant"
+  },
+  {
+    "id": "ct-test-begin",
+    "courseId": "k-test-begin",
+    "teacherId": "u_bao",
+    "role": "main"
+  },
+  {
+    "id": "ct-test-inter",
+    "courseId": "k-test-inter",
+    "teacherId": "u_nam",
+    "role": "main"
+  },
+  {
+    "id": "ct-test-adv",
+    "courseId": "k-test-adv",
+    "teacherId": "u_phuong",
+    "role": "main"
+  }
+]

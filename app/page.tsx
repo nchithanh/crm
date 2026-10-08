@@ -110,17 +110,17 @@ export default function DashboardPage() {
   const showMoney = canSeeMoney(role);
   const branches = useLiveQuery(() => db.branches.toArray());
   const students = useLiveQuery(() => db.students.toArray());
-  const sessions = useLiveQuery(() => db.sessions.toArray());
+  const sessions = useLiveQuery(() => db.classes.toArray());
   const courses = useLiveQuery(() => db.courses.toArray());
   const classes = useLiveQuery(() => db.classes.toArray());
   const rooms = useLiveQuery(() => db.rooms.toArray());
   const users = useLiveQuery(() => db.users.toArray());
   const payments = useLiveQuery(() => db.payments.toArray());
-  const receivables = useLiveQuery(() => db.receivables.toArray());
+  const receivables = useLiveQuery(() => db.installments.toArray());
   const attendance = useLiveQuery(() => db.attendance.toArray());
   const holds = useLiveQuery(() => db.holds.toArray());
   const leads = useLiveQuery(() => db.leads.toArray());
-  const audits = useLiveQuery(() => db.audits.toArray());
+  const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
   const [period, setPeriod] = useState<Period>("month");
@@ -175,11 +175,11 @@ export default function DashboardPage() {
     const debtTotal = debtRows.reduce((s, r) => s + debtRemaining(r), 0);
 
     const marks = attendance.filter((a) => {
-      const student = students.find((s) => s.id === a.studentId);
+      const student = students.find((s) => s.id === (a.personId));
       return student && inBranch(student.branchId) && inWindow(a.day, period, 0);
     });
     const prevMarks = attendance.filter((a) => {
-      const student = students.find((s) => s.id === a.studentId);
+      const student = students.find((s) => s.id === (a.personId));
       return student && inBranch(student.branchId) && inWindow(a.day, period, 1);
     });
     const rateOf = (rows: typeof marks) => {
@@ -191,7 +191,7 @@ export default function DashboardPage() {
     const attendSpark = Array.from({ length: 7 }, (_, i) => {
       const day = addDays(today, -(6 - i));
       const rows = attendance.filter((a) => {
-        const student = students.find((s) => s.id === a.studentId);
+        const student = students.find((s) => s.id === (a.personId));
         return a.day === day && student && inBranch(student.branchId);
       });
       return rateOf(rows);
@@ -254,11 +254,11 @@ export default function DashboardPage() {
         text: fill(t.dash.paidFrom, { amount: formatVnd(p.amount), name: students.find((s) => s.id === p.studentId)?.name ?? t.dash.student }),
       })),
       ...attendance
-        .filter((a) => inBranch(students.find((s) => s.id === a.studentId)?.branchId ?? ""))
+        .filter((a) => inBranch(students.find((s) => s.id === (a.personId))?.branchId ?? ""))
         .map((a) => ({
           id: a.id,
           day: a.day,
-          text: fill(t.dash.marked, { name: students.find((s) => s.id === a.studentId)?.name ?? t.dash.student, className: classes.find((c) => c.id === a.classId)?.name ?? "" }),
+          text: fill(t.dash.marked, { name: students.find((s) => s.id === (a.personId))?.name ?? t.dash.student, className: classes.find((c) => c.id === a.classId)?.name ?? "" }),
         })),
       ...holds
         .filter((h) => h.status === "approved" && inBranch(students.find((s) => s.id === h.studentId)?.branchId ?? ""))
@@ -274,16 +274,16 @@ export default function DashboardPage() {
 
     const q = branchId === "all" ? "" : `?branch=${branchId}`;
     const urgent = [
-      pendingHolds.length ? { id: "hold", label: t.dash.urgentHold, count: pendingHolds.length, href: "/bao-luu" } : null,
-      needBackup.length ? { id: "backup", label: t.dash.urgentBackup, count: needBackup.length, href: `/lich${q}` } : null,
-      fullClasses.length ? { id: "full", label: t.dash.urgentFull, count: fullClasses.length, href: "/lop-hoc" } : null,
+      pendingHolds.length ? { id: "hold", label: t.dash.urgentHold, count: pendingHolds.length, href: "/holds" } : null,
+      needBackup.length ? { id: "backup", label: t.dash.urgentBackup, count: needBackup.length, href: `/schedule${q}` } : null,
+      fullClasses.length ? { id: "full", label: t.dash.urgentFull, count: fullClasses.length, href: "/classes" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const watch = [
-      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/thu-hoc-phi${q}` } : null,
-      ending3.length ? { id: "end", label: t.dash.watchEnd, count: ending3.length, href: `/khoa-hoc${q}` } : null,
+      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/fees${q}` } : null,
+      ending3.length ? { id: "end", label: t.dash.watchEnd, count: ending3.length, href: `/courses${q}` } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const info = [
-      freshLeads.length ? { id: "lead", label: t.dash.infoLead, count: freshLeads.length, href: "/cham-soc?stage=new" } : null,
+      freshLeads.length ? { id: "lead", label: t.dash.infoLead, count: freshLeads.length, href: "/leads?stage=new" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     return {
       today,
@@ -350,14 +350,14 @@ export default function DashboardPage() {
       label: t.dash.activeStudents,
       value: String(model.active),
       hint: fill(t.dash.vsLast, { n: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta}` }),
-      href: `/hoc-vien${q}`,
+      href: `/students${q}`,
       icon: Users,
     },
     {
       label: t.dash.todaySessions,
       value: String(model.todaySessions.length),
       hint: fill(t.dash.classStudents, { classes: model.todayClassCount, students: model.todayStudentCount }),
-      href: `/lich${q}`,
+      href: `/schedule${q}`,
       icon: CalendarDays,
     },
     {
@@ -374,7 +374,7 @@ export default function DashboardPage() {
       label: t.dash.debtOpen,
       value: showMoney ? formatVnd(model.debtTotal) : "—",
       hint: showMoney ? fill(t.dash.debtHint, { n: model.debtStudents, share: model.debtShare }) : t.common.hiddenTeacher,
-      href: showMoney ? `/thu-hoc-phi${q}` : "",
+      href: showMoney ? `/fees${q}` : "",
       icon: AlertTriangle,
       warn: showMoney && model.debtTotal > 0,
     },
@@ -390,7 +390,7 @@ export default function DashboardPage() {
       label: t.dash.endingCourses,
       value: String(model.ending7),
       hint: t.dash.endingHint,
-      href: `/khoa-hoc${q}`,
+      href: `/courses${q}`,
       icon: Clock,
     },
   ];
@@ -400,13 +400,13 @@ export default function DashboardPage() {
   return (
     <div className="space-y-3">
       <div>
-        <h1 className="text-xl font-bold">{t.dash.title}</h1>
+        <h1 className="crm-page-title">{t.dash.title}</h1>
         <p className="mt-1 text-sm text-slate-500">{settings?.name || "Edu Dance"} · {t.common.sample}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link href={`/diem-danh${q}`} className={ctaPrimary}>
             <Check size={16} /> {t.dash.quickAttend}
           </Link>
-          <Link href={`/ghi-danh${q}`} className={ctaOutline}>
+          <Link href={`/enroll${q}`} className={ctaOutline}>
             <Plus size={16} /> {t.dash.enrollStudent}
           </Link>
           {showMoney ? (
@@ -501,7 +501,7 @@ export default function DashboardPage() {
               const conv = next && step.count > 0 ? Math.round((next.count / step.count) * 100) : null;
               return (
                 <li key={step.id}>
-                  <Link href={`/cham-soc?stage=${step.id}`} className="block rounded-[12px] px-1 py-1 hover:bg-slate-50">
+                  <Link href={`/leads?stage=${step.id}`} className="block rounded-[12px] px-1 py-1 hover:bg-slate-50">
                     <div className="flex items-center justify-between text-sm">
                       <span>{step.label}</span>
                       <span className="font-semibold tabular-nums">{step.count}</span>
@@ -525,7 +525,7 @@ export default function DashboardPage() {
             <div className="mt-6 text-center">
               <CalendarDays className="mx-auto text-slate-300" />
               <p className="mt-2 text-sm text-slate-500">{t.dash.noClassToday}</p>
-              <Link href={`/lich${q}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
+              <Link href={`/schedule${q}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
             </div>
           ) : (
             <ul className="mt-3 space-y-3">
@@ -570,7 +570,7 @@ export default function DashboardPage() {
             </ul>
           )}
           {model.todaySessions.length > 0 ? (
-            <Link href={`/lich${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
+            <Link href={`/schedule${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
           ) : null}
         </section>
         <section className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
@@ -614,7 +614,7 @@ export default function DashboardPage() {
             {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
             {model.ranking.map((c, i) => (
               <li key={c.id}>
-                <Link href={`/khoa-hoc${q}`} className="flex items-center justify-between rounded-[12px] px-1 py-1 text-sm hover:bg-slate-50">
+                <Link href={`/courses${q}`} className="flex items-center justify-between rounded-[12px] px-1 py-1 text-sm hover:bg-slate-50">
                   <span>{i + 1}. {c.name} · {levelLabel(c.level)}</span>
                   <span className="font-semibold tabular-nums">{fill(t.dash.studentCount, { n: c.count })}</span>
                 </Link>

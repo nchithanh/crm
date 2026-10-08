@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
+import { isSubscriptionValid } from "@/lib/subscription";
 import { localDayKey, uid, weekdayShort } from "@/lib/utils";
-import type { AttendStatus, LeadStage, Level, PayMethod, Role, TaskPriority, TaskStatus } from "@/types";
+import type { AttendStatus, LeadStage, Level, PayMethod, Role, TaskPriority, TaskStatus, TeacherStatus, User } from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
   const lead = await db.leads.get(id);
@@ -97,60 +98,84 @@ export async function convertLead(id: string, branchId: string) {
 
 export async function setAttendance(input: {
   classId: string;
-  studentId: string;
-  day: string;
   status: AttendStatus;
+  personId?: string;
+  subject?: "student" | "teacher";
+  /** @deprecated */
+  studentId?: string;
+  day?: string;
   sessionId?: string;
 }) {
-  const id = `${input.classId}_${input.studentId}_${input.day}`;
+  const personId = input.personId || input.studentId || "";
+  const subject = input.subject ?? "student";
+  const klass = await db.classes.get(input.classId);
+  if (!klass || !personId) return "fields";
+  const id = `${input.classId}_${subject}_${personId}`;
   const prev = await db.attendance.get(id);
-  const student = await db.students.get(input.studentId);
-  if (!student) return;
-  const session = input.sessionId
-    ? await db.sessions.get(input.sessionId)
-    : await db.sessions.filter((s) => s.classId === input.classId && s.day === input.day).first();
-  const cancelled = session?.status === "cancelled";
+  const cancelled = klass.status === "cancelled";
   const prevDeduct = Boolean(prev && !prev.waived && deductsCredit(prev.status));
-  const nowDeduct = !cancelled && deductsCredit(input.status);
-  let remaining = student.remainingSessions;
-  if (!prevDeduct && nowDeduct) remaining = Math.max(0, remaining - 1);
-  if (prevDeduct && !nowDeduct) remaining += 1;
-  await db.transaction("rw", [db.attendance, db.students], async () => {
+  const nowDeduct = !cancelled && subject === "student" && deductsCredit(input.status);
+  const student = subject === "student" ? await db.students.get(personId) : undefined;
+  // New credit deduction requires a valid subscription for this course.
+  if (student && nowDeduct && !prevDeduct) {
+    const sub = student.subscriptionId ? await db.subscriptions.get(student.subscriptionId) : undefined;
+    if (!isSubscriptionValid(sub, { day: klass.day, courseId: klass.courseId })) {
+      return "subscription";
+    }
+  }
+  let remaining = student?.remainingSessions ?? 0;
+  if (student) {
+    if (!prevDeduct && nowDeduct) remaining = Math.max(0, remaining - 1);
+    if (prevDeduct && !nowDeduct) remaining += 1;
+  }
+  await db.transaction("rw", [db.attendance, db.students, db.subscriptions], async () => {
     await db.attendance.put({
       id,
       classId: input.classId,
-      studentId: input.studentId,
-      day: input.day,
+      personId,
+      subject,
+      day: klass.day,
       status: input.status,
-      sessionId: session?.id ?? input.sessionId ?? "",
       waived: cancelled,
     });
-    if (remaining !== student.remainingSessions) {
-      await db.students.update(input.studentId, { remainingSessions: remaining });
+    if (student && remaining !== student.remainingSessions) {
+      await db.students.update(personId, { remainingSessions: remaining });
+      if (student.subscriptionId) {
+        const patch: { remainingSessions: number; status?: "active" | "expired" } = { remainingSessions: remaining };
+        if (remaining <= 0) patch.status = "expired";
+        await db.subscriptions.update(student.subscriptionId, patch);
+      }
     }
   });
+  return "";
 }
 
 export async function restoreAttendance(input: {
   classId: string;
-  studentId: string;
-  day: string;
+  previousRemaining: number;
+  personId?: string;
+  subject?: "student" | "teacher";
+  studentId?: string;
+  day?: string;
   previous: {
     id: string;
     classId: string;
-    studentId: string;
+    personId: string;
+    subject: "student" | "teacher";
     day: string;
     status: AttendStatus;
-    sessionId: string;
     waived: boolean;
   } | null;
-  previousRemaining: number;
 }) {
-  const id = `${input.classId}_${input.studentId}_${input.day}`;
+  const personId = input.personId || input.studentId || "";
+  const subject = input.subject ?? "student";
+  const id = `${input.classId}_${subject}_${personId}`;
   await db.transaction("rw", [db.attendance, db.students], async () => {
     if (input.previous) await db.attendance.put(input.previous);
     else await db.attendance.delete(id);
-    await db.students.update(input.studentId, { remainingSessions: input.previousRemaining });
+    if (subject === "student" && personId) {
+      await db.students.update(personId, { remainingSessions: input.previousRemaining });
+    }
   });
 }
 
@@ -244,7 +269,7 @@ export async function payReceivable(input: {
   billImage?: string;
   note?: string;
 }) {
-  const row = await db.receivables.get(input.receivableId);
+  const row = await db.installments.get(input.receivableId);
   if (!row) return "Không thấy khoản phải thu.";
   const room = Math.max(0, row.amount - row.paid);
   const amount = Math.min(room, Math.max(0, Math.round(input.amount)));
@@ -252,11 +277,13 @@ export async function payReceivable(input: {
   const student = await db.students.get(row.studentId);
   const id = uid("pay");
   const day = localDayKey();
-  await db.transaction("rw", [db.receivables, db.payments, db.students], async () => {
-    await db.receivables.update(row.id, { paid: row.paid + amount });
+  await db.transaction("rw", [db.installments, db.payments, db.students], async () => {
+    await db.installments.update(row.id, { paid: row.paid + amount });
     await db.payments.add({
       id,
       studentId: row.studentId,
+      subscriptionId: row.subscriptionId || student?.subscriptionId || "",
+      installmentId: row.id,
       branchId: row.branchId || student?.branchId || "",
       amount,
       method: input.method,
@@ -280,7 +307,7 @@ export async function addPackage(input: {
   price: number;
   note: string;
 }) {
-  await db.packages.add({
+  await db.subscriptionPlans.add({
     id: uid("pkg"),
     name: input.name.trim(),
     sessions: input.sessions,
@@ -294,54 +321,74 @@ export async function addPackage(input: {
 
 export async function enrollStudent(input: {
   studentId: string;
-  packageId: string;
-  classId: string;
+  planId: string;
+  courseId: string;
+  /** @deprecated */
+  packageId?: string;
+  classId?: string;
 }) {
-  const pack = await db.packages.get(input.packageId);
+  const planId = input.planId || input.packageId || "";
+  const pack = await db.subscriptionPlans.get(planId);
   const student = await db.students.get(input.studentId);
   if (!pack || !student || pack.kind === "hold") return "Gói này không dùng để ghi danh khóa.";
-  const klass = await db.classes.get(input.classId);
-  const course = klass ? await db.courses.get(klass.courseId) : undefined;
-  if (!klass || !course) return "Không thấy lớp.";
-  const sessions = await db.sessions.where("classId").equals(klass.id).toArray();
+  let courseId = input.courseId || "";
+  if (!courseId && input.classId) {
+    const fromClass = await db.classes.get(input.classId);
+    if (fromClass) courseId = fromClass.courseId;
+    else if (await db.courses.get(input.classId)) courseId = input.classId;
+  }
+  const course = await db.courses.get(courseId);
+  if (!course) return "Không thấy khóa.";
+  const classes = await db.classes.where("courseId").equals(course.id).toArray();
   const today = localDayKey();
-  const next = [...sessions]
+  const next = [...classes]
     .filter((s) => s.status !== "cancelled" && s.status !== "completed" && s.day >= today)
     .sort((a, b) => a.index - b.index)[0];
   if (!next) return "Khóa đã hết buổi.";
   const gate = canJoinAtSession(course.level, next.index);
   if (!gate.ok) return gate.reason;
-  const seated = await db.students.filter((s) => s.classId === klass.id).count();
-  if (student.classId !== klass.id && seated >= klass.capacity) return "Lớp đã đủ chỗ.";
   const day = localDayKey();
-  await db.transaction("rw", [db.enrollments, db.students, db.receivables], async () => {
-    await db.enrollments.add({
-      id: uid("en"),
+  const end = new Date();
+  end.setMonth(end.getMonth() + pack.months);
+  const endDay = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+  const subId = uid("sub");
+  const debtId = uid("debt");
+  await db.transaction("rw", [db.subscriptions, db.students, db.installments, db.classStudents, db.classes], async () => {
+    await db.subscriptions.add({
+      id: subId,
       studentId: input.studentId,
-      packageId: input.packageId,
-      classId: input.classId,
+      courseId: course.id,
+      planId: pack.id,
       day,
+      endDay,
       sessions: pack.sessions,
+      remainingSessions: pack.sessions,
+      status: "active",
     });
     await db.students.update(student.id, {
-      packageId: pack.id,
-      classId: input.classId,
+      subscriptionId: subId,
       courseId: course.id,
-      branchId: klass.branchId,
+      branchId: course.branchId,
       level: course.level,
       remainingSessions: student.remainingSessions + pack.sessions,
       debt: student.debt + pack.price,
       status: student.status === "paused" ? "active" : student.status,
     });
-    await db.receivables.add({
-      id: uid("debt"),
+    await db.installments.add({
+      id: debtId,
+      subscriptionId: subId,
       studentId: student.id,
-      branchId: klass.branchId,
+      branchId: course.branchId,
       title: pack.name,
       amount: pack.price,
       paid: 0,
       dueDay: day,
     });
+    for (const klass of classes.filter((c) => c.status !== "cancelled" && c.day >= today)) {
+      const csId = `${klass.id}_${student.id}`;
+      const exists = await db.classStudents.get(csId);
+      if (!exists) await db.classStudents.add({ id: csId, classId: klass.id, studentId: student.id });
+    }
   });
   return "";
 }
@@ -363,8 +410,7 @@ export async function createStudent(input: { name: string; phone: string; branch
     birthDay: "",
     avatarColor: avatarColors[Math.floor(Math.random() * avatarColors.length)] ?? "#F97316",
     status: "active",
-    packageId: "",
-    classId: "",
+    subscriptionId: "",
     courseId: "",
     branchId: input.branchId,
     level: "begin",
@@ -381,73 +427,20 @@ export async function createStudent(input: { name: string; phone: string; branch
 
 export async function enrollMidCourse(input: {
   studentId: string;
-  packageId: string;
-  classId: string;
+  planId?: string;
+  packageId?: string;
+  courseId?: string;
+  classId?: string;
   payNow?: number;
   method?: PayMethod;
 }) {
-  const pack = await db.packages.get(input.packageId);
-  const student = await db.students.get(input.studentId);
-  if (!pack || !student || pack.kind === "hold") return "Gói này không dùng để ghi danh khóa.";
-  const klass = await db.classes.get(input.classId);
-  const course = klass ? await db.courses.get(klass.courseId) : undefined;
-  if (!klass || !course) return "Không thấy lớp.";
-  const sessions = await db.sessions.where("classId").equals(klass.id).toArray();
-  const today = localDayKey();
-  const next = [...sessions]
-    .filter((s) => s.status !== "cancelled" && s.status !== "completed" && s.day >= today)
-    .sort((a, b) => a.index - b.index)[0];
-  if (!next) return "Khóa đã hết buổi.";
-  const gate = canJoinAtSession(course.level, next.index);
-  if (!gate.ok) return gate.reason;
-  const granted = sessions.filter((s) => s.index >= next.index && s.status !== "cancelled").length;
-  if (granted <= 0) return "Khóa không còn buổi để vào.";
-  const seated = await db.students.filter((s) => s.classId === klass.id).count();
-  if (student.classId !== klass.id && seated >= klass.capacity) return "Lớp đã đủ chỗ.";
-  const price = Math.round((pack.price * granted) / Math.max(1, pack.sessions));
-  const pay = Math.min(price, Math.max(0, Math.round(input.payNow ?? 0)));
-  await db.transaction("rw", [db.enrollments, db.students, db.receivables, db.payments], async () => {
-    await db.enrollments.add({
-      id: uid("en"),
-      studentId: input.studentId,
-      packageId: input.packageId,
-      classId: input.classId,
-      day: today,
-      sessions: granted,
-    });
-    await db.students.update(student.id, {
-      packageId: pack.id,
-      classId: input.classId,
-      courseId: course.id,
-      branchId: klass.branchId,
-      level: course.level,
-      remainingSessions: student.remainingSessions + granted,
-      debt: student.debt + price - pay,
-      status: student.status === "paused" ? "active" : student.status,
-    });
-    await db.receivables.add({
-      id: uid("debt"),
-      studentId: student.id,
-      branchId: klass.branchId,
-      title: `${pack.name} · ${granted} buổi`,
-      amount: price,
-      paid: pay,
-      dueDay: today,
-    });
-    if (pay > 0) {
-      await db.payments.add({
-        id: uid("pay"),
-        studentId: student.id,
-        branchId: klass.branchId,
-        amount: pay,
-        method: input.method ?? "cash",
-        day: today,
-        note: `Thu ghi danh ${course.name}`,
-        billNote: "",
-      });
-    }
+  return enrollStudent({
+    studentId: input.studentId,
+    planId: input.planId || input.packageId || "",
+    courseId: input.courseId || "",
+    classId: input.classId,
+    packageId: input.packageId,
   });
-  return "";
 }
 
 export async function requestHold(input: {
@@ -488,7 +481,7 @@ export async function decideHold(id: string, status: "approved" | "rejected", ro
   if (!hold || hold.status !== "pending") return "Phiếu không còn chờ duyệt.";
   if (status === "rejected" && !rejectReason.trim()) return "Nhập lý do từ chối.";
   if (status === "approved" && hold.needsPackage) {
-    const bought = await db.enrollments
+    const bought = await db.subscriptions
       .filter((e) => e.studentId === hold.studentId && e.packageId === "phold")
       .first();
     if (!bought) return "Gói dưới 3 tháng phải mua gói bảo lưu trước khi duyệt.";
@@ -521,7 +514,7 @@ export async function updateSession(input: {
   teacherId?: string;
   roomId?: string;
 }) {
-  const session = await db.sessions.get(input.sessionId);
+  const session = await db.classes.get(input.sessionId);
   if (!session) return "Không thấy buổi.";
   const bits: string[] = [];
   const patch: Partial<typeof session> = {};
@@ -536,7 +529,7 @@ export async function updateSession(input: {
     bits.push("đổi phòng");
   }
   if (bits.length === 0) return "";
-  const all = await db.sessions.toArray();
+  const all = await db.classes.toArray();
   const clash = conflictLabel(all, {
     id: session.id,
     day: session.day,
@@ -546,16 +539,7 @@ export async function updateSession(input: {
     roomId: patch.roomId ?? session.roomId,
   });
   if (clash) return clash;
-  await db.transaction("rw", [db.sessions, db.audits], async () => {
-    await db.sessions.update(session.id, patch);
-    await db.audits.add({
-      id: uid("aud"),
-      sessionId: session.id,
-      day: localDayKey(),
-      actorId: input.actorId,
-      text: `Buổi ${session.index}: ${bits.join(", ")}.`,
-    });
-  });
+  await db.classes.update(session.id, patch);
   return "";
 }
 
@@ -569,29 +553,20 @@ export async function moveSession(input: {
   roomId: string;
   branchId: string;
 }) {
-  const session = await db.sessions.get(input.sessionId);
+  const session = await db.classes.get(input.sessionId);
   if (!session) return "Không thấy buổi.";
   if (session.status === "cancelled" || session.status === "completed") return "Buổi này không dời được.";
-  const all = await db.sessions.toArray();
+  const all = await db.classes.toArray();
   const clash = conflictLabel(all, input);
   if (clash) return clash;
-  await db.transaction("rw", [db.sessions, db.audits], async () => {
-    await db.sessions.update(session.id, {
-      day: input.day,
-      start: input.start,
-      end: input.end,
-      teacherId: input.teacherId,
-      roomId: input.roomId,
-      branchId: input.branchId,
-      status: sessionStatus(input.day, session.index),
-    });
-    await db.audits.add({
-      id: uid("aud"),
-      sessionId: session.id,
-      day: localDayKey(),
-      actorId: input.actorId,
-      text: `Dời buổi ${session.index} sang ${input.day} ${input.start}–${input.end}.`,
-    });
+  await db.classes.update(session.id, {
+    day: input.day,
+    start: input.start,
+    end: input.end,
+    teacherId: input.teacherId,
+    roomId: input.roomId,
+    branchId: input.branchId,
+    status: sessionStatus(input.day, session.index),
   });
   return "";
 }
@@ -606,48 +581,40 @@ export async function addOneOffSession(input: {
   roomId: string;
 }) {
   const course = await db.courses.get(input.courseId);
-  const room = await db.rooms.get(input.roomId);
-  if (!course || !room) return "Thiếu khóa hoặc phòng.";
+  const room = input.roomId ? await db.rooms.get(input.roomId) : undefined;
+  if (!course) return "Thiếu khóa.";
   if (input.start >= input.end) return "Giờ kết thúc phải sau giờ bắt đầu.";
-  const all = await db.sessions.toArray();
-  const clash = conflictLabel(all, { ...input, roomId: room.id });
+  const all = await db.classes.toArray();
+  const clash = conflictLabel(all, { ...input, roomId: input.roomId || "" });
   if (clash) return clash;
-  const index = all.filter((s) => s.classId === course.classId).reduce((m, s) => Math.max(m, s.index), 0) + 1;
-  const id = uid("ss");
-  await db.transaction("rw", [db.sessions, db.audits], async () => {
-    await db.sessions.add({
-      id,
-      courseId: course.id,
-      classId: course.classId,
-      branchId: room.branchId,
-      index,
-      day: input.day,
-      start: input.start,
-      end: input.end,
-      teacherId: input.teacherId,
-      roomId: room.id,
-      status: sessionStatus(input.day, index),
-      note: "Buổi lẻ",
-    });
-    await db.audits.add({
-      id: uid("aud"),
-      sessionId: id,
-      day: localDayKey(),
-      actorId: input.actorId,
-      text: `Tạo buổi lẻ ${input.day} ${input.start}–${input.end}.`,
-    });
+  const index = all.filter((s) => s.courseId === course.id).reduce((m, s) => Math.max(m, s.index), 0) + 1;
+  const id = `${course.id}-c${index}`;
+  await db.classes.add({
+    id,
+    courseId: course.id,
+    branchId: room?.branchId ?? course.branchId,
+    index,
+    name: `${course.name} · #${index}`,
+    day: input.day,
+    start: input.start,
+    end: input.end,
+    teacherId: input.teacherId,
+    roomId: room?.id ?? "",
+    status: sessionStatus(input.day, index),
+    capacity: 12,
+    note: "Buổi lẻ",
   });
   return "";
 }
 
 export async function syncSessionClock() {
   const today = localDayKey();
-  const rows = await db.sessions.toArray();
-  await db.transaction("rw", db.sessions, async () => {
+  const rows = await db.classes.toArray();
+  await db.transaction("rw", db.classes, async () => {
     for (const row of rows) {
       if (row.status === "cancelled") continue;
       const next = row.day < today ? "completed" : row.day === today ? "ongoing" : "upcoming";
-      if (next !== row.status) await db.sessions.update(row.id, { status: next });
+      if (next !== row.status) await db.classes.update(row.id, { status: next });
     }
   });
 }
@@ -656,15 +623,19 @@ export async function moveStudentClass(studentId: string, classId: string) {
   const student = await db.students.get(studentId);
   const klass = await db.classes.get(classId);
   const course = klass ? await db.courses.get(klass.courseId) : undefined;
-  if (!student || !klass || !course) return "Không thấy lớp.";
-  if (student.classId === classId) return "";
-  const seated = await db.students.filter((s) => s.classId === klass.id).count();
+  if (!student || !klass || !course) return "Không thấy buổi.";
+  const seated = await db.classStudents.where("classId").equals(klass.id).count();
   if (seated >= klass.capacity) return "Lớp đã đủ chỗ.";
-  await db.students.update(student.id, {
-    classId: klass.id,
-    courseId: course.id,
-    branchId: klass.branchId,
-    level: course.level,
+  await db.transaction("rw", [db.students, db.classStudents], async () => {
+    await db.students.update(student.id, {
+      courseId: course.id,
+      branchId: klass.branchId,
+      level: course.level,
+    });
+    const csId = `${klass.id}_${student.id}`;
+    if (!(await db.classStudents.get(csId))) {
+      await db.classStudents.add({ id: csId, classId: klass.id, studentId: student.id });
+    }
   });
   return "";
 }
@@ -685,26 +656,23 @@ export async function setStudentsFlag(ids: string[], flagged: boolean) {
 }
 
 export async function cancelSession(sessionId: string, actorId: string, reason: string) {
-  const session = await db.sessions.get(sessionId);
+  const session = await db.classes.get(sessionId);
   if (!session || session.status === "cancelled") return;
-  const marks = await db.attendance.filter((a) => a.classId === session.classId && a.day === session.day).toArray();
-  await db.transaction("rw", [db.sessions, db.attendance, db.students, db.audits], async () => {
-    await db.sessions.update(session.id, { status: "cancelled", note: reason.trim() || "Hủy buổi" });
+  const marks = await db.attendance.where("classId").equals(session.id).toArray();
+  await db.transaction("rw", [db.classes, db.attendance, db.students, db.subscriptions], async () => {
+    await db.classes.update(session.id, { status: "cancelled", note: reason.trim() || "Hủy buổi" });
     for (const mark of marks) {
-      if (mark.waived || !deductsCredit(mark.status)) continue;
-      const student = await db.students.get(mark.studentId);
+      if (mark.waived || mark.subject !== "student" || !deductsCredit(mark.status)) continue;
+      const student = await db.students.get(mark.personId);
       if (student) {
-        await db.students.update(student.id, { remainingSessions: student.remainingSessions + 1 });
+        const remaining = student.remainingSessions + 1;
+        await db.students.update(student.id, { remainingSessions: remaining });
+        if (student.subscriptionId) {
+          await db.subscriptions.update(student.subscriptionId, { remainingSessions: remaining });
+        }
       }
       await db.attendance.update(mark.id, { waived: true });
     }
-    await db.audits.add({
-      id: uid("aud"),
-      sessionId: session.id,
-      day: localDayKey(),
-      actorId,
-      text: `Hủy buổi ${session.index}: ${reason.trim() || "ốm / lễ"}. Không trừ buổi.`,
-    });
   });
 }
 
@@ -721,23 +689,29 @@ export async function createCourse(input: {
   level: Level;
   branchId: string;
   teacherId: string;
-  roomId: string;
+  roomId?: string;
   weekdays: number[];
   start: string;
   end: string;
   description: string;
+  sessionCount?: number;
+  capacity?: number;
+  assistantIds?: string[];
 }) {
   const name = input.name.trim();
-  if (!name || !input.teacherId || !input.roomId || !input.branchId) return "fields";
+  if (!name || !input.teacherId || !input.branchId) return "fields";
   if (input.weekdays.length === 0) return "weekday";
-  const room = await db.rooms.get(input.roomId);
-  if (!room || room.branchId !== input.branchId) return "room";
+  const capacity = Math.max(1, Math.round(input.capacity ?? 12));
+  const roomId = input.roomId ?? "";
+  if (roomId) {
+    const room = await db.rooms.get(roomId);
+    if (!room || room.branchId !== input.branchId) return "room";
+  }
   const startDay = localDayKey();
-  const days = sessionDates(startDay, input.weekdays, 8);
+  const count = input.sessionCount ?? 8;
+  const days = sessionDates(startDay, input.weekdays, count);
   const courseId = uid("k");
-  const classId = uid("c");
-  const weekday = [...input.weekdays].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))[0] ?? 1;
-  await db.transaction("rw", [db.courses, db.classes, db.sessions], async () => {
+  await db.transaction("rw", [db.courses, db.classes, db.courseTeachers, db.courseRooms], async () => {
     await db.courses.add({
       id: courseId,
       name,
@@ -746,45 +720,45 @@ export async function createCourse(input: {
       slot: slotLine(input.weekdays, input.start),
       teacherId: input.teacherId,
       branchId: input.branchId,
-      roomId: input.roomId,
-      classId,
+      roomId,
       startDay,
       endDay: days[days.length - 1] ?? startDay,
       weekdays: input.weekdays,
       start: input.start,
       end: input.end,
+      sessionCount: count,
+      capacity,
+      durationMonths: 1,
       description: input.description.trim(),
       active: true,
     });
-    await db.classes.add({
-      id: classId,
-      name,
+    await db.courseTeachers.add({
+      id: uid("ct"),
       courseId,
-      branchId: input.branchId,
       teacherId: input.teacherId,
-      roomId: input.roomId,
-      room: room.name,
-      capacity: 12,
-      level: input.level,
-      weekday,
-      start: input.start,
-      end: input.end,
-      active: true,
+      role: "main",
     });
+    for (const aid of input.assistantIds ?? []) {
+      await db.courseTeachers.add({ id: uid("ct"), courseId, teacherId: aid, role: "assistant" });
+    }
+    if (roomId) {
+      await db.courseRooms.add({ id: uid("cr"), courseId, roomId });
+    }
     for (const [i, day] of days.entries()) {
       const index = i + 1;
-      await db.sessions.add({
-        id: uid("s"),
+      await db.classes.add({
+        id: `${courseId}-c${index}`,
         courseId,
-        classId,
         branchId: input.branchId,
         index,
+        name: `${name} · #${index}`,
         day,
         start: input.start,
         end: input.end,
         teacherId: input.teacherId,
-        roomId: input.roomId,
+        roomId,
         status: sessionStatus(day, index),
+        capacity,
         note: "",
       });
     }
@@ -799,47 +773,44 @@ export async function updateCourse(input: {
   level: Level;
   description: string;
   teacherId: string;
-  roomId: string;
+  roomId?: string;
   start: string;
   end: string;
   active: boolean;
 }) {
   const course = await db.courses.get(input.id);
-  const room = await db.rooms.get(input.roomId);
-  if (!course || !input.name.trim() || !input.teacherId || !room) return "fields";
-  if (room.branchId !== course.branchId) return "room";
+  if (!course || !input.name.trim() || !input.teacherId) return "fields";
+  const roomId = input.roomId ?? course.roomId;
+  if (roomId) {
+    const room = await db.rooms.get(roomId);
+    if (!room || room.branchId !== course.branchId) return "room";
+  }
   const today = localDayKey();
-  const sessions = await db.sessions.where("courseId").equals(course.id).toArray();
-  await db.transaction("rw", [db.courses, db.classes, db.sessions], async () => {
+  const classes = await db.classes.where("courseId").equals(course.id).toArray();
+  await db.transaction("rw", [db.courses, db.classes, db.courseTeachers], async () => {
     await db.courses.update(course.id, {
       name: input.name.trim(),
       style: input.style.trim() || input.name.trim(),
       level: input.level,
       description: input.description.trim(),
       teacherId: input.teacherId,
-      roomId: room.id,
+      roomId,
       start: input.start,
       end: input.end,
       active: input.active,
       slot: slotLine(course.weekdays, input.start),
     });
-    await db.classes.update(course.classId, {
-      name: input.name.trim(),
-      level: input.level,
-      teacherId: input.teacherId,
-      roomId: room.id,
-      room: room.name,
-      start: input.start,
-      end: input.end,
-      active: input.active,
-    });
-    for (const session of sessions) {
-      if (session.day < today || session.status === "cancelled" || session.status === "completed") continue;
-      await db.sessions.update(session.id, {
+    const mains = await db.courseTeachers.where("courseId").equals(course.id).filter((t) => t.role === "main").toArray();
+    if (mains[0]) await db.courseTeachers.update(mains[0].id, { teacherId: input.teacherId });
+    else await db.courseTeachers.add({ id: uid("ct"), courseId: course.id, teacherId: input.teacherId, role: "main" });
+    for (const klass of classes) {
+      if (klass.day < today || klass.status === "cancelled" || klass.status === "completed") continue;
+      await db.classes.update(klass.id, {
         teacherId: input.teacherId,
-        roomId: room.id,
+        roomId,
         start: input.start,
         end: input.end,
+        name: `${input.name.trim()} · #${klass.index}`,
       });
     }
   });
@@ -850,44 +821,27 @@ export async function updateClass(input: {
   id: string;
   capacity: number;
   teacherId: string;
-  roomId: string;
+  roomId?: string;
   start: string;
   end: string;
+  day?: string;
+  status?: "upcoming" | "ongoing" | "completed" | "cancelled";
 }) {
   const klass = await db.classes.get(input.id);
-  const room = await db.rooms.get(input.roomId);
-  if (!klass || !input.teacherId || !room || input.capacity < 1) return "fields";
-  if (room.branchId !== klass.branchId) return "room";
-  const today = localDayKey();
-  const sessions = await db.sessions.where("classId").equals(klass.id).toArray();
-  await db.transaction("rw", [db.classes, db.courses, db.sessions], async () => {
-    await db.classes.update(klass.id, {
-      capacity: input.capacity,
-      teacherId: input.teacherId,
-      roomId: room.id,
-      room: room.name,
-      start: input.start,
-      end: input.end,
-    });
-    const course = await db.courses.get(klass.courseId);
-    if (course && course.classId === klass.id) {
-      await db.courses.update(course.id, {
-        teacherId: input.teacherId,
-        roomId: room.id,
-        start: input.start,
-        end: input.end,
-        slot: slotLine(course.weekdays, input.start),
-      });
-    }
-    for (const session of sessions) {
-      if (session.day < today || session.status === "cancelled" || session.status === "completed") continue;
-      await db.sessions.update(session.id, {
-        teacherId: input.teacherId,
-        roomId: room.id,
-        start: input.start,
-        end: input.end,
-      });
-    }
+  if (!klass || !input.teacherId || input.capacity < 1) return "fields";
+  const roomId = input.roomId ?? klass.roomId;
+  if (roomId) {
+    const room = await db.rooms.get(roomId);
+    if (!room || room.branchId !== klass.branchId) return "room";
+  }
+  await db.classes.update(klass.id, {
+    capacity: input.capacity,
+    teacherId: input.teacherId,
+    roomId,
+    start: input.start,
+    end: input.end,
+    ...(input.day ? { day: input.day } : {}),
+    ...(input.status ? { status: input.status } : {}),
   });
   return "";
 }
@@ -929,32 +883,129 @@ export async function updateRoom(input: {
       capacity: input.capacity,
       note: input.note.trim(),
     });
-    const classes = await db.classes.filter((klass) => klass.roomId === room.id).toArray();
-    for (const klass of classes) await db.classes.update(klass.id, { room: name });
+    /* room name denormalized field removed — classes store roomId only */
   });
   return "";
 }
 
-export async function createTeacher(input: { name: string; phone: string }) {
+export async function createTeacher(input: {
+  name: string;
+  phone: string;
+  email?: string;
+  branchId: string;
+  styles: string[];
+  levels: Level[];
+  teacherStatus?: TeacherStatus;
+  note?: string;
+  pin?: string;
+}) {
   const name = input.name.trim();
-  if (!name) return "fields";
+  const phone = input.phone.trim();
+  if (!name || !phone || !input.branchId) return "fields";
+  if (!input.styles.length || !input.levels.length) return "skills";
   const id = uid("u");
   const count = await db.users.where("role").equals("teacher").count();
+  const pin = input.pin?.trim();
+  if (pin && !/^\d{4}$/.test(pin)) return "pin";
   await db.users.add({
     id,
     name,
-    phone: input.phone.trim(),
-    email: `${id}@demo.local`,
+    phone,
+    email: (input.email ?? "").trim() || `${id}@demo.local`,
     role: "teacher",
-    pin: `locked-${id}`,
+    pin: pin || `locked-${id}`,
     avatarColor: TEACHER_COLORS[count % TEACHER_COLORS.length],
+    branchId: input.branchId,
+    styles: input.styles,
+    levels: input.levels,
+    teacherStatus: input.teacherStatus ?? "active",
+    note: (input.note ?? "").trim(),
+  });
+  return id;
+}
+
+export async function updateTeacher(input: {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  branchId: string;
+  styles: string[];
+  levels: Level[];
+  teacherStatus: TeacherStatus;
+  note?: string;
+  pin?: string;
+}) {
+  const user = await db.users.get(input.id);
+  const name = input.name.trim();
+  const phone = input.phone.trim();
+  if (!user || user.role !== "teacher" || !name || !phone || !input.branchId) return "fields";
+  if (!input.styles.length || !input.levels.length) return "skills";
+  const patch: Partial<User> = {
+    name,
+    phone,
+    email: (input.email ?? "").trim() || user.email,
+    branchId: input.branchId,
+    styles: input.styles,
+    levels: input.levels,
+    teacherStatus: input.teacherStatus,
+    note: (input.note ?? "").trim(),
+  };
+  const pin = input.pin?.trim();
+  if (pin) {
+    if (!/^\d{4}$/.test(pin)) return "pin";
+    patch.pin = pin;
+  }
+  await db.users.update(user.id, patch);
+  return "";
+}
+
+export async function markTeacherAbsence(input: { teacherId: string; day: string; note?: string }) {
+  const teacher = await db.users.get(input.teacherId);
+  if (!teacher || teacher.role !== "teacher" || !input.day) return "fields";
+  const existing = await db.teacherAbsences
+    .where("teacherId")
+    .equals(input.teacherId)
+    .filter((a) => a.day === input.day)
+    .first();
+  if (existing) {
+    await db.teacherAbsences.update(existing.id, { note: (input.note ?? "").trim() });
+    return "";
+  }
+  await db.teacherAbsences.add({
+    id: uid("ta"),
+    teacherId: input.teacherId,
+    day: input.day,
+    note: (input.note ?? "").trim(),
   });
   return "";
 }
 
-export async function updateTeacher(input: { id: string; name: string; phone: string }) {
-  const user = await db.users.get(input.id);
-  if (!user || user.role !== "teacher" || !input.name.trim()) return "fields";
-  await db.users.update(user.id, { name: input.name.trim(), phone: input.phone.trim() });
+export async function clearTeacherAbsence(id: string) {
+  await db.teacherAbsences.delete(id);
   return "";
+}
+
+/** Suggest active teachers sharing at least one style or level. */
+export function suggestBackupTeachers(
+  absent: User,
+  allTeachers: User[],
+  excludeId: string,
+): User[] {
+  const styles = new Set(absent.styles ?? []);
+  const levels = new Set(absent.levels ?? []);
+  return allTeachers
+    .filter((t) => {
+      if (t.id === excludeId || t.role !== "teacher") return false;
+      if ((t.teacherStatus ?? "active") !== "active") return false;
+      const shareStyle = (t.styles ?? []).some((s) => styles.has(s));
+      const shareLevel = (t.levels ?? []).some((l) => levels.has(l));
+      return shareStyle || shareLevel;
+    })
+    .sort((a, b) => {
+      const score = (u: User) =>
+        (u.styles ?? []).filter((s) => styles.has(s)).length * 2 +
+        (u.levels ?? []).filter((l) => levels.has(l)).length;
+      return score(b) - score(a);
+    });
 }

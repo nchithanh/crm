@@ -1,19 +1,32 @@
 # Data
 
-Mỗi lĩnh vực một thư mục `data/{id}/`.
+Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). Schema seed **v14** / version app **`14b`**.
 
-Hiện có `nhay` (Edu Dance), `anh` (Edu English), `nhac` (Edu Music), `boi` (Edu Swim). Cùng schema. Khác tên cơ sở, khóa và gói.
+### Test ghi danh (`nhay` only)
 
-- `settings.json` `users.json` `demo-accounts.json`
-- `branches.json` `courses.json` `rooms.json` `classes.json` `packages.json`
-- `leads.json` `students.json` `enrollments.json`
-- `payments.json` `receivables.json` `attendance.json` `tasks.json` `task-parents.json`
-- `promotions.json` `holds.json` `bookings.json`
+- HV chưa enroll: `s-enroll-begin|inter|adv|new` (`courseId`/`subscriptionId` rỗng).
+- Khóa mở gate: `k-test-begin|inter|adv` (`startOffset: 0`, có `capacity`).
+- Chi tiết: `context/flows.md` §3.
 
-Ngày trong JSON là `offset` so với hôm nay (0 = hôm nay, âm = ngày trước). Lúc seed mới đổi thành `YYYY-MM-DD`. Học viên có `email`, `birthYears` (tuổi, seed đổi thành ngày sinh) và `flagged`.
+## Files
 
-Seed `12`: như `11`, 5 stage tác vụ (`todo` / `inprogress` / `verify` / `feedback` / `done`), remap `parentId` theo nội dung việc. Dexie v5: bảng `taskParents`.
+| File | Nội dung |
+| --- | --- |
+| `settings.json` `users.json` `demo-accounts.json` | Studio + PIN |
+| `branches.json` `rooms.json` | Chi nhánh / phòng |
+| `courses.json` | Khung khóa + lịch mẫu (`weekdays`, `start`/`end`, `sessionCount`, `capacity` = HV tối đa, `teacherId`, `roomId` optional) |
+| `course-teachers.json` | `main` \| `assistant` |
+| `course-rooms.json` | Room gắn khóa (optional) |
+| `classes.json` | **[]** — buổi học sinh trong `seed.ts` từ Course |
+| `legacy-class-map.json` | Map class cũ → courseId (remap attendance) |
+| `subscription-plans.json` | Gói mẫu (ex-packages) |
+| `subscriptions.json` | 1 sub = 1 HV trên Course |
+| `installments.json` | Kỳ thu theo sub |
+| `payments.json` | Lần thu (`subscriptionId`) |
+| `students.json` | `courseId` + `subscriptionId` (không `classId`/`packageId`) |
+| `attendance.json` | `legacyClassId` + `personId` + `subject` — seed map sang class buổi |
+| `leads` `tasks` `holds` `bookings` `promotions` `teacher-absences` | Như trước |
 
-IndexedDB: `dolphin_crm_{id}`. Đổi lĩnh vực là đổi database, không trộn dữ liệu.
+Ngày JSON = `offset`. IndexedDB: `dolphin_crm_{id}`. Đổi lĩnh vực = đổi DB.
 
-Thêm lĩnh vực sau: copy folder, sửa `lib/vertical.ts` và `lib/seed-data.ts`.
+Dexie **v7**: bảng `classes` (buổi), `classStudents`, `courseTeachers`, `courseRooms`, `subscriptionPlans`, `subscriptions`, `installments`. Drop `sessions` / `packages` / `enrollments` / `receivables`.

@@ -29,13 +29,13 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const student = useLiveQuery(() => db.students.get(studentId), [studentId]);
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
-  const packages = useLiveQuery(() => db.packages.toArray(), []) ?? [];
+  const packages = useLiveQuery(() => db.subscriptionPlans.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const holds = useLiveQuery(() => db.holds.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
-  const enrollments = useLiveQuery(() => db.enrollments.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
+  const enrollments = useLiveQuery(() => db.subscriptions.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
   const payments = useLiveQuery(() => db.payments.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
-  const receivables = useLiveQuery(() => db.receivables.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
-  const attendance = useLiveQuery(() => db.attendance.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
+  const receivables = useLiveQuery(() => db.installments.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
+  const attendance = useLiveQuery(() => db.attendance.where("personId").equals(studentId).filter((a) => a.subject === "student").toArray(), [studentId]) ?? [];
   const allStudents = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const [tab, setTab] = useState<TabId>("info");
   const [note, setNote] = useState("");
@@ -75,7 +75,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
       ...enrollments.map((e) => ({
         id: e.id,
         day: e.day,
-        text: `${t.drawer.enrollMore} · ${packages.find((p) => p.id === e.packageId)?.name ?? ""} · ${classes.find((c) => c.id === e.classId)?.name ?? ""} · ${e.sessions}`,
+        text: `${t.drawer.enrollMore} · ${packages.find((p) => p.id === e.planId)?.name ?? ""} · ${classes.find((c) => c.id === e.courseId)?.name ?? ""} · ${e.sessions}`,
       })),
       ...attendance.map((a) => ({
         id: a.id,
@@ -100,16 +100,16 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   if (!student) return null;
 
   const course = courses.find((c) => c.id === student.courseId);
-  const klass = classes.find((c) => c.id === student.classId);
-  const pack = packages.find((p) => p.id === student.packageId);
+  const klass = classes.find((c) => c.id === student.courseId);
+  const pack = packages.find((p) => p.id === student.subscriptionId);
   const branch = branches.find((b) => b.id === student.branchId);
   const age = ageYears(student.birthDay);
   const kid = isMinor(student.birthDay);
   const badges = studentBadges(student, holds, seeMoney, lang);
   const currentHold = holds.find((h) => h.status === "approved" || h.status === "pending");
   const canRequestHold = !currentHold && student.status !== "paused";
-  const rosterInClass = student.classId
-    ? allStudents.filter((s) => s.classId === student.classId && s.status !== "paused").length
+  const rosterInClass = student.courseId
+    ? allStudents.filter((s) => s.courseId === student.courseId && s.status !== "paused").length
     : 0;
 
   async function saveNote() {
@@ -188,11 +188,11 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {seeMoney ? (
-              <Link href={`/thu-hoc-phi?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+              <Link href={`/fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
                 {t.drawer.collect}
               </Link>
             ) : null}
-            <Link href="/ghi-danh" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+            <Link href="/enroll" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
               {t.drawer.enrollMore}
             </Link>
             <Button type="button" variant="ghost" onClick={onClose}>{t.drawer.close}</Button>
@@ -275,21 +275,21 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 <ul className="space-y-2">
                   {[...enrollments].sort((a, b) => b.day.localeCompare(a.day)).map((e) => (
                     <li key={e.id} className="rounded-[12px] border border-slate-100 px-3 py-2 text-slate-600">
-                      <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.packageId)?.name ?? "—"}</span>
-                      {" · "}{classes.find((c) => c.id === e.classId)?.name}
+                      <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.planId)?.name ?? "—"}</span>
+                      {" · "}{classes.find((c) => c.id === e.courseId)?.name}
                       {" · "}{e.sessions} · {e.day}
                     </li>
                   ))}
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
+                <Link href="/enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
               </div>
               <div className="rounded-[12px] border border-[#E2E8F0] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.changeClass}</p>
                 <select className={`${inputClass} mt-2`} value={classId} onChange={(e) => setClassId(e.target.value)}>
                   <option value="">{t.drawer.pickClass}</option>
-                  {classes.filter((c) => c.id !== student.classId).map((c) => (
+                  {classes.filter((c) => c.id !== student.courseId).map((c) => (
                     <option key={c.id} value={c.id}>{c.name} · {branches.find((b) => b.id === c.branchId)?.name}</option>
                   ))}
                 </select>
@@ -343,7 +343,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href={`/thu-hoc-phi?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <Link href={`/fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
               <div className="overflow-auto rounded-[12px] border border-[#E2E8F0]">
                 <table className="w-full min-w-[320px] text-sm">
                   <thead className="bg-slate-50 text-left text-xs text-slate-500">

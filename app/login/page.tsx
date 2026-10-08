@@ -111,7 +111,7 @@ export default function LoginPage() {
         <button
           type="button"
           className="mt-6 w-full text-center text-sm font-semibold text-[var(--brand-500)]"
-          onClick={() => router.push("/chon-linh-vuc")}
+          onClick={() => router.push("/choose-vertical")}
         >
           {t.login.switch}
         </button>

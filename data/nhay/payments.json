@@ -7,7 +7,9 @@
     "method": "transfer",
     "offset": -40,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s1.jpg"
+    "billNote": "bill-s1.jpg",
+    "subscriptionId": "sub1",
+    "installmentId": ""
   },
   {
     "id": "pay2",
@@ -17,7 +19,9 @@
     "method": "transfer",
     "offset": -2,
     "note": "Cọc gói 6 tháng",
-    "billNote": "coc-s3.jpg"
+    "billNote": "coc-s3.jpg",
+    "subscriptionId": "sub3",
+    "installmentId": ""
   },
   {
     "id": "pay3",
@@ -27,7 +31,9 @@
     "method": "cash",
     "offset": -1,
     "note": "Phần còn lại gói 6 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub3",
+    "installmentId": ""
   },
   {
     "id": "pay4",
@@ -37,7 +43,9 @@
     "method": "transfer",
     "offset": 0,
     "note": "Cọc gói 12 tháng",
-    "billNote": "coc-s4.jpg"
+    "billNote": "coc-s4.jpg",
+    "subscriptionId": "sub4",
+    "installmentId": ""
   },
   {
     "id": "pay5",
@@ -47,7 +55,9 @@
     "method": "transfer",
     "offset": -30,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s5.jpg"
+    "billNote": "bill-s5.jpg",
+    "subscriptionId": "sub5",
+    "installmentId": ""
   },
   {
     "id": "pay6",
@@ -57,7 +67,9 @@
     "method": "cash",
     "offset": -15,
     "note": "Gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub6",
+    "installmentId": ""
   },
   {
     "id": "pay7",
@@ -67,7 +79,9 @@
     "method": "transfer",
     "offset": -12,
     "note": "Gói 1 tháng",
-    "billNote": "bill-s7.jpg"
+    "billNote": "bill-s7.jpg",
+    "subscriptionId": "sub7",
+    "installmentId": ""
   },
   {
     "id": "pay8",
@@ -77,7 +91,9 @@
     "method": "cash",
     "offset": -3,
     "note": "Thu một phần gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub8",
+    "installmentId": ""
   },
   {
     "id": "pay9",
@@ -87,7 +103,9 @@
     "method": "transfer",
     "offset": -25,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s9.jpg"
+    "billNote": "bill-s9.jpg",
+    "subscriptionId": "sub9",
+    "installmentId": ""
   },
   {
     "id": "pay10",
@@ -97,7 +115,9 @@
     "method": "cash",
     "offset": -8,
     "note": "Gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub10",
+    "installmentId": ""
   },
   {
     "id": "pay11",
@@ -107,7 +127,9 @@
     "method": "transfer",
     "offset": -35,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s12.jpg"
+    "billNote": "bill-s12.jpg",
+    "subscriptionId": "sub12",
+    "installmentId": ""
   },
   {
     "id": "pay12",
@@ -117,7 +139,9 @@
     "method": "transfer",
     "offset": -45,
     "note": "Cọc gói 6 tháng",
-    "billNote": "coc-s13.jpg"
+    "billNote": "coc-s13.jpg",
+    "subscriptionId": "sub13",
+    "installmentId": ""
   },
   {
     "id": "pay13",
@@ -127,7 +151,9 @@
     "method": "cash",
     "offset": -44,
     "note": "Phần còn lại gói 6 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub13",
+    "installmentId": ""
   },
   {
     "id": "pay14",
@@ -137,7 +163,9 @@
     "method": "cash",
     "offset": -6,
     "note": "Thu một phần gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub14",
+    "installmentId": ""
   },
   {
     "id": "pay15",
@@ -147,7 +175,9 @@
     "method": "transfer",
     "offset": -28,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s15.jpg"
+    "billNote": "bill-s15.jpg",
+    "subscriptionId": "sub15",
+    "installmentId": ""
   },
   {
     "id": "pay16",
@@ -157,7 +187,9 @@
     "method": "transfer",
     "offset": -8,
     "note": "Cọc gói 6 tháng",
-    "billNote": "coc-s16.jpg"
+    "billNote": "coc-s16.jpg",
+    "subscriptionId": "sub16",
+    "installmentId": ""
   },
   {
     "id": "pay17",
@@ -167,7 +199,9 @@
     "method": "cash",
     "offset": -11,
     "note": "Gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub17",
+    "installmentId": ""
   },
   {
     "id": "pay18",
@@ -177,7 +211,9 @@
     "method": "transfer",
     "offset": -50,
     "note": "Cọc gói 12 tháng",
-    "billNote": "coc-s18.jpg"
+    "billNote": "coc-s18.jpg",
+    "subscriptionId": "sub18",
+    "installmentId": ""
   },
   {
     "id": "pay19",
@@ -187,7 +223,9 @@
     "method": "transfer",
     "offset": -49,
     "note": "Phần còn lại gói 12 tháng",
-    "billNote": "bill-s18.jpg"
+    "billNote": "bill-s18.jpg",
+    "subscriptionId": "sub18",
+    "installmentId": ""
   },
   {
     "id": "pay20",
@@ -197,7 +235,9 @@
     "method": "cash",
     "offset": -16,
     "note": "Gói 3 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub19",
+    "installmentId": ""
   },
   {
     "id": "pay21",
@@ -207,7 +247,9 @@
     "method": "transfer",
     "offset": -25,
     "note": "Thu một phần gói 6 tháng",
-    "billNote": "bill-s20.jpg"
+    "billNote": "bill-s20.jpg",
+    "subscriptionId": "sub20",
+    "installmentId": ""
   },
   {
     "id": "pay22",
@@ -217,7 +259,9 @@
     "method": "cash",
     "offset": -21,
     "note": "Gói 3 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub21",
+    "installmentId": ""
   },
   {
     "id": "pay23",
@@ -227,7 +271,9 @@
     "method": "transfer",
     "offset": -19,
     "note": "Gói 3 tháng",
-    "billNote": "bill-s22.jpg"
+    "billNote": "bill-s22.jpg",
+    "subscriptionId": "sub22",
+    "installmentId": ""
   },
   {
     "id": "pay24",
@@ -237,6 +283,8 @@
     "method": "cash",
     "offset": -42,
     "note": "Gói 1 tháng",
-    "billNote": ""
+    "billNote": "",
+    "subscriptionId": "sub23",
+    "installmentId": ""
   }
 ]

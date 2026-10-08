@@ -8,14 +8,18 @@
     "teacherId": "u_bao",
     "branchId": "b-a",
     "roomId": "r1",
-    "classId": "c-hh-begin",
     "startOffset": -14,
-    "weekdays": [1, 3],
+    "weekdays": [
+      1,
+      3
+    ],
     "start": "18:00",
     "end": "19:30",
     "cancelIndex": 2,
     "description": "8 buổi trong tháng. Không học bù.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   },
   {
     "id": "k-kp-inter",
@@ -26,14 +30,18 @@
     "teacherId": "u_nam",
     "branchId": "b-b",
     "roomId": "r4",
-    "classId": "c-kp-inter",
     "startOffset": -7,
-    "weekdays": [2, 4],
+    "weekdays": [
+      2,
+      4
+    ],
     "start": "19:00",
     "end": "20:30",
     "cancelIndex": 0,
     "description": "Tập bài theo giáo trình. Vào giữa khóa ở buổi lẻ.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   },
   {
     "id": "k-ct-adv",
@@ -44,14 +52,18 @@
     "teacherId": "u_phuong",
     "branchId": "b-c",
     "roomId": "r6",
-    "classId": "c-ct-adv",
     "startOffset": 0,
-    "weekdays": [6, 0],
+    "weekdays": [
+      6,
+      0
+    ],
     "start": "09:00",
     "end": "10:30",
     "cancelIndex": 0,
     "description": "Chỉ nhận buổi 1 và buổi 5.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   },
   {
     "id": "k-hh-inter",
@@ -62,14 +74,18 @@
     "teacherId": "u_bao",
     "branchId": "b-a",
     "roomId": "r2",
-    "classId": "c-hh-inter",
     "startOffset": -21,
-    "weekdays": [5, 0],
+    "weekdays": [
+      5,
+      0
+    ],
     "start": "17:00",
     "end": "18:30",
     "cancelIndex": 0,
     "description": "Khóa sắp kết thúc trong tháng này.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   },
   {
     "id": "k-am-7",
@@ -80,14 +96,19 @@
     "teacherId": "u_bao",
     "branchId": "b-a",
     "roomId": "r3",
-    "classId": "c-am-7",
     "startOffset": -14,
-    "weekdays": [1, 3, 6],
+    "weekdays": [
+      1,
+      3,
+      6
+    ],
     "start": "07:00",
     "end": "08:30",
     "cancelIndex": 0,
     "description": "Lớp sáng sớm. 8 buổi trong tháng.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   },
   {
     "id": "k-am-8",
@@ -98,13 +119,18 @@
     "teacherId": "u_nam",
     "branchId": "b-b",
     "roomId": "r5",
-    "classId": "c-am-8",
     "startOffset": -14,
-    "weekdays": [2, 4, 0],
+    "weekdays": [
+      2,
+      4,
+      0
+    ],
     "start": "08:00",
     "end": "09:30",
     "cancelIndex": 0,
     "description": "Lớp sáng. 8 buổi trong tháng.",
-    "active": true
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
   }
 ]

@@ -7,8 +7,6 @@
     "birthYears": 14,
     "avatarColor": "#F97316",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -23,7 +21,8 @@
         "text": "Mẹ nhắn Zalo xin nghỉ một buổi."
       }
     ],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub1"
   },
   {
     "id": "s2",
@@ -33,8 +32,6 @@
     "birthYears": 11,
     "avatarColor": "#0EA5E9",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -49,7 +46,8 @@
         "text": "Vào lớp khi chưa đóng đủ. Đang nợ cả gói tháng."
       }
     ],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub2"
   },
   {
     "id": "s3",
@@ -59,8 +57,6 @@
     "birthYears": 24,
     "avatarColor": "#7C3AED",
     "status": "active",
-    "packageId": "p6",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -70,7 +66,8 @@
     "parentPhone": "",
     "joinedOffset": -60,
     "notes": [],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub3"
   },
   {
     "id": "s4",
@@ -80,8 +77,6 @@
     "birthYears": 16,
     "avatarColor": "#DB2777",
     "status": "active",
-    "packageId": "p12",
-    "classId": "c-ct-adv",
     "courseId": "k-ct-adv",
     "branchId": "b-c",
     "level": "advance",
@@ -96,7 +91,8 @@
         "text": "Đóng góp một phần, còn trả góp."
       }
     ],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub4"
   },
   {
     "id": "s5",
@@ -106,8 +102,6 @@
     "birthYears": 21,
     "avatarColor": "#059669",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-inter",
     "courseId": "k-hh-inter",
     "branchId": "b-a",
     "level": "inter",
@@ -117,7 +111,8 @@
     "parentPhone": "",
     "joinedOffset": -30,
     "notes": [],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub5"
   },
   {
     "id": "s6",
@@ -127,8 +122,6 @@
     "birthYears": 13,
     "avatarColor": "#F59E0B",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -143,7 +136,8 @@
         "text": "Xin bảo lưu qua Zalo. Gói 1 tháng nên cần mua gói bảo lưu."
       }
     ],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub6"
   },
   {
     "id": "s7",
@@ -153,8 +147,6 @@
     "birthYears": 20,
     "avatarColor": "#64748B",
     "status": "paused",
-    "packageId": "p1",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -164,7 +156,8 @@
     "parentPhone": "",
     "joinedOffset": -12,
     "notes": [],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub7"
   },
   {
     "id": "s8",
@@ -174,8 +167,6 @@
     "birthYears": 27,
     "avatarColor": "#0F766E",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -185,7 +176,8 @@
     "parentPhone": "",
     "joinedOffset": -18,
     "notes": [],
-    "flagged": false
+    "flagged": false,
+    "subscriptionId": "sub8"
   },
   {
     "id": "s9",
@@ -195,8 +187,6 @@
     "birthYears": 15,
     "avatarColor": "#F97316",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -211,7 +201,8 @@
         "offset": -4,
         "text": "Phụ huynh hỏi lịch học bù. Khóa không học bù."
       }
-    ]
+    ],
+    "subscriptionId": "sub9"
   },
   {
     "id": "s10",
@@ -221,8 +212,6 @@
     "birthYears": 12,
     "avatarColor": "#0EA5E9",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -232,7 +221,8 @@
     "parentPhone": "0900 200 110",
     "flagged": false,
     "joinedOffset": -8,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub10"
   },
   {
     "id": "s11",
@@ -242,8 +232,6 @@
     "birthYears": 17,
     "avatarColor": "#7C3AED",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -258,7 +246,8 @@
         "offset": -1,
         "text": "Còn 1 buổi và chưa đóng gói tháng."
       }
-    ]
+    ],
+    "subscriptionId": "sub11"
   },
   {
     "id": "s12",
@@ -268,8 +257,6 @@
     "birthYears": 10,
     "avatarColor": "#DB2777",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-begin",
     "courseId": "k-hh-begin",
     "branchId": "b-a",
     "level": "begin",
@@ -279,7 +266,8 @@
     "parentPhone": "0900 200 112",
     "flagged": false,
     "joinedOffset": -35,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub12"
   },
   {
     "id": "s13",
@@ -289,8 +277,6 @@
     "birthYears": 22,
     "avatarColor": "#059669",
     "status": "active",
-    "packageId": "p6",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -300,7 +286,8 @@
     "parentPhone": "",
     "flagged": false,
     "joinedOffset": -45,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub13"
   },
   {
     "id": "s14",
@@ -310,8 +297,6 @@
     "birthYears": 19,
     "avatarColor": "#F59E0B",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -326,7 +311,8 @@
         "offset": -6,
         "text": "Đóng một phần gói tháng, hẹn trả nốt cuối tuần."
       }
-    ]
+    ],
+    "subscriptionId": "sub14"
   },
   {
     "id": "s15",
@@ -336,8 +322,6 @@
     "birthYears": 23,
     "avatarColor": "#64748B",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -352,7 +336,8 @@
         "offset": -2,
         "text": "Hay đổi lịch sát giờ. Đánh dấu để lễ tân nhắc sớm."
       }
-    ]
+    ],
+    "subscriptionId": "sub15"
   },
   {
     "id": "s16",
@@ -362,8 +347,6 @@
     "birthYears": 26,
     "avatarColor": "#0F766E",
     "status": "active",
-    "packageId": "p6",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -378,7 +361,8 @@
         "offset": -8,
         "text": "Mới cọc gói 6 tháng."
       }
-    ]
+    ],
+    "subscriptionId": "sub16"
   },
   {
     "id": "s17",
@@ -388,8 +372,6 @@
     "birthYears": 18,
     "avatarColor": "#F97316",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-kp-inter",
     "courseId": "k-kp-inter",
     "branchId": "b-b",
     "level": "inter",
@@ -399,7 +381,8 @@
     "parentPhone": "",
     "flagged": false,
     "joinedOffset": -11,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub17"
   },
   {
     "id": "s18",
@@ -409,8 +392,6 @@
     "birthYears": 29,
     "avatarColor": "#0EA5E9",
     "status": "active",
-    "packageId": "p12",
-    "classId": "c-ct-adv",
     "courseId": "k-ct-adv",
     "branchId": "b-c",
     "level": "advance",
@@ -420,7 +401,8 @@
     "parentPhone": "",
     "flagged": false,
     "joinedOffset": -50,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub18"
   },
   {
     "id": "s19",
@@ -430,8 +412,6 @@
     "birthYears": 25,
     "avatarColor": "#7C3AED",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-ct-adv",
     "courseId": "k-ct-adv",
     "branchId": "b-c",
     "level": "advance",
@@ -446,7 +426,8 @@
         "offset": -1,
         "text": "Đang bảo lưu, giữ chỗ Contemporary."
       }
-    ]
+    ],
+    "subscriptionId": "sub19"
   },
   {
     "id": "s20",
@@ -456,8 +437,6 @@
     "birthYears": 31,
     "avatarColor": "#DB2777",
     "status": "active",
-    "packageId": "p6",
-    "classId": "c-ct-adv",
     "courseId": "k-ct-adv",
     "branchId": "b-c",
     "level": "advance",
@@ -472,7 +451,8 @@
         "offset": -3,
         "text": "Còn nợ 2 triệu, hẹn chuyển khoản tuần này."
       }
-    ]
+    ],
+    "subscriptionId": "sub20"
   },
   {
     "id": "s21",
@@ -482,8 +462,6 @@
     "birthYears": 28,
     "avatarColor": "#059669",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-ct-adv",
     "courseId": "k-ct-adv",
     "branchId": "b-c",
     "level": "advance",
@@ -493,7 +471,8 @@
     "parentPhone": "",
     "flagged": false,
     "joinedOffset": -21,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub21"
   },
   {
     "id": "s22",
@@ -503,8 +482,6 @@
     "birthYears": 16,
     "avatarColor": "#F59E0B",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-inter",
     "courseId": "k-hh-inter",
     "branchId": "b-a",
     "level": "inter",
@@ -514,7 +491,8 @@
     "parentPhone": "0900 200 122",
     "flagged": false,
     "joinedOffset": -19,
-    "notes": []
+    "notes": [],
+    "subscriptionId": "sub22"
   },
   {
     "id": "s23",
@@ -524,8 +502,6 @@
     "birthYears": 20,
     "avatarColor": "#64748B",
     "status": "active",
-    "packageId": "p1",
-    "classId": "c-hh-inter",
     "courseId": "k-hh-inter",
     "branchId": "b-a",
     "level": "inter",
@@ -540,7 +516,8 @@
         "offset": 0,
         "text": "Hết buổi gói tháng. Lễ tân mời gia hạn."
       }
-    ]
+    ],
+    "subscriptionId": "sub23"
   },
   {
     "id": "s24",
@@ -550,8 +527,6 @@
     "birthYears": 14,
     "avatarColor": "#0F766E",
     "status": "active",
-    "packageId": "p3",
-    "classId": "c-hh-inter",
     "courseId": "k-hh-inter",
     "branchId": "b-a",
     "level": "inter",
@@ -566,6 +541,107 @@
         "offset": -6,
         "text": "Vào lớp khi chưa đóng gói 3 tháng."
       }
-    ]
+    ],
+    "subscriptionId": "sub24"
+  },
+  {
+    "id": "s-enroll-begin",
+    "name": "Test Enroll Begin",
+    "phone": "0900 200 025",
+    "email": "test.enroll.begin@edudance.demo",
+    "birthYears": 12,
+    "avatarColor": "#EA580C",
+    "status": "active",
+    "courseId": "",
+    "branchId": "b-a",
+    "level": "begin",
+    "remainingSessions": 0,
+    "debt": 0,
+    "parentName": "Phụ huynh Test Begin",
+    "parentPhone": "0900 200 125",
+    "flagged": false,
+    "joinedOffset": 0,
+    "notes": [
+      {
+        "offset": 0,
+        "text": "HV test — chưa ghi danh. Dùng với khóa TEST Ghi danh Begin."
+      }
+    ],
+    "subscriptionId": ""
+  },
+  {
+    "id": "s-enroll-inter",
+    "name": "Test Enroll Inter",
+    "phone": "0900 200 026",
+    "email": "test.enroll.inter@edudance.demo",
+    "birthYears": 18,
+    "avatarColor": "#0284C7",
+    "status": "active",
+    "courseId": "",
+    "branchId": "b-b",
+    "level": "inter",
+    "remainingSessions": 0,
+    "debt": 0,
+    "parentName": "",
+    "parentPhone": "",
+    "flagged": false,
+    "joinedOffset": 0,
+    "notes": [
+      {
+        "offset": 0,
+        "text": "HV test — chưa ghi danh. Dùng với khóa TEST Ghi danh Inter."
+      }
+    ],
+    "subscriptionId": ""
+  },
+  {
+    "id": "s-enroll-adv",
+    "name": "Test Enroll Advance",
+    "phone": "0900 200 027",
+    "email": "test.enroll.adv@edudance.demo",
+    "birthYears": 22,
+    "avatarColor": "#7C3AED",
+    "status": "active",
+    "courseId": "",
+    "branchId": "b-c",
+    "level": "advance",
+    "remainingSessions": 0,
+    "debt": 0,
+    "parentName": "",
+    "parentPhone": "",
+    "flagged": false,
+    "joinedOffset": 0,
+    "notes": [
+      {
+        "offset": 0,
+        "text": "HV test — chưa ghi danh. Dùng với khóa TEST Ghi danh Advance."
+      }
+    ],
+    "subscriptionId": ""
+  },
+  {
+    "id": "s-enroll-new",
+    "name": "Test Enroll Mới",
+    "phone": "0900 200 028",
+    "email": "test.enroll.new@edudance.demo",
+    "birthYears": 15,
+    "avatarColor": "#059669",
+    "status": "trial",
+    "courseId": "",
+    "branchId": "b-a",
+    "level": "begin",
+    "remainingSessions": 0,
+    "debt": 0,
+    "parentName": "Phụ huynh Test Mới",
+    "parentPhone": "0900 200 128",
+    "flagged": false,
+    "joinedOffset": 0,
+    "notes": [
+      {
+        "offset": 0,
+        "text": "HV trial test — tạo sẵn; cũng có thể tạo HV mới trong wizard ghi danh."
+      }
+    ],
+    "subscriptionId": ""
   }
 ]

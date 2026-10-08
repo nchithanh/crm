@@ -39,20 +39,20 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!hydrated || vertical === undefined) return;
     if (!vertical) {
       setReady(false);
-      if (path !== "/chon-linh-vuc") router.replace("/chon-linh-vuc");
+      if (path !== "/choose-vertical") router.replace("/choose-vertical");
       return;
     }
-    if (!user && path !== "/login" && path !== "/chon-linh-vuc") {
+    if (!user && path !== "/login" && path !== "/choose-vertical") {
       router.replace("/login");
       return;
     }
-    if (user && (path === "/login" || path === "/chon-linh-vuc")) {
+    if (user && (path === "/login" || path === "/choose-vertical")) {
       router.replace("/");
     }
   }, [hydrated, user, path, router, vertical]);
 
   useEffect(() => {
-    if (!vertical || path === "/chon-linh-vuc") {
+    if (!vertical || path === "/choose-vertical") {
       setReady(true);
       return;
     }

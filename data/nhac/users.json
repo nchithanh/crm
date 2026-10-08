@@ -24,7 +24,18 @@
     "phone": "0900 100 003",
     "role": "teacher",
     "pin": "2222",
-    "avatarColor": "#7C3AED"
+    "avatarColor": "#7C3AED",
+    "branchId": "b-a",
+    "styles": [
+      "Piano",
+      "Vocal"
+    ],
+    "levels": [
+      "begin",
+      "inter"
+    ],
+    "teacherStatus": "active",
+    "note": ""
   },
   {
     "id": "u_phuong",
@@ -33,7 +44,18 @@
     "phone": "0900 100 004",
     "role": "teacher",
     "pin": "3333",
-    "avatarColor": "#DB2777"
+    "avatarColor": "#DB2777",
+    "branchId": "b-b",
+    "styles": [
+      "Guitar"
+    ],
+    "levels": [
+      "begin",
+      "inter",
+      "advance"
+    ],
+    "teacherStatus": "active",
+    "note": ""
   },
   {
     "id": "u_nam",
@@ -42,6 +64,15 @@
     "phone": "0900 100 005",
     "role": "teacher",
     "pin": "4444",
-    "avatarColor": "#059669"
+    "avatarColor": "#059669",
+    "branchId": "b-a",
+    "styles": [
+      "Vocal"
+    ],
+    "levels": [
+      "inter"
+    ],
+    "teacherStatus": "left",
+    "note": "Đã nghỉ việc demo."
   }
 ]

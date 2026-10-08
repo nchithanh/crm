@@ -1,0 +1,47 @@
+[
+  {
+    "id": "cr1",
+    "courseId": "k-hh-begin",
+    "roomId": "r1"
+  },
+  {
+    "id": "cr2",
+    "courseId": "k-kp-inter",
+    "roomId": "r4"
+  },
+  {
+    "id": "cr3",
+    "courseId": "k-ct-adv",
+    "roomId": "r6"
+  },
+  {
+    "id": "cr4",
+    "courseId": "k-hh-inter",
+    "roomId": "r2"
+  },
+  {
+    "id": "cr5",
+    "courseId": "k-am-7",
+    "roomId": "r3"
+  },
+  {
+    "id": "cr6",
+    "courseId": "k-am-8",
+    "roomId": "r5"
+  },
+  {
+    "id": "cr-test-begin",
+    "courseId": "k-test-begin",
+    "roomId": "r1"
+  },
+  {
+    "id": "cr-test-inter",
+    "courseId": "k-test-inter",
+    "roomId": "r4"
+  },
+  {
+    "id": "cr-test-adv",
+    "courseId": "k-test-adv",
+    "roomId": "r6"
+  }
+]

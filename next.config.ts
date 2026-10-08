@@ -7,6 +7,34 @@ const basePath =
     ? process.env.GITHUB_PAGES_BASE_PATH
     : "";
 
+const legacyRedirects = [
+  { source: "/khoa-hoc", destination: "/courses", permanent: false },
+  { source: "/khoa-hoc/:path*", destination: "/courses/:path*", permanent: false },
+  { source: "/lop-hoc", destination: "/classes", permanent: false },
+  { source: "/lop-hoc/:path*", destination: "/classes/:path*", permanent: false },
+  { source: "/giao-vien", destination: "/teachers", permanent: false },
+  { source: "/giao-vien/:path*", destination: "/teachers/:path*", permanent: false },
+  { source: "/hoc-vien", destination: "/students", permanent: false },
+  { source: "/hoc-vien/:path*", destination: "/students/:path*", permanent: false },
+  { source: "/lich", destination: "/schedule", permanent: false },
+  { source: "/lich/:path*", destination: "/schedule/:path*", permanent: false },
+  { source: "/ghi-danh", destination: "/enroll", permanent: false },
+  { source: "/goi-buoi", destination: "/subscriptions", permanent: false },
+  { source: "/goi", destination: "/subscriptions", permanent: false },
+  { source: "/plans", destination: "/subscriptions", permanent: false },
+  { source: "/plans/:path*", destination: "/subscriptions/:path*", permanent: false },
+  { source: "/thu-hoc-phi", destination: "/fees", permanent: false },
+  { source: "/cong-no", destination: "/fees", permanent: false },
+  { source: "/diem-danh", destination: "/attendance", permanent: false },
+  { source: "/phong", destination: "/rooms", permanent: false },
+  { source: "/bao-luu", destination: "/holds", permanent: false },
+  { source: "/doanh-thu", destination: "/revenue", permanent: false },
+  { source: "/tac-vu", destination: "/tasks", permanent: false },
+  { source: "/cham-soc", destination: "/leads", permanent: false },
+  { source: "/khach-tiem-nang", destination: "/leads", permanent: false },
+  { source: "/chon-linh-vuc", destination: "/choose-vertical", permanent: false },
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   ...(isGithubPages
@@ -18,12 +46,7 @@ const nextConfig: NextConfig = {
       }
     : {
         async redirects() {
-          return [
-            { source: "/khach-tiem-nang", destination: "/cham-soc", permanent: false },
-            { source: "/goi", destination: "/goi-buoi", permanent: false },
-            { source: "/cong-no", destination: "/thu-hoc-phi", permanent: false },
-            { source: "/lich/:id", destination: "/lop-hoc/:id", permanent: false },
-          ];
+          return legacyRedirects;
         },
       }),
   turbopack: {

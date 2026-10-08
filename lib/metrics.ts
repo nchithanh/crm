@@ -1,14 +1,14 @@
 import { localDayKey } from "@/lib/utils";
-import type { Lead, Payment, Receivable, Student } from "@/types";
+import type { Installment, Lead, Payment, Student } from "@/types";
 
-export function debtStatus(row: Receivable, today = localDayKey()) {
+export function debtStatus(row: Installment, today = localDayKey()) {
   if (row.paid >= row.amount) return "paid" as const;
   if (row.dueDay < today) return "overdue" as const;
   if (row.paid > 0) return "partial" as const;
   return "unpaid" as const;
 }
 
-export function debtRemaining(row: Receivable) {
+export function debtRemaining(row: Installment) {
   return Math.max(0, row.amount - row.paid);
 }
 
@@ -27,7 +27,7 @@ export function dashboardNumbers(input: {
   students: Student[];
   leads: Lead[];
   payments: Payment[];
-  receivables: Receivable[];
+  receivables: Installment[];
   present: number;
   marked: number;
   todayClasses: number;

@@ -1,9 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ClientRedirect } from "@/components/client-redirect";
+import { RouteRedirect } from "@/components/route-redirect";
 
-export default function OldClassRedirect() {
-  const { id } = useParams<{ id: string }>();
-  return <ClientRedirect href={`/lop-hoc/${id}`} />;
+export default function LegacyIdRedirect() {
+  const params = useParams();
+  const id = String(params?.id ?? "");
+  return <RouteRedirect to={`/schedule/${id}`} />;
 }

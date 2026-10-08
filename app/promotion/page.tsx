@@ -10,7 +10,7 @@ export default function PromotionsPage() {
   const rows = useLiveQuery(() => db.promotions.toArray(), []) ?? [];
   return (
     <div>
-      <h1 className="text-xl font-bold">{t.pages.promotion}</h1>
+      <h1 className="crm-page-title">{t.pages.promotion}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.pages.promotionLead}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         {rows.map((p) => (

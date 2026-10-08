@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-09
+
+- Shell menu: chữ **14px**; inactive bỏ `slate-500` → `slate-700` (sidebar + bottom tab).
+- Shell nav align POS: active bar trái + slate bg, `min-h-11`, group label bold, VI/EN pill, bottom tab gap/icon 20, FAB trắng; wordmark DOLPHIN CRM.
+- Design language (align POS): stack Geist→Inter→Be Vietnam; body 14/400; utilities `.crm-page-title` / `.crm-section-title` / `.crm-kpi` / `.crm-lead` / `.crm-meta`; SoT `context/design-language.md`.
+- Fix `/enroll`: chỗ trống dùng `course.capacity` + đếm HV theo `courseId` (trước đó luôn 0); confirm truyền `courseId`.
+- Seed **14b** (`nhay`): HV test ghi danh `s-enroll-*` (chưa Sub) + khóa `k-test-begin|inter|adv` (`startOffset: 0`).
+- Context: thêm `context/flows.md` — sync đầy đủ nghiệp vụ (enroll side-effect, gate Sub, thu phí, hold, lịch…) mirror code; cập nhật `domain` / `AGENTS` / product·scope·constraints.
+- Course: list + hub hiện **HV hiện tại** và **HV tối đa** (`capacity`); fix hooks order trên `/classes/[id]`.
+- Subscription: route `/subscriptions` (thay plans/gói buổi); `isSubscriptionValid` gate điểm danh (hạn + buổi còn + đúng course).
+- Migrate seed **v14** / Dexie **v7**: Class = buổi (bỏ Session); Subscription + installments; courseTeachers/Rooms; slug EN (`/courses`…); hub `/courses/[id]` quan hệ clickable; redirect path VI.
+- Domain SoT: `context/domain.md`.
+
 ## 2026-10-08
 
 - Học viên: list production (click hàng → drawer, buổi còn đỏ/amber, hover Xem/Thu, empty CTA, bulk bar). Drawer denser: copy SĐT, Esc, progress điểm danh, Xin bảo lưu, timeline relative.

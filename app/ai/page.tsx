@@ -16,7 +16,7 @@ export default function AiPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">{t.pages.ai}</h1>
+      <h1 className="crm-page-title">{t.pages.ai}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.pages.aiLead}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Card className="p-4">

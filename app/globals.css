@@ -61,12 +61,61 @@ html[data-vertical="boi"] {
 
 * { box-sizing: border-box; }
 
-html, body {
+html,
+body {
   margin: 0;
   min-height: 100%;
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, "Be Vietnam Pro", system-ui, sans-serif;
+  font-family:
+    Geist,
+    Inter,
+    "Be Vietnam Pro",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Type scale — SoT: context/design-language.md (align POS) */
+.crm-page-title {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.crm-section-title {
+  font-size: 1rem; /* 16px */
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--foreground);
+}
+.crm-kpi {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.crm-body {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 400;
+  line-height: 1.5;
+}
+.crm-lead {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.crm-meta {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--muted);
 }
 
 /* Keep family/line from parent, but force ≥16px so iOS does not zoom on focus.

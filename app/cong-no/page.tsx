@@ -1,7 +1,7 @@
 "use client";
 
-import { ClientRedirect } from "@/components/client-redirect";
+import { RouteRedirect } from "@/components/route-redirect";
 
-export default function OldDebtRedirect() {
-  return <ClientRedirect href="/thu-hoc-phi" />;
+export default function LegacyRedirect() {
+  return <RouteRedirect to="/fees" />;
 }

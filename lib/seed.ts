@@ -1,30 +1,33 @@
 import { db } from "@/lib/db";
 import { loadSeed } from "@/lib/seed-data";
-import { sessionDates, sessionStatus } from "@/lib/schedule";
+import { classStatus, sessionDates } from "@/lib/schedule";
 import { dayFromOffset, localDayKey } from "@/lib/utils";
 import type { VerticalId } from "@/lib/vertical";
 import type {
   Attendance,
-  ClassSession,
+  ClassStudent,
   Course,
-  CoursePackage,
-  DanceClass,
-  Enrollment,
+  CourseRoom,
+  CourseTeacher,
   Hold,
+  Installment,
   Lead,
   Payment,
   Promotion,
-  Receivable,
   RoomBooking,
   Student,
+  StudioClass,
   StudioSettings,
   StudioTask,
+  Subscription,
+  SubscriptionPlan,
   TaskParent,
+  TeacherAbsence,
   User,
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "12";
+const SEED_VERSION = "14b";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -33,24 +36,118 @@ function birthFromYears(years: number) {
   return localDayKey(d);
 }
 
+function addMonths(day: string, months: number) {
+  const [y, m, d] = day.split("-").map(Number);
+  const dt = new Date(y, (m ?? 1) - 1 + months, d ?? 1, 12);
+  return localDayKey(dt);
+}
+
 export async function ensureSeed(id: VerticalId) {
   const current = await db.meta.get(SEED_KEY);
   if (current?.value === SEED_VERSION) return;
   const raw = loadSeed(id);
 
-  const studentRows: Student[] = raw.students.map((s) => ({
+  const courseRows: Course[] = [];
+  const classRows: StudioClass[] = [];
+  for (const rawCourse of raw.courses as {
+    id: string;
+    name: string;
+    style: string;
+    level: Course["level"];
+    slot: string;
+    teacherId: string;
+    branchId: string;
+    roomId?: string;
+    startOffset: number;
+    weekdays: number[];
+    start: string;
+    end: string;
+    cancelIndex?: number;
+    description: string;
+    active: boolean;
+    sessionCount?: number;
+    durationMonths?: number;
+    capacity?: number;
+  }[]) {
+    const startDay = dayFromOffset(rawCourse.startOffset);
+    const count = rawCourse.sessionCount ?? 8;
+    const capacity = Math.max(1, rawCourse.capacity ?? 12);
+    const days = sessionDates(startDay, rawCourse.weekdays, count);
+    const endDay = days[days.length - 1] ?? startDay;
+    courseRows.push({
+      id: rawCourse.id,
+      name: rawCourse.name,
+      style: rawCourse.style,
+      level: rawCourse.level,
+      slot: rawCourse.slot,
+      teacherId: rawCourse.teacherId,
+      branchId: rawCourse.branchId,
+      roomId: rawCourse.roomId ?? "",
+      startDay,
+      endDay,
+      weekdays: rawCourse.weekdays,
+      start: rawCourse.start,
+      end: rawCourse.end,
+      sessionCount: count,
+      capacity,
+      durationMonths: rawCourse.durationMonths ?? 1,
+      description: rawCourse.description,
+      active: rawCourse.active,
+    });
+    days.forEach((day, i) => {
+      const index = i + 1;
+      classRows.push({
+        id: `${rawCourse.id}-c${index}`,
+        courseId: rawCourse.id,
+        branchId: rawCourse.branchId,
+        index,
+        name: `${rawCourse.name} · #${index}`,
+        day,
+        start: rawCourse.start,
+        end: rawCourse.end,
+        teacherId: rawCourse.teacherId,
+        roomId: rawCourse.roomId ?? "",
+        status: classStatus(day, index, rawCourse.cancelIndex),
+        capacity,
+        note: rawCourse.cancelIndex === index ? "Nghỉ lễ" : "",
+      });
+    });
+  }
+
+  const courseTeachers = raw.courseTeachers as CourseTeacher[];
+  const courseRooms = raw.courseRooms as CourseRoom[];
+
+  const studentRows: Student[] = (raw.students as {
+    id: string;
+    name: string;
+    phone: string;
+    email: string;
+    birthYears: number;
+    avatarColor: string;
+    status: Student["status"];
+    subscriptionId: string;
+    courseId: string;
+    branchId: string;
+    level: Student["level"];
+    remainingSessions: number;
+    debt: number;
+    parentName: string;
+    parentPhone: string;
+    flagged?: boolean;
+    joinedOffset: number;
+    notes: { offset: number; text: string }[];
+  }[]).map((s) => ({
     id: s.id,
     name: s.name,
     phone: s.phone,
     email: s.email,
     birthDay: birthFromYears(s.birthYears),
     avatarColor: s.avatarColor,
-    status: s.status as Student["status"],
-    packageId: s.packageId,
-    classId: s.classId,
+    status: s.status,
+    subscriptionId: s.subscriptionId,
     courseId: s.courseId,
     branchId: s.branchId,
-    level: s.level as Student["level"],
+    level: s.level,
     remainingSessions: s.remainingSessions,
     debt: s.debt,
     parentName: s.parentName,
@@ -76,31 +173,70 @@ export async function ensureSeed(id: VerticalId) {
     })),
   }));
 
-  const enrollmentRows: Enrollment[] = raw.enrollments.map((e) => ({
-    id: e.id,
-    studentId: e.studentId,
-    packageId: e.packageId,
-    classId: e.classId,
-    day: dayFromOffset(e.offset),
-    sessions: e.sessions,
-  }));
+  const subscriptionRows: Subscription[] = (raw.subscriptions as {
+    id: string;
+    studentId: string;
+    courseId: string;
+    planId: string;
+    offset: number;
+    sessions: number;
+    remainingSessions: number;
+    status: Subscription["status"];
+    months?: number;
+  }[]).map((s) => {
+    const day = dayFromOffset(s.offset);
+    return {
+      id: s.id,
+      studentId: s.studentId,
+      courseId: s.courseId,
+      planId: s.planId,
+      day,
+      endDay: addMonths(day, s.months ?? 1),
+      sessions: s.sessions,
+      remainingSessions: s.remainingSessions,
+      status: s.status,
+    };
+  });
 
-  const paymentRows: Payment[] = raw.payments.map((p) => ({
+  const paymentRows: Payment[] = (raw.payments as {
+    id: string;
+    studentId: string;
+    subscriptionId?: string;
+    installmentId?: string;
+    branchId: string;
+    amount: number;
+    method: Payment["method"];
+    offset: number;
+    note: string;
+    billNote: string;
+  }[]).map((p) => ({
     id: p.id,
-      studentId: p.studentId,
-      branchId: p.branchId,
-      amount: p.amount,
-      method: p.method as Payment["method"],
-      day: dayFromOffset(p.offset),
-      note: p.note,
-      billNote: p.billNote,
+    studentId: p.studentId,
+    subscriptionId: p.subscriptionId ?? "",
+    installmentId: p.installmentId ?? "",
+    branchId: p.branchId,
+    amount: p.amount,
+    method: p.method,
+    day: dayFromOffset(p.offset),
+    note: p.note,
+    billNote: p.billNote,
   }));
 
-  const receivableRows: Receivable[] = raw.receivables.map((r) => ({
+  const installmentRows: Installment[] = (raw.installments as {
+    id: string;
+    subscriptionId: string;
+    studentId: string;
+    branchId: string;
+    title: string;
+    amount: number;
+    paid: number;
+    dueOffset: number;
+  }[]).map((r) => ({
     id: r.id,
-      studentId: r.studentId,
-      branchId: r.branchId,
-      title: r.title,
+    subscriptionId: r.subscriptionId,
+    studentId: r.studentId,
+    branchId: r.branchId,
+    title: r.title,
     amount: r.amount,
     paid: r.paid,
     dueDay: dayFromOffset(r.dueOffset),
@@ -150,19 +286,59 @@ export async function ensureSeed(id: VerticalId) {
     };
   });
   const taskParentRows = (raw.taskParents ?? []) as TaskParent[];
+  const teacherAbsenceRows: TeacherAbsence[] = ((raw.teacherAbsences ?? []) as { id: string; teacherId: string; offset: number; note?: string }[]).map((row) => ({
+    id: row.id,
+    teacherId: row.teacherId,
+    day: dayFromOffset(row.offset),
+    note: row.note ?? "",
+  }));
 
-  const attendanceRows: Attendance[] = raw.attendance.map((a) => {
+  const legacyMap = raw.legacyClassMap ?? {};
+  const attendanceRows: Attendance[] = [];
+  const attendanceUsed = new Set<string>();
+  for (const a of raw.attendance as {
+    legacyClassId: string;
+    personId: string;
+    subject: Attendance["subject"];
+    offset: number;
+    status: Attendance["status"];
+    waived: boolean;
+  }[]) {
     const day = dayFromOffset(a.offset);
-    return {
-      id: `${a.classId}_${a.studentId}_${day}`,
-      classId: a.classId,
-      studentId: a.studentId,
-      day,
-      status: a.status as Attendance["status"],
-      sessionId: a.sessionId,
+    const courseId = legacyMap[a.legacyClassId];
+    if (!courseId) continue;
+    const dayMs = Date.parse(`${day}T12:00:00`);
+    const candidates = classRows
+      .filter((c) => c.courseId === courseId && c.status !== "cancelled")
+      .slice()
+      .sort((x, y) => Math.abs(Date.parse(`${x.day}T12:00:00`) - dayMs) - Math.abs(Date.parse(`${y.day}T12:00:00`) - dayMs) || x.index - y.index);
+    // Prefer exact/nearest day; skip classes already used for this person (avoid bulkAdd key clash).
+    const klass = candidates.find((c) => !attendanceUsed.has(`${c.id}_${a.subject}_${a.personId}`));
+    if (!klass) continue;
+    const id = `${klass.id}_${a.subject}_${a.personId}`;
+    attendanceUsed.add(id);
+    attendanceRows.push({
+      id,
+      classId: klass.id,
+      personId: a.personId,
+      subject: a.subject,
+      day: klass.day,
+      status: a.status,
       waived: a.waived,
-    };
-  });
+    });
+  }
+
+  const classStudentRows: ClassStudent[] = [];
+  for (const st of studentRows) {
+    if (st.status === "paused") continue;
+    for (const klass of classRows.filter((c) => c.courseId === st.courseId && c.status !== "cancelled")) {
+      classStudentRows.push({
+        id: `${klass.id}_${st.id}`,
+        classId: klass.id,
+        studentId: st.id,
+      });
+    }
+  }
 
   const holdRows: Hold[] = raw.holds.map((h) => ({
     id: h.id,
@@ -197,107 +373,71 @@ export async function ensureSeed(id: VerticalId) {
     note: p.note,
   }));
 
-  const courseRows: Course[] = [];
-  const sessionRows: ClassSession[] = [];
-  for (const rawCourse of raw.courses) {
-    const startDay = dayFromOffset(rawCourse.startOffset);
-    const days = sessionDates(startDay, rawCourse.weekdays, 8);
-    const endDay = days[days.length - 1] ?? startDay;
-    courseRows.push({
-      id: rawCourse.id,
-      name: rawCourse.name,
-      style: rawCourse.style,
-      level: rawCourse.level as Course["level"],
-      slot: rawCourse.slot,
-      teacherId: rawCourse.teacherId,
-      branchId: rawCourse.branchId,
-      roomId: rawCourse.roomId,
-      classId: rawCourse.classId,
-      startDay,
-      endDay,
-      weekdays: rawCourse.weekdays,
-      start: rawCourse.start,
-      end: rawCourse.end,
-      description: rawCourse.description,
-      active: rawCourse.active,
-    });
-    days.forEach((day, i) => {
-      const index = i + 1;
-      sessionRows.push({
-        id: `${rawCourse.id}-s${index}`,
-        courseId: rawCourse.id,
-        classId: rawCourse.classId,
-        branchId: rawCourse.branchId,
-        index,
-        day,
-        start: rawCourse.start,
-        end: rawCourse.end,
-        teacherId: rawCourse.teacherId,
-        roomId: rawCourse.roomId,
-        status: sessionStatus(day, index, rawCourse.cancelIndex),
-        note: rawCourse.cancelIndex === index ? "Nghỉ lễ" : "",
-      });
-    });
-  }
-
   await db.transaction(
     "rw",
     [
       db.settings,
       db.users,
-      db.packages,
+      db.subscriptionPlans,
       db.classes,
+      db.classStudents,
       db.students,
       db.leads,
-      db.enrollments,
+      db.subscriptions,
       db.payments,
-      db.receivables,
+      db.installments,
       db.tasks,
       db.taskParents,
       db.attendance,
       db.courses,
+      db.courseTeachers,
+      db.courseRooms,
       db.rooms,
       db.promotions,
       db.holds,
       db.bookings,
       db.branches,
-      db.sessions,
-      db.audits,
+      db.teacherAbsences,
       db.meta,
     ],
     async () => {
       await db.settings.clear();
       await db.users.clear();
-      await db.packages.clear();
+      await db.subscriptionPlans.clear();
       await db.classes.clear();
+      await db.classStudents.clear();
       await db.students.clear();
       await db.leads.clear();
-      await db.enrollments.clear();
+      await db.subscriptions.clear();
       await db.payments.clear();
-      await db.receivables.clear();
+      await db.installments.clear();
       await db.tasks.clear();
       await db.taskParents.clear();
       await db.attendance.clear();
       await db.courses.clear();
+      await db.courseTeachers.clear();
+      await db.courseRooms.clear();
       await db.rooms.clear();
       await db.promotions.clear();
       await db.holds.clear();
       await db.bookings.clear();
       await db.branches.clear();
-      await db.sessions.clear();
-      await db.audits.clear();
+      await db.teacherAbsences.clear();
+
       await db.settings.add(raw.settings as StudioSettings);
       await db.users.bulkAdd(raw.users as User[]);
-      await db.packages.bulkAdd(raw.packages as CoursePackage[]);
-      await db.classes.bulkAdd(raw.classes as DanceClass[]);
+      await db.subscriptionPlans.bulkAdd(raw.subscriptionPlans as SubscriptionPlan[]);
       await db.courses.bulkAdd(courseRows);
-      await db.sessions.bulkAdd(sessionRows);
+      await db.courseTeachers.bulkAdd(courseTeachers);
+      await db.courseRooms.bulkAdd(courseRooms);
+      await db.classes.bulkAdd(classRows);
+      await db.classStudents.bulkAdd(classStudentRows);
       await db.branches.bulkAdd(raw.branches);
       await db.students.bulkAdd(studentRows);
       await db.leads.bulkAdd(leadRows);
-      await db.enrollments.bulkAdd(enrollmentRows);
+      await db.subscriptions.bulkAdd(subscriptionRows);
       await db.payments.bulkAdd(paymentRows);
-      await db.receivables.bulkAdd(receivableRows);
+      await db.installments.bulkAdd(installmentRows);
       await db.tasks.bulkAdd(taskRows);
       await db.taskParents.bulkAdd(taskParentRows);
       await db.attendance.bulkAdd(attendanceRows);
@@ -305,6 +445,7 @@ export async function ensureSeed(id: VerticalId) {
       await db.promotions.bulkAdd(promotionRows);
       await db.holds.bulkAdd(holdRows);
       await db.bookings.bulkAdd(bookingRows);
+      await db.teacherAbsences.bulkAdd(teacherAbsenceRows);
       await db.meta.put({ key: SEED_KEY, value: SEED_VERSION });
     },
   );

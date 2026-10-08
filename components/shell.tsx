@@ -42,43 +42,43 @@ import type { Role } from "@/types";
 
 const top = [
   { href: "/", key: "overview" as const, icon: LayoutDashboard },
-  { href: "/lich", key: "schedule" as const, icon: CalendarDays },
+  { href: "/schedule", key: "schedule" as const, icon: CalendarDays },
 ];
 
 const groups = [
   {
     title: "manage" as const,
     items: [
-      { href: "/hoc-vien", key: "students" as const, icon: Users },
-      { href: "/khoa-hoc", key: "courses" as const, icon: BookOpen },
-      { href: "/lop-hoc", key: "classes" as const, icon: GraduationCap },
-      { href: "/giao-vien", key: "teachers" as const, icon: UserRound },
-      { href: "/phong", key: "rooms" as const, icon: DoorOpen },
-      { href: "/goi-buoi", key: "packages" as const, icon: Package },
+      { href: "/students", key: "students" as const, icon: Users },
+      { href: "/courses", key: "courses" as const, icon: BookOpen },
+      { href: "/classes", key: "classes" as const, icon: GraduationCap },
+      { href: "/teachers", key: "teachers" as const, icon: UserRound },
+      { href: "/rooms", key: "rooms" as const, icon: DoorOpen },
+      { href: "/subscriptions", key: "packages" as const, icon: Package },
     ],
   },
   {
     title: "enrollGroup" as const,
     items: [
-      { href: "/ghi-danh", key: "midEnroll" as const, icon: ClipboardCheck },
+      { href: "/enroll", key: "midEnroll" as const, icon: ClipboardCheck },
       { href: "/promotion", key: "promotion" as const, icon: Tags },
-      { href: "/cham-soc", key: "care" as const, icon: HeartHandshake },
+      { href: "/leads", key: "care" as const, icon: HeartHandshake },
     ],
   },
   {
     title: "finance" as const,
     items: [
-      { href: "/thu-hoc-phi", key: "collect" as const, icon: Wallet },
-      { href: "/bao-luu", key: "holds" as const, icon: PauseCircle },
-      { href: "/doanh-thu", key: "revenue" as const, icon: LineChart },
+      { href: "/fees", key: "collect" as const, icon: Wallet },
+      { href: "/holds", key: "holds" as const, icon: PauseCircle },
+      { href: "/revenue", key: "revenue" as const, icon: LineChart },
     ],
   },
   {
     title: "ops" as const,
     items: [
-      { href: "/diem-danh", key: "attend" as const, icon: Receipt },
+      { href: "/attendance", key: "attend" as const, icon: Receipt },
       { href: "/diem-danh-qr", key: "attendQr" as const, icon: QrCode },
-      { href: "/tac-vu", key: "tasks" as const, icon: ListTodo },
+      { href: "/tasks", key: "tasks" as const, icon: ListTodo },
       { href: "/dat-phong", key: "bookings" as const, icon: DoorOpen },
     ],
   },
@@ -95,19 +95,19 @@ type MobileItem =
 function mobileForRole(role: Role | undefined): MobileItem[] {
   const base: MobileItem[] = [
     { href: "/", key: "overview", icon: LayoutDashboard },
-    { href: "/lich", key: "schedule", icon: CalendarDays },
-    { href: "/diem-danh", key: "attendShort", icon: Receipt },
+    { href: "/schedule", key: "schedule", icon: CalendarDays },
+    { href: "/attendance", key: "attendShort", icon: Receipt },
   ];
   if (role === "teacher") {
     return [
       ...base,
-      { href: "/tac-vu", key: "tasks", icon: ListTodo },
+      { href: "/tasks", key: "tasks", icon: ListTodo },
       { href: ZALO_FOUNDER, key: "support", external: true },
     ];
   }
   return [
     ...base,
-    { href: "/ghi-danh", key: "enrollShort", icon: Plus },
+    { href: "/enroll", key: "enrollShort", icon: Plus },
     { href: ZALO_FOUNDER, key: "support", external: true },
   ];
 }
@@ -158,7 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Receipt size={16} /> {t.header.attend}
       </Link>
       {canEnroll ? (
-        <Link href={`/ghi-danh${branchQuery}`} className={cn(ctaOutline, extra)}>
+        <Link href={`/enroll${branchQuery}`} className={cn(ctaOutline, extra)}>
           <Plus size={16} /> {t.header.enroll}
         </Link>
       ) : null}
@@ -170,26 +170,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </>
   );
 
-  const linkClass = (href: string) =>
-    cn(
-      "flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-medium",
-      active(href, path) ? "bg-[var(--brand-50)] text-[var(--brand-600)]" : "text-slate-600 hover:bg-slate-50",
-    );
-
-  const nav = (
-    <div className="flex h-full flex-col">
-      <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 pt-4 pb-3">
-        <BrandMark className="h-9 w-9" />
-        <span className="min-w-0 pr-6">
-          <span className="block truncate text-sm font-bold text-slate-900">Dolphin CRM</span>
-          <span className="block truncate text-xs text-slate-500">{studio}</span>
-        </span>
+  const renderNavLink = (
+    item: { href: string; key: keyof typeof t.nav; icon: typeof LayoutDashboard },
+    onNavigate?: () => void,
+  ) => {
+    const on = active(item.href, path);
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onNavigate}
+        className={cn(
+          "relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium leading-snug",
+          on ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50",
+        )}
+      >
+        {on ? (
+          <span className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[var(--brand-500)]" />
+        ) : null}
+        <Icon size={18} className={on ? "text-[var(--brand-600)]" : undefined} />
+        <span className="flex-1">{t.nav[item.key]}</span>
       </Link>
-      <div className="px-3 pb-3">
-        <label className="block text-xs font-medium text-slate-500">
-          {t.common.branch}
+    );
+  };
+
+  const groupLabelClass = "mb-1 px-3 text-[11px] font-bold tracking-wide text-slate-400 uppercase";
+
+  function NavPanel({ showBrand }: { showBrand: boolean }) {
+    const close = () => setOpen(false);
+    return (
+      <div className="flex h-full flex-col bg-[var(--card)]">
+        {showBrand ? (
+          <Link href="/" onClick={close} className="flex shrink-0 items-center gap-2.5 px-5 py-5">
+            <BrandMark className="h-10 w-10" />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold tracking-wide text-[var(--brand-600)]">DOLPHIN CRM</span>
+              <span className="block truncate text-xs text-slate-400">{studio}</span>
+            </span>
+          </Link>
+        ) : null}
+        <div className="px-3 pb-3">
+          <p className={groupLabelClass}>{t.common.branch}</p>
           <select
-            className="mt-1 h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-base text-slate-700"
+            className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-base font-normal text-slate-700"
             aria-label={t.common.branch}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
@@ -199,106 +223,119 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
-        </label>
-      </div>
-      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-        <div className="space-y-0.5">
-          {top
-            .filter((item) => canSeeNavHref(user?.role, item.href))
-            .map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-                  <Icon size={16} />
-                  {t.nav[item.key]}
-                </Link>
-              );
-            })}
         </div>
-        {visibleGroups.map((group) => (
-          <div key={group.title}>
-            <p className="mt-2 border-t border-[#E2E8F0] px-2.5 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase">
-              {t.nav[group.title]}
-            </p>
-            <ul className="space-y-0.5">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.href}>
-                    <Link href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-                      <Icon size={16} />
-                      {t.nav[item.key]}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+        <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-4">
+          <div className="space-y-0.5">
+            {top
+              .filter((item) => canSeeNavHref(user?.role, item.href))
+              .map((item) => renderNavLink(item, close))}
           </div>
-        ))}
-        {canSeeNavHref(user?.role, ai.href) ? (
-          <Link href={ai.href} onClick={() => setOpen(false)} className={linkClass(ai.href)}>
-            <Sparkles size={16} />
-            {t.nav[ai.key]}
-          </Link>
+          {visibleGroups.map((group) => (
+            <div key={group.title}>
+              <p className={groupLabelClass}>{t.nav[group.title]}</p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => renderNavLink(item, close))}
+              </div>
+            </div>
+          ))}
+          {canSeeNavHref(user?.role, ai.href) ? renderNavLink(ai, close) : null}
+        </nav>
+        {user ? (
+          <div className="shrink-0 border-t border-[var(--border)] p-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{ background: "var(--brand-500)" }}
+                aria-hidden
+              >
+                {user.name.trim().charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold leading-tight text-slate-900">{user.name}</p>
+                <p className="truncate text-xs text-slate-400">{roleLabel(user.role, lang)}</p>
+              </div>
+            </div>
+          </div>
         ) : null}
-      </nav>
-    </div>
-  );
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-dvh">
-      <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:block">{nav}</aside>
+    <div className="flex h-dvh overflow-hidden bg-[var(--background)]">
+      <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)] lg:flex">
+        <NavPanel showBrand />
+      </aside>
       {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <aside className="relative h-full w-72 bg-white shadow-xl">
-            <button className="absolute top-3 right-3 z-10" onClick={() => setOpen(false)} aria-label={t.common.close}>
-              <X size={18} />
-            </button>
-            {nav}
-          </aside>
-        </div>
-      ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-          <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
-            <button className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[#E2E8F0] lg:hidden" onClick={() => setOpen(true)} aria-label={t.common.menu}>
-              <Menu size={18} />
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900">{studio}</p>
-              <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
+        <>
+          <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
+          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[var(--card)] shadow-2xl lg:hidden">
+            <div className="flex items-center justify-between px-4 py-4">
+              <div className="flex items-center gap-2">
+                <BrandMark className="h-8 w-8" />
+                <p className="font-bold text-[var(--brand-600)]">Dolphin CRM</p>
+              </div>
+              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label={t.common.close}>
+                <X size={18} />
+              </button>
             </div>
-            <div role="group" aria-label={t.common.language} className="inline-flex h-10 shrink-0 items-center rounded-[10px] border border-[#E2E8F0] p-0.5 text-xs font-bold">
-              {(["vi", "en"] as const).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  aria-pressed={lang === code}
-                  onClick={() => setLang(code)}
-                  className={cn("h-8 rounded-[8px] px-2", lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500 hover:bg-slate-100")}
-                >
-                  {code.toUpperCase()}
-                </button>
-              ))}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <NavPanel showBrand={false} />
             </div>
-            <div className="hidden items-center gap-2 lg:flex">{ctas("")}</div>
-            <button
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
-              aria-label={t.common.logout}
-              onClick={() => {
-                logout();
-                router.replace("/login");
-              }}
-            >
-              <LogOut size={18} />
-            </button>
           </div>
+        </>
+      ) : null}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="z-30 flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--card)]/95 px-3 py-3 backdrop-blur sm:px-5">
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border)] lg:hidden"
+            onClick={() => setOpen(true)}
+            aria-label={t.common.menu}
+          >
+            <Menu size={18} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-slate-900">{studio}</p>
+            <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
+          </div>
+          <div
+            role="group"
+            aria-label={t.common.language}
+            className="inline-flex h-9 shrink-0 items-center rounded-full border border-slate-200 p-0.5 text-xs font-bold"
+          >
+            {(["vi", "en"] as const).map((code) => (
+              <button
+                key={code}
+                type="button"
+                aria-pressed={lang === code}
+                onClick={() => setLang(code)}
+                className={cn(
+                  "min-h-8 rounded-full px-2.5",
+                  lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500 hover:bg-slate-100",
+                )}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <div className="hidden items-center gap-2 lg:flex">{ctas("")}</div>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
+            aria-label={t.common.logout}
+            onClick={() => {
+              logout();
+              router.replace("/login");
+            }}
+          >
+            <LogOut size={18} />
+          </button>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="grid grid-cols-5">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="grid grid-cols-5 gap-1">
           {mobile.map((item) => {
             if ("external" in item) {
               return (
@@ -307,25 +344,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium text-slate-400"
+                  className="flex min-h-14 flex-col items-center justify-center gap-1 text-[14px] font-medium text-slate-700"
                 >
-                  <SupportIcon className="h-[18px] w-[18px] opacity-70" />
+                  <SupportIcon className="h-5 w-5" />
                   {t.nav.support}
                 </a>
               );
             }
             const Icon = item.icon;
-            const label = item.key === "tasks" ? t.nav.tasks : t.nav[item.key];
+            const on = active(item.href, path);
+            const label =
+              item.key === "tasks"
+                ? t.nav.tasks
+                : item.key === "attendShort"
+                  ? t.nav.attendShort
+                  : item.key === "enrollShort"
+                    ? t.nav.enrollShort
+                    : t.nav[item.key];
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
-                  active(item.href, path) ? "text-[var(--brand-600)]" : "text-slate-400",
+                  "flex min-h-14 flex-col items-center justify-center gap-1 rounded-[10px] text-[14px] font-medium",
+                  on ? "text-[var(--brand-600)]" : "text-slate-700",
                 )}
               >
-                <Icon size={18} />
+                <Icon size={20} />
                 {label}
               </Link>
             );
@@ -338,9 +383,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         rel="noreferrer"
         aria-label={t.nav.support}
         title={t.nav.support}
-        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] hover:bg-[var(--brand-600)] lg:inline-flex"
+        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white shadow-lg hover:bg-slate-50 lg:inline-flex"
       >
-        <SupportIcon className="h-[22px] w-[22px] brightness-0 invert" />
+        <SupportIcon className="h-6 w-6" />
       </a>
     </div>
   );

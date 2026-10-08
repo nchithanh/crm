@@ -13,7 +13,7 @@ export default function RoomBookingsPage() {
   const label = { booked: t.pages.booked, done: t.pages.bookingDone, cancelled: t.status.cancelled } as const;
   return (
     <div>
-      <h1 className="text-xl font-bold">{t.pages.booking}</h1>
+      <h1 className="crm-page-title">{t.pages.booking}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.pages.bookingLead}</p>
       <div className="mt-4 space-y-3">
         {[...bookings].sort((a, b) => (a.day < b.day ? 1 : -1)).map((b) => (

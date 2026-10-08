@@ -1,7 +1,7 @@
 "use client";
 
-import { ClientRedirect } from "@/components/client-redirect";
+import { RouteRedirect } from "@/components/route-redirect";
 
-export default function OldLeadsRedirect() {
-  return <ClientRedirect href="/cham-soc" />;
+export default function LegacyRedirect() {
+  return <RouteRedirect to="/leads" />;
 }

@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
+/** CTA: text-sm / font-semibold — design-language.md */
 export const ctaPrimary =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)] active:bg-[var(--brand-700)]";
+  "inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)] active:bg-[var(--brand-700)]";
 export const ctaOutline =
-  "crm-outline inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)] hover:bg-[var(--brand-50)] active:bg-[var(--brand-100)]";
+  "crm-outline inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)] hover:bg-[var(--brand-50)] active:bg-[var(--brand-100)]";
 export const ctaGhost =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200";
+  "inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200";
 
 export function Button({
   className,
@@ -68,12 +69,12 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block min-w-0 text-sm">
-      <span className="text-slate-500">{label}</span>
+    <label className="crm-body block min-w-0">
+      <span className="crm-lead">{label}</span>
       <div className="mt-1 min-w-0">{children}</div>
     </label>
   );
 }
 
 export const inputClass =
-  "h-10 w-full min-w-0 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-base text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
+  "h-10 w-full min-w-0 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-base font-normal text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
