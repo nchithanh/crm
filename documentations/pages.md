@@ -4,7 +4,7 @@
 | --- | --- |
 | `/chon-linh-vuc` | Chọn lĩnh vực trước login: Edu Dance, Edu English, Edu Music, Edu Swim. Mỗi mục một IndexedDB |
 | `/login` | PIN |
-| `/` | Tổng quan: KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh lấy từ header. Mobile: menu đáy Tổng quan · Lịch · Điểm danh · Đăng ký · Support (Zalo). Máy tính: icon Support góc dưới phải + CTA header |
+| `/` | Tổng quan: KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh chọn trong sidebar / menu. Mobile: menu đáy Tổng quan · Lịch · Điểm danh · Đăng ký · Support (Zalo). Máy tính: icon Support góc dưới phải + CTA header |
 | `/lich` | Lịch tuần (lưới 07:00–22:00), tháng, theo phòng / giáo viên / chi nhánh. Kéo thả có chặn trùng. Drawer điểm danh, đổi giáo viên, đổi phòng, hủy buổi |
 | `/hoc-vien` | Bảng sắp xếp, lọc, chọn nhiều, xuất CSV. Drawer hồ sơ: thông tin, khóa, điểm danh, thanh toán, bảo lưu, hoạt động |
 | `/hoc-vien/[id]` | Mở lại danh sách và drawer của học viên đó |
@@ -22,7 +22,7 @@
 | `/doanh-thu` | Tiền đã thu |
 | `/diem-danh` | Điểm danh tay: chọn buổi, nút lớn, trừ buổi ngay, hoàn tác, bảo lưu bị khóa, tóm tắt cuối buổi |
 | `/diem-danh-qr` | Mã giả lập + nút giả lập quét |
-| `/tac-vu` | Việc trong ngày |
+| `/tac-vu` | Tác vụ nhân sự: List + Board (Todo → In progress → Verify → Feedback → Done). Nhóm việc (parent/campaign), lọc nhóm, gán người, hạn, ưu tiên. Drawer: chọn/tạo nhóm, comment + Gọi/Zalo người nhận. Giáo viên chỉ việc của mình |
 | `/dat-phong` | Đặt phòng thuê |
 | `/ai` | Gợi ý từ dữ liệu mẫu, chưa nối mô hình |
 

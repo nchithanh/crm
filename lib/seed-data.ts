@@ -10,6 +10,7 @@ import nhay_enrollments from "@/data/nhay/enrollments.json";
 import nhay_payments from "@/data/nhay/payments.json";
 import nhay_receivables from "@/data/nhay/receivables.json";
 import nhay_tasks from "@/data/nhay/tasks.json";
+import nhay_taskParents from "@/data/nhay/task-parents.json";
 import nhay_attendance from "@/data/nhay/attendance.json";
 import nhay_courses from "@/data/nhay/courses.json";
 import nhay_rooms from "@/data/nhay/rooms.json";
@@ -28,6 +29,7 @@ import anh_enrollments from "@/data/anh/enrollments.json";
 import anh_payments from "@/data/anh/payments.json";
 import anh_receivables from "@/data/anh/receivables.json";
 import anh_tasks from "@/data/anh/tasks.json";
+import anh_taskParents from "@/data/anh/task-parents.json";
 import anh_attendance from "@/data/anh/attendance.json";
 import anh_courses from "@/data/anh/courses.json";
 import anh_rooms from "@/data/anh/rooms.json";
@@ -46,6 +48,7 @@ import nhac_enrollments from "@/data/nhac/enrollments.json";
 import nhac_payments from "@/data/nhac/payments.json";
 import nhac_receivables from "@/data/nhac/receivables.json";
 import nhac_tasks from "@/data/nhac/tasks.json";
+import nhac_taskParents from "@/data/nhac/task-parents.json";
 import nhac_attendance from "@/data/nhac/attendance.json";
 import nhac_courses from "@/data/nhac/courses.json";
 import nhac_rooms from "@/data/nhac/rooms.json";
@@ -64,6 +67,7 @@ import boi_enrollments from "@/data/boi/enrollments.json";
 import boi_payments from "@/data/boi/payments.json";
 import boi_receivables from "@/data/boi/receivables.json";
 import boi_tasks from "@/data/boi/tasks.json";
+import boi_taskParents from "@/data/boi/task-parents.json";
 import boi_attendance from "@/data/boi/attendance.json";
 import boi_courses from "@/data/boi/courses.json";
 import boi_rooms from "@/data/boi/rooms.json";
@@ -74,10 +78,10 @@ import boi_branches from "@/data/boi/branches.json";
 
 export function loadSeed(id: VerticalId) {
   const table = {
-    nhay: { settings: nhay_settings, users: nhay_users, packages: nhay_packages, classes: nhay_classes, students: nhay_students, leads: nhay_leads, enrollments: nhay_enrollments, payments: nhay_payments, receivables: nhay_receivables, tasks: nhay_tasks, attendance: nhay_attendance, courses: nhay_courses, rooms: nhay_rooms, promotions: nhay_promotions, holds: nhay_holds, bookings: nhay_bookings, branches: nhay_branches },
-    anh: { settings: anh_settings, users: anh_users, packages: anh_packages, classes: anh_classes, students: anh_students, leads: anh_leads, enrollments: anh_enrollments, payments: anh_payments, receivables: anh_receivables, tasks: anh_tasks, attendance: anh_attendance, courses: anh_courses, rooms: anh_rooms, promotions: anh_promotions, holds: anh_holds, bookings: anh_bookings, branches: anh_branches },
-    nhac: { settings: nhac_settings, users: nhac_users, packages: nhac_packages, classes: nhac_classes, students: nhac_students, leads: nhac_leads, enrollments: nhac_enrollments, payments: nhac_payments, receivables: nhac_receivables, tasks: nhac_tasks, attendance: nhac_attendance, courses: nhac_courses, rooms: nhac_rooms, promotions: nhac_promotions, holds: nhac_holds, bookings: nhac_bookings, branches: nhac_branches },
-    boi: { settings: boi_settings, users: boi_users, packages: boi_packages, classes: boi_classes, students: boi_students, leads: boi_leads, enrollments: boi_enrollments, payments: boi_payments, receivables: boi_receivables, tasks: boi_tasks, attendance: boi_attendance, courses: boi_courses, rooms: boi_rooms, promotions: boi_promotions, holds: boi_holds, bookings: boi_bookings, branches: boi_branches },
+    nhay: { settings: nhay_settings, users: nhay_users, packages: nhay_packages, classes: nhay_classes, students: nhay_students, leads: nhay_leads, enrollments: nhay_enrollments, payments: nhay_payments, receivables: nhay_receivables, tasks: nhay_tasks, taskParents: nhay_taskParents, attendance: nhay_attendance, courses: nhay_courses, rooms: nhay_rooms, promotions: nhay_promotions, holds: nhay_holds, bookings: nhay_bookings, branches: nhay_branches },
+    anh: { settings: anh_settings, users: anh_users, packages: anh_packages, classes: anh_classes, students: anh_students, leads: anh_leads, enrollments: anh_enrollments, payments: anh_payments, receivables: anh_receivables, tasks: anh_tasks, taskParents: anh_taskParents, attendance: anh_attendance, courses: anh_courses, rooms: anh_rooms, promotions: anh_promotions, holds: anh_holds, bookings: anh_bookings, branches: anh_branches },
+    nhac: { settings: nhac_settings, users: nhac_users, packages: nhac_packages, classes: nhac_classes, students: nhac_students, leads: nhac_leads, enrollments: nhac_enrollments, payments: nhac_payments, receivables: nhac_receivables, tasks: nhac_tasks, taskParents: nhac_taskParents, attendance: nhac_attendance, courses: nhac_courses, rooms: nhac_rooms, promotions: nhac_promotions, holds: nhac_holds, bookings: nhac_bookings, branches: nhac_branches },
+    boi: { settings: boi_settings, users: boi_users, packages: boi_packages, classes: boi_classes, students: boi_students, leads: boi_leads, enrollments: boi_enrollments, payments: boi_payments, receivables: boi_receivables, tasks: boi_tasks, taskParents: boi_taskParents, attendance: boi_attendance, courses: boi_courses, rooms: boi_rooms, promotions: boi_promotions, holds: boi_holds, bookings: boi_bookings, branches: boi_branches },
   };
   return table[id];
 }

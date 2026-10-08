@@ -19,6 +19,7 @@ import type {
   Student,
   StudioSettings,
   StudioTask,
+  TaskParent,
   User,
 } from "@/types";
 import {
@@ -39,6 +40,7 @@ export class DolphinCrmDB extends Dexie {
   payments!: EntityTable<Payment, "id">;
   receivables!: EntityTable<Receivable, "id">;
   tasks!: EntityTable<StudioTask, "id">;
+  taskParents!: EntityTable<TaskParent, "id">;
   courses!: EntityTable<Course, "id">;
   rooms!: EntityTable<Room, "id">;
   promotions!: EntityTable<Promotion, "id">;
@@ -76,6 +78,13 @@ export class DolphinCrmDB extends Dexie {
       branches: "id",
       sessions: "id, courseId, classId, day, branchId, teacherId",
       audits: "id, sessionId",
+    });
+    this.version(4).stores({
+      tasks: "id, dueDay, status, assigneeId",
+    });
+    this.version(5).stores({
+      taskParents: "id",
+      tasks: "id, dueDay, status, assigneeId, parentId",
     });
   }
 }

@@ -23,3 +23,7 @@ export function canCollect(role: Role | undefined) {
 export function canManageCatalog(role: Role | undefined) {
   return role === "owner" || role === "reception";
 }
+
+export function canManageTasks(role: Role | undefined) {
+  return role === "owner" || role === "reception";
+}

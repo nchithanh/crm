@@ -245,11 +245,32 @@ export type Receivable = {
   dueDay: string;
 };
 
+export type TaskStatus = "todo" | "inprogress" | "verify" | "feedback" | "done";
+export type TaskPriority = "low" | "medium" | "high";
+
+export type TaskComment = {
+  id: string;
+  day: string;
+  actorId: string;
+  text: string;
+};
+
+export type TaskParent = {
+  id: string;
+  name: string;
+};
+
 export type StudioTask = {
   id: string;
   title: string;
-  done: boolean;
-  day: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assigneeId: string;
+  branchId: string;
+  parentId: string;
+  dueDay: string;
+  note: string;
+  comments: TaskComment[];
 };
 
 export type Meta = {

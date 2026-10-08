@@ -146,6 +146,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="block truncate text-xs text-slate-500">{studio}</span>
         </span>
       </Link>
+      <div className="px-3 pb-3">
+        <label className="block text-xs font-medium text-slate-500">
+          {t.common.branch}
+          <select
+            className="mt-1 h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-base text-slate-700"
+            aria-label={t.common.branch}
+            value={branchId}
+            onChange={(e) => setBranchId(e.target.value)}
+          >
+            <option value="all">{t.common.allBranches}</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+        </label>
+      </div>
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         <div className="space-y-0.5">
           {top.map((item) => {
@@ -216,10 +232,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="truncate text-sm font-semibold text-slate-900">{studio}</p>
               <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
             </div>
-            <select className="h-10 max-w-[7.5rem] shrink-0 rounded-[8px] border border-[#E2E8F0] bg-white px-2 text-sm text-slate-700 sm:max-w-none sm:px-3" aria-label={t.common.branch} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-              <option value="all">{t.common.allBranches}</option>
-              {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
             <div role="group" aria-label={t.common.language} className="inline-flex h-10 shrink-0 items-center rounded-[10px] border border-[#E2E8F0] p-0.5 text-xs font-bold">
               {(["vi", "en"] as const).map((code) => (
                 <button

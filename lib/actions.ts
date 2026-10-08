@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { localDayKey, uid, weekdayShort } from "@/lib/utils";
-import type { AttendStatus, LeadStage, Level, PayMethod, Role } from "@/types";
+import type { AttendStatus, LeadStage, Level, PayMethod, Role, TaskPriority, TaskStatus } from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
   const lead = await db.leads.get(id);
@@ -155,7 +155,85 @@ export async function restoreAttendance(input: {
 }
 
 export async function toggleTask(id: string, done: boolean) {
-  await db.tasks.update(id, { done });
+  await db.tasks.update(id, { status: done ? "done" : "todo" });
+}
+
+export async function createTaskParent(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "fields" as const };
+  const id = uid("tp");
+  await db.taskParents.add({ id, name: trimmed });
+  return { id };
+}
+
+export async function createTask(input: {
+  title: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assigneeId?: string;
+  branchId?: string;
+  parentId?: string;
+  dueDay?: string;
+  note?: string;
+}) {
+  const title = input.title.trim();
+  if (!title) return "fields";
+  await db.tasks.add({
+    id: uid("tk"),
+    title,
+    status: input.status ?? "todo",
+    priority: input.priority ?? "medium",
+    assigneeId: input.assigneeId ?? "",
+    branchId: input.branchId ?? "",
+    parentId: input.parentId ?? "",
+    dueDay: input.dueDay || localDayKey(),
+    note: (input.note ?? "").trim(),
+    comments: [],
+  });
+  return "";
+}
+
+export async function addTaskComment(input: { taskId: string; actorId: string; text: string }) {
+  const task = await db.tasks.get(input.taskId);
+  const text = input.text.trim();
+  if (!task || !text || !input.actorId) return "fields";
+  await db.tasks.update(input.taskId, {
+    comments: [
+      ...(task.comments ?? []),
+      { id: uid("tc"), day: localDayKey(), actorId: input.actorId, text },
+    ],
+  });
+  return "";
+}
+
+export async function updateTask(input: {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assigneeId: string;
+  branchId: string;
+  parentId: string;
+  dueDay: string;
+  note: string;
+}) {
+  const title = input.title.trim();
+  if (!title || !input.dueDay) return "fields";
+  await db.tasks.update(input.id, {
+    title,
+    status: input.status,
+    priority: input.priority,
+    assigneeId: input.assigneeId,
+    branchId: input.branchId,
+    parentId: input.parentId,
+    dueDay: input.dueDay,
+    note: input.note.trim(),
+  });
+  return "";
+}
+
+export async function moveTaskStatus(id: string, status: TaskStatus) {
+  await db.tasks.update(id, { status });
 }
 
 export async function payReceivable(input: {

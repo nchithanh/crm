@@ -11,7 +11,7 @@ export default function AiPage() {
   const tasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const today = localDayKey();
-  const overdue = tasks.filter((t) => !t.done && t.day < today);
+  const overdue = tasks.filter((t) => t.status !== "done" && t.dueDay < today);
   const debtors = students.filter((s) => s.debt > 0);
 
   return (
@@ -23,7 +23,7 @@ export default function AiPage() {
           <h2 className="font-semibold">{t.pages.overdueTasks}</h2>
           <ul className="mt-2 space-y-2 text-sm">
             {overdue.length === 0 ? <li className="text-slate-500">{t.pages.noOverdue}</li> : null}
-            {overdue.map((t) => <li key={t.id}>{t.title} · {t.day}</li>)}
+            {overdue.map((t) => <li key={t.id}>{t.title} · {t.dueDay}</li>)}
           </ul>
         </Card>
         <Card className="p-4">

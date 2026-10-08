@@ -1,5 +1,5 @@
 import { copy, type Lang } from "@/lib/copy";
-import type { AttendStatus, DebtStatus, LeadStage, StudentStatus } from "@/types";
+import type { AttendStatus, DebtStatus, LeadStage, StudentStatus, TaskPriority, TaskStatus } from "@/types";
 
 export function leadStages(lang: Lang) {
   const s = copy[lang].status;
@@ -60,4 +60,32 @@ export function holdStatusLabel(status: string, lang: Lang) {
   if (status === "approved") return s.holdApproved;
   if (status === "rejected") return s.holdRejected;
   return s.holdEnded;
+}
+
+export function taskStatuses(lang: Lang) {
+  const t = copy[lang].task;
+  return [
+    { id: "todo" as const, label: t.todo },
+    { id: "inprogress" as const, label: t.inprogress },
+    { id: "verify" as const, label: t.verify },
+    { id: "feedback" as const, label: t.feedback },
+    { id: "done" as const, label: t.done },
+  ];
+}
+
+export function taskStatusLabel(status: TaskStatus, lang: Lang) {
+  return taskStatuses(lang).find((s) => s.id === status)?.label ?? status;
+}
+
+export function taskPriorities(lang: Lang) {
+  const t = copy[lang].task;
+  return [
+    { id: "low" as const, label: t.low },
+    { id: "medium" as const, label: t.medium },
+    { id: "high" as const, label: t.high },
+  ];
+}
+
+export function taskPriorityLabel(priority: TaskPriority, lang: Lang) {
+  return taskPriorities(lang).find((p) => p.id === priority)?.label ?? priority;
 }

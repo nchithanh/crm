@@ -2,6 +2,11 @@
 
 ## 2026-10-08
 
+- Tác vụ: 5 stage Board — Todo, In progress, Verify, Feedback, Done. Remap nhóm việc seed. Seed `12`.
+- Tác vụ: nhóm việc (parent/campaign) — lọc, badge, gán trong drawer, tạo nhóm mới. Seed `11`.
+- Tác vụ: drawer có lịch sử comment và nút Gọi / Zalo tới người nhận. Seed `10`.
+- Tác vụ: quản lý việc nhân sự kiểu Jira — List và Board, gán người, hạn, ưu tiên, kéo cột. Seed `9`.
+- Chọn chi nhánh chỉ còn trong sidebar / menu drawer. Bỏ khỏi header.
 - Form khóa/lớp trên mobile: giờ bắt đầu và kết thúc xếp dọc; input 16px để Safari không zoom khi focus.
 - Menu đáy mobile: Tổng quan, Lịch, Điểm danh, Đăng ký, Support (Zalo founder). Bỏ hàng CTA trùng dưới menu. Máy tính: icon Support cố định góc dưới phải (headset + chat). CTA header giữ nguyên.
 - Lịch mẫu thêm hai khóa sáng: 07:00–08:30 (thứ 2, thứ 4, thứ 7) và 08:00–09:30 (thứ 3, thứ 5, chủ nhật). Seed `8`.

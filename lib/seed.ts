@@ -19,11 +19,12 @@ import type {
   Student,
   StudioSettings,
   StudioTask,
+  TaskParent,
   User,
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "8";
+const SEED_VERSION = "12";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -105,12 +106,50 @@ export async function ensureSeed(id: VerticalId) {
     dueDay: dayFromOffset(r.dueOffset),
   }));
 
-  const taskRows: StudioTask[] = raw.tasks.map((t) => ({
-    id: t.id,
-    title: t.title,
-    done: t.done,
-    day: dayFromOffset(t.offset),
-  }));
+  const taskRows: StudioTask[] = raw.tasks.map((t) => {
+    const row = t as {
+      id: string;
+      title: string;
+      offset: number;
+      status?: string;
+      priority?: StudioTask["priority"];
+      assigneeId?: string;
+      branchId?: string;
+      parentId?: string;
+      note?: string;
+      done?: boolean;
+      comments?: { id: string; actorId: string; offset: number; text: string }[];
+    };
+    const rawStatus = row.status === "doing" ? "inprogress" : row.status;
+    const status: StudioTask["status"] =
+      rawStatus === "todo" ||
+      rawStatus === "inprogress" ||
+      rawStatus === "verify" ||
+      rawStatus === "feedback" ||
+      rawStatus === "done"
+        ? rawStatus
+        : row.done
+          ? "done"
+          : "todo";
+    return {
+      id: row.id,
+      title: row.title,
+      status,
+      priority: row.priority ?? "medium",
+      assigneeId: row.assigneeId ?? "",
+      branchId: row.branchId ?? "",
+      parentId: row.parentId ?? "",
+      dueDay: dayFromOffset(row.offset),
+      note: row.note ?? "",
+      comments: (row.comments ?? []).map((c) => ({
+        id: c.id,
+        actorId: c.actorId,
+        day: dayFromOffset(c.offset),
+        text: c.text,
+      })),
+    };
+  });
+  const taskParentRows = (raw.taskParents ?? []) as TaskParent[];
 
   const attendanceRows: Attendance[] = raw.attendance.map((a) => {
     const day = dayFromOffset(a.offset);
@@ -214,6 +253,7 @@ export async function ensureSeed(id: VerticalId) {
       db.payments,
       db.receivables,
       db.tasks,
+      db.taskParents,
       db.attendance,
       db.courses,
       db.rooms,
@@ -236,6 +276,7 @@ export async function ensureSeed(id: VerticalId) {
       await db.payments.clear();
       await db.receivables.clear();
       await db.tasks.clear();
+      await db.taskParents.clear();
       await db.attendance.clear();
       await db.courses.clear();
       await db.rooms.clear();
@@ -258,6 +299,7 @@ export async function ensureSeed(id: VerticalId) {
       await db.payments.bulkAdd(paymentRows);
       await db.receivables.bulkAdd(receivableRows);
       await db.tasks.bulkAdd(taskRows);
+      await db.taskParents.bulkAdd(taskParentRows);
       await db.attendance.bulkAdd(attendanceRows);
       await db.rooms.bulkAdd(raw.rooms);
       await db.promotions.bulkAdd(promotionRows);

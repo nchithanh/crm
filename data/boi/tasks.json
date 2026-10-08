@@ -2,49 +2,133 @@
   {
     "id": "t1",
     "title": "Duyệt bảo lưu Tô Phương (gói 1 tháng)",
-    "done": false,
-    "offset": 0
+    "status": "todo",
+    "priority": "high",
+    "assigneeId": "u_owner",
+    "branchId": "b-a",
+    "offset": 0,
+    "note": "Gói ngắn — cần gói bảo lưu lẻ.",
+    "parentId": "tp-ops"
   },
   {
     "id": "t2",
     "title": "Nhắc học phí Phan Bình — Bể Mai",
-    "done": false,
-    "offset": 0
+    "status": "feedback",
+    "priority": "high",
+    "assigneeId": "u_reception",
+    "branchId": "b-a",
+    "offset": 0,
+    "note": "Còn nợ tháng này.",
+    "comments": [
+      {
+        "id": "tc1",
+        "actorId": "u_owner",
+        "offset": -1,
+        "text": "Ưu tiên gọi trước 18:00."
+      },
+      {
+        "id": "tc2",
+        "actorId": "u_reception",
+        "offset": 0,
+        "text": "Đã nhắn Zalo, chờ phản hồi."
+      }
+    ],
+    "parentId": "tp-sale-7"
   },
   {
     "id": "t3",
     "title": "Soạn sĩ số lớp tối nay",
-    "done": true,
-    "offset": 0
+    "status": "done",
+    "priority": "medium",
+    "assigneeId": "u_bao",
+    "branchId": "b-a",
+    "offset": 0,
+    "note": "",
+    "parentId": "tp-ops"
   },
   {
     "id": "t4",
     "title": "Gửi lịch tuần cho giáo viên",
-    "done": false,
-    "offset": 0
+    "status": "todo",
+    "priority": "medium",
+    "assigneeId": "u_reception",
+    "branchId": "",
+    "offset": 1,
+    "note": "Zalo nhóm giáo viên.",
+    "parentId": "tp-ops"
   },
   {
     "id": "t5",
     "title": "Nhắc học phí Vũ Minh — còn 1 buổi",
-    "done": false,
-    "offset": 0
+    "status": "inprogress",
+    "priority": "high",
+    "assigneeId": "u_reception",
+    "branchId": "b-b",
+    "offset": 0,
+    "note": "",
+    "parentId": "tp-sale-7"
   },
   {
     "id": "t6",
     "title": "Gọi lại lead Lê Bảo Châu (lạnh 8 ngày)",
-    "done": false,
-    "offset": 0
+    "status": "verify",
+    "priority": "medium",
+    "assigneeId": "u_reception",
+    "branchId": "b-c",
+    "offset": 0,
+    "note": "Ưu tiên buổi tối.",
+    "comments": [
+      {
+        "id": "tc3",
+        "actorId": "u_reception",
+        "offset": -2,
+        "text": "Máy bận lần 1."
+      }
+    ],
+    "parentId": "tp-sale-7"
   },
   {
     "id": "t7",
     "title": "Thu nốt gói Đinh Khoa",
-    "done": false,
-    "offset": 1
+    "status": "todo",
+    "priority": "medium",
+    "assigneeId": "u_owner",
+    "branchId": "b-a",
+    "offset": 2,
+    "note": "",
+    "parentId": "tp-sale-7"
   },
   {
     "id": "t8",
     "title": "Xác nhận bảo lưu Võ My với giáo viên",
-    "done": true,
-    "offset": -1
+    "status": "done",
+    "priority": "low",
+    "assigneeId": "u_nam",
+    "branchId": "b-b",
+    "offset": -1,
+    "note": "",
+    "parentId": "tp-ops"
+  },
+  {
+    "id": "t9",
+    "title": "Kiểm tra bể trước ca sáng",
+    "status": "verify",
+    "priority": "low",
+    "assigneeId": "u_bao",
+    "branchId": "b-a",
+    "offset": 1,
+    "note": "Chlorine và phao.",
+    "parentId": "tp-ops"
+  },
+  {
+    "id": "t10",
+    "title": "Onboard giáo viên mới — hướng dẫn điểm danh",
+    "status": "inprogress",
+    "priority": "medium",
+    "assigneeId": "u_owner",
+    "branchId": "",
+    "offset": 3,
+    "note": "",
+    "parentId": "tp-onboard"
   }
 ]
