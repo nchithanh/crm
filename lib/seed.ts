@@ -27,7 +27,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "14b";
+const SEED_VERSION = "14c";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -112,6 +112,19 @@ export async function ensureSeed(id: VerticalId) {
         note: rawCourse.cancelIndex === index ? "Nghỉ lễ" : "",
       });
     });
+  }
+
+  const classOverrides = (
+    raw as {
+      classOverrides?: { classId: string; teacherId?: string; roomId?: string; note?: string }[];
+    }
+  ).classOverrides ?? [];
+  for (const ov of classOverrides) {
+    const klass = classRows.find((c) => c.id === ov.classId);
+    if (!klass) continue;
+    if (ov.teacherId) klass.teacherId = ov.teacherId;
+    if (ov.roomId !== undefined) klass.roomId = ov.roomId;
+    if (ov.note) klass.note = ov.note;
   }
 
   const courseTeachers = raw.courseTeachers as CourseTeacher[];

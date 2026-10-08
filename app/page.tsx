@@ -10,6 +10,7 @@ import {
   Clock,
   LineChart,
   Plus,
+  Sparkles,
   Users,
   Wallet,
 } from "lucide-react";
@@ -279,7 +280,7 @@ export default function DashboardPage() {
       fullClasses.length ? { id: "full", label: t.dash.urgentFull, count: fullClasses.length, href: "/classes" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const watch = [
-      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/fees${q}` } : null,
+      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/finance/debts${q}` } : null,
       ending3.length ? { id: "end", label: t.dash.watchEnd, count: ending3.length, href: `/courses${q}` } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const info = [
@@ -366,7 +367,7 @@ export default function DashboardPage() {
       hint: showMoney
         ? fill(t.dash.revenueHint, { arrow: model.revenueTrend >= 0 ? "↑" : "↓", pct: Math.abs(model.revenueTrend), prev: formatVnd(model.revenuePrev) })
         : t.common.hiddenTeacher,
-      href: showMoney ? `/doanh-thu${q}` : "",
+      href: showMoney ? `/finance/revenue${q}` : "",
       icon: Wallet,
     },
     {
@@ -374,7 +375,7 @@ export default function DashboardPage() {
       label: t.dash.debtOpen,
       value: showMoney ? formatVnd(model.debtTotal) : "—",
       hint: showMoney ? fill(t.dash.debtHint, { n: model.debtStudents, share: model.debtShare }) : t.common.hiddenTeacher,
-      href: showMoney ? `/fees${q}` : "",
+      href: showMoney ? `/finance/collect${q}` : "",
       icon: AlertTriangle,
       warn: showMoney && model.debtTotal > 0,
     },
@@ -410,7 +411,7 @@ export default function DashboardPage() {
             <Plus size={16} /> {t.dash.enrollStudent}
           </Link>
           {showMoney ? (
-            <Link href={`/doanh-thu${q}`} className={ctaGhost}>
+            <Link href={`/finance/revenue${q}`} className={ctaGhost}>
               <LineChart size={16} /> {t.dash.viewReport}
             </Link>
           ) : null}
@@ -574,7 +575,14 @@ export default function DashboardPage() {
           ) : null}
         </section>
         <section className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-          <h2 className="text-base font-semibold">{t.dash.tasks}</h2>
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <Link href="/ai" className="inline-flex items-center gap-2 hover:text-[var(--brand-700)]">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--brand-50)] text-[var(--brand-600)]">
+                <Sparkles size={16} aria-hidden />
+              </span>
+              {t.dash.tasks}
+            </Link>
+          </h2>
           {model.groups.length === 0 ? (
             <div className="mt-8 text-center">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">

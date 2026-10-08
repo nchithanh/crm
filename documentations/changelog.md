@@ -2,6 +2,16 @@
 
 ## 2026-10-09
 
+- Mobile bottom: bỏ Support; owner/lễ tân **Học phí** ở giữa → `/finance/collect`; giáo viên 4 tab (không Support).
+- Thu học phí: lưới Tiền mặt / CK / QR / Nợ; QR demo + Chia sẻ / Gửi Zalo; dialog xác nhận + success kiểu POS.
+- Ghi danh: bỏ thu ngay ở bước 4; sau xác nhận CTA **Thu học phí** → `/finance/collect?student=` (+ xem HV / ghi danh tiếp).
+- **Tài chính** (align POS, domain học phí): hub `/finance` + collect / debts / revenue / ledger; KPI, date range, aging, chart tiền vào (semantic green); nav nhóm Tài chính; Bảo lưu → Ops; redirect `/fees` `/revenue` `/cong-no` `/doanh-thu`.
+- Lịch: filter select dùng `inputClassInline` (không `w-full`) — hết full-bleed trên desktop.
+- Dashboard / nav: **Dolphin AI** (+ icon Sparkles) thay “Việc cần xử lý” / AI vận hành.
+- Seed **14c** (`nhay`): denser relationships — HV lớp sáng, assistant, class-overrides GV/phòng, installment≈sub active, attendance+GV, sub expired/history.
+- Detail Overview: course hub + student/teacher drawer — tab Tổng quan đầu tiên stack toàn bộ data các tab còn lại.
+- Attendance: thanh Đã điểm danh/Xong `fixed` sát đáy (trên bottom nav) — hết treo giữa list vì `sticky`.
+- Vertical emoji (kiểu POS): 💃📘🎵🏊 chỉ trên thẻ `/choose-vertical` (không gắn tên studio/login).
 - Shell menu: chữ **14px**; inactive bỏ `slate-500` → `slate-700` (sidebar + bottom tab).
 - Shell nav align POS: active bar trái + slate bg, `min-h-11`, group label bold, VI/EN pill, bottom tab gap/icon 20, FAB trắng; wordmark DOLPHIN CRM.
 - Design language (align POS): stack Geist→Inter→Be Vietnam; body 14/400; utilities `.crm-page-title` / `.crm-section-title` / `.crm-kpi` / `.crm-lead` / `.crm-meta`; SoT `context/design-language.md`.

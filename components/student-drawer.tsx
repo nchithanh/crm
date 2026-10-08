@@ -17,7 +17,7 @@ import { studentBadges } from "@/lib/student-badges";
 import { ageYears, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
-const tabIds = ["info", "courses", "attendance", "money", "hold", "activity"] as const;
+const tabIds = ["overview", "info", "courses", "attendance", "money", "hold", "activity"] as const;
 type TabId = (typeof tabIds)[number];
 
 export function StudentDrawer({ studentId, onClose }: { studentId: string; onClose: () => void }) {
@@ -37,7 +37,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const receivables = useLiveQuery(() => db.installments.where("studentId").equals(studentId).toArray(), [studentId]) ?? [];
   const attendance = useLiveQuery(() => db.attendance.where("personId").equals(studentId).filter((a) => a.subject === "student").toArray(), [studentId]) ?? [];
   const allStudents = useLiveQuery(() => db.students.toArray(), []) ?? [];
-  const [tab, setTab] = useState<TabId>("info");
+  const [tab, setTab] = useState<TabId>("overview");
   const [note, setNote] = useState("");
   const [classId, setClassId] = useState("");
   const [moveError, setMoveError] = useState("");
@@ -58,7 +58,12 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  useEffect(() => {
+    setTab("overview");
+  }, [studentId]);
+
   const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
+  const show = (id: TabId) => tab === "overview" || tab === id;
   const marks = useMemo(() => {
     const rows = attendClass === "all" ? attendance : attendance.filter((a) => a.classId === attendClass);
     return [...rows].sort((a, b) => b.day.localeCompare(a.day)).slice(0, 20);
@@ -188,7 +193,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {seeMoney ? (
-              <Link href={`/fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+              <Link href={`/finance/collect?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
                 {t.drawer.collect}
               </Link>
             ) : null}
@@ -213,9 +218,10 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          {tab === "info" ? (
-            <div className="space-y-4 text-sm">
+        <div className={`min-h-0 flex-1 overflow-y-auto px-5 py-4${tab === "overview" ? " space-y-8" : ""}`}>
+          {show("info") ? (
+            <section className="space-y-4 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.info}</h2> : null}
               <dl className="grid grid-cols-2 gap-3">
                 <div><dt className="text-slate-500">{t.drawer.fullName}</dt><dd className="font-semibold">{student.name}</dd></div>
                 <div>
@@ -251,11 +257,12 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                   <Button type="button" onClick={() => void saveNote()} disabled={!note.trim()}>{t.common.save}</Button>
                 </div>
               </section>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "courses" ? (
-            <div className="space-y-3 text-sm">
+          {show("courses") ? (
+            <section className="space-y-3 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.courses}</h2> : null}
               <article className="rounded-[12px] border border-[#E2E8F0] p-3">
                 <p className="font-semibold text-slate-900">{course?.name ?? klass?.name ?? t.drawer.noCourse}</p>
                 <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {klass?.name} · {branch?.name}</p>
@@ -296,11 +303,12 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 {moveError ? <p className="mt-2 text-rose-600">{moveError}</p> : null}
                 <Button type="button" className="mt-2" variant="outline" disabled={!classId || moving} onClick={() => void changeClass()}>{t.drawer.changeClass}</Button>
               </div>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "attendance" ? (
-            <div className="text-sm">
+          {show("attendance") ? (
+            <section className="text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title mb-2">{t.drawer.attendance}</h2> : null}
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.attendRate}</p>
               <p className="mt-1 text-3xl font-bold tabular-nums text-slate-900">{rate}%</p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -334,16 +342,17 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                   ))}
                 </tbody>
               </table>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "money" && seeMoney ? (
-            <div className="space-y-3 text-sm">
+          {show("money") && seeMoney ? (
+            <section className="space-y-3 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.money}</h2> : null}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href={`/fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <Link href={`/finance/collect?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
               <div className="overflow-auto rounded-[12px] border border-[#E2E8F0]">
                 <table className="w-full min-w-[320px] text-sm">
                   <thead className="bg-slate-50 text-left text-xs text-slate-500">
@@ -370,11 +379,12 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                   </tbody>
                 </table>
               </div>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "hold" ? (
-            <div className="space-y-3 text-sm">
+          {show("hold") ? (
+            <section className="space-y-3 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.hold}</h2> : null}
               {currentHold ? (
                 <article className="rounded-[12px] border border-[#E2E8F0] p-3">
                   <Badge tone={currentHold.status === "approved" ? "warn" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
@@ -419,20 +429,23 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "activity" ? (
-            <ul className="space-y-3 text-sm">
-              {activity.length === 0 ? <li className="text-slate-500">{t.drawer.noActivity}</li> : null}
-              {activity.map((a) => (
-                <li key={a.id} className="relative border-l border-slate-200 pl-3">
-                  <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
-                  <p>{a.text}</p>
-                  <p className="text-xs text-slate-400">{relativeDayLabel(a.day, lang)} · {a.day}</p>
-                </li>
-              ))}
-            </ul>
+          {show("activity") ? (
+            <section>
+              {tab === "overview" ? <h2 className="crm-section-title mb-3">{t.drawer.activity}</h2> : null}
+              <ul className="space-y-3 text-sm">
+                {activity.length === 0 ? <li className="text-slate-500">{t.drawer.noActivity}</li> : null}
+                {activity.map((a) => (
+                  <li key={a.id} className="relative border-l border-slate-200 pl-3">
+                    <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
+                    <p>{a.text}</p>
+                    <p className="text-xs text-slate-400">{relativeDayLabel(a.day, lang)} · {a.day}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
         </div>
       </aside>

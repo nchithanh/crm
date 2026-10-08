@@ -46,7 +46,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center text-center">
           <BrandMark className="h-14 w-14" />
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">{t.brand}</h1>
-          <p className="mt-1.5 text-sm text-slate-500">{fill(t.login.hint, { name: option.label })}</p>
+          <p className="mt-1.5 text-sm text-slate-700">{fill(t.login.hint, { name: option.label })}</p>
         </div>
 
         <form

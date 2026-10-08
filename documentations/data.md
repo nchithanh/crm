@@ -1,12 +1,19 @@
 # Data
 
-Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). Schema seed **v14** / version app **`14b`**.
+Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). Schema seed **v14** / version app **`14c`**.
 
 ### Test ghi danh (`nhay` only)
 
 - HV chưa enroll: `s-enroll-begin|inter|adv|new` (`courseId`/`subscriptionId` rỗng).
 - Khóa mở gate: `k-test-begin|inter|adv` (`startOffset: 0`, có `capacity`).
 - Chi tiết: `context/flows.md` §3.
+
+### Quan hệ denser (`nhay` / 14c)
+
+- Lớp sáng `k-am-7` / `k-am-8`: HV + Sub + installment + attendance (+ mark GV).
+- Nhiều khóa có `assistant`; `class-overrides.json` đổi GV/phòng vài buổi.
+- Installment ~1:1 với Sub `active`; vài Sub `expired` (history / renew).
+- `course-rooms` có thể >1 phòng / khóa.
 
 ## Files
 

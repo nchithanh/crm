@@ -19,7 +19,7 @@ import { dayFromOffset, initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { TeacherStatus, User } from "@/types";
 
-const tabIds = ["info", "schedule", "workload", "backup"] as const;
+const tabIds = ["overview", "info", "schedule", "workload", "backup"] as const;
 type TabId = (typeof tabIds)[number];
 
 function weekBounds(base = new Date()) {
@@ -59,7 +59,8 @@ export function TeacherDrawer({
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
   const sessions = useLiveQuery(() => db.classes.where("teacherId").equals(teacherId).toArray(), [teacherId]) ?? [];
   const absences = useLiveQuery(() => db.teacherAbsences.where("teacherId").equals(teacherId).toArray(), [teacherId]) ?? [];
-  const [tab, setTab] = useState<TabId>("info");
+  const [tab, setTab] = useState<TabId>("overview");
+  const show = (id: TabId) => tab === "overview" || tab === id;
   const [absenceDay, setAbsenceDay] = useState(dayFromOffset(1));
   const [absenceNote, setAbsenceNote] = useState("");
   const [absenceMsg, setAbsenceMsg] = useState("");
@@ -72,6 +73,10 @@ export function TeacherDrawer({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    setTab("overview");
+  }, [teacherId]);
 
   const week = weekBounds();
   const monthKey = localDayKey().slice(0, 7);
@@ -162,9 +167,10 @@ export function TeacherDrawer({
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          {tab === "info" ? (
-            <div className="space-y-4 text-sm">
+        <div className={`min-h-0 flex-1 overflow-y-auto px-5 py-4${tab === "overview" ? " space-y-8" : ""}`}>
+          {show("info") ? (
+            <section className="space-y-4 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.info}</h2> : null}
               <dl className="grid grid-cols-2 gap-3">
                 <div><dt className="text-slate-400">{t.catalog.phone}</dt><dd className="font-medium text-slate-800">{teacher.phone}</dd></div>
                 <div><dt className="text-slate-400">Email</dt><dd className="font-medium text-slate-800">{teacher.email}</dd></div>
@@ -194,11 +200,12 @@ export function TeacherDrawer({
                   ))}
                 </ul>
               </div>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "schedule" ? (
-            <div className="space-y-2 text-sm">
+          {show("schedule") ? (
+            <section className="space-y-2 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.schedule}</h2> : null}
               <p className="text-slate-500">{t.teachers.weekSessions}</p>
               {weekSessions.length === 0 ? <p className="text-slate-500">{t.teachers.noSessions}</p> : null}
               {weekSessions.map((s) => {
@@ -216,11 +223,12 @@ export function TeacherDrawer({
               <Link href="/schedule" className="mt-3 inline-flex text-sm font-semibold text-[var(--brand-600)] hover:underline">
                 {t.teachers.viewSchedule}
               </Link>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "workload" ? (
-            <div className="space-y-4 text-sm">
+          {show("workload") ? (
+            <section className="space-y-4 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.workload}</h2> : null}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-[10px] border border-[#E2E8F0] p-3">
                   <p className="text-slate-400">{t.teachers.weekLoad}</p>
@@ -245,11 +253,12 @@ export function TeacherDrawer({
               </div>
               {overloaded ? <p className="rounded-[10px] bg-rose-50 px-3 py-2 text-rose-700">{t.teachers.overload}</p> : null}
               <p className="text-slate-500">{fill(t.teachers.classCount, { n: teachingClasses.length })}</p>
-            </div>
+            </section>
           ) : null}
 
-          {tab === "backup" ? (
-            <div className="space-y-4 text-sm">
+          {show("backup") ? (
+            <section className="space-y-4 text-sm">
+              {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.backup}</h2> : null}
               {canEdit ? (
                 <div className="space-y-2 rounded-[10px] border border-[#E2E8F0] p-3">
                   <p className="font-semibold text-slate-800">{t.teachers.markAbsence}</p>
@@ -323,7 +332,7 @@ export function TeacherDrawer({
                   </ul>
                 </div>
               ) : null}
-            </div>
+            </section>
           ) : null}
         </div>
       </aside>

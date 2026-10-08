@@ -5,6 +5,8 @@ export const VERTICAL_STORAGE_KEY = "dolphin-crm-vertical";
 export type VerticalOption = {
   id: VerticalId;
   label: string;
+  /** Emoji lĩnh vực — UI chọn lĩnh vực / login (kiểu POS) */
+  emoji: string;
   description: string;
   color: string;
   soft: string;
@@ -18,6 +20,7 @@ export const VERTICALS: VerticalOption[] = [
   {
     id: "nhay",
     label: "Edu Dance",
+    emoji: "💃",
     description: "Lớp nhảy, học thử, học viên, học phí",
     color: "#F97316",
     soft: "#FFF7ED",
@@ -25,6 +28,7 @@ export const VERTICALS: VerticalOption[] = [
   {
     id: "anh",
     label: "Edu English",
+    emoji: "📘",
     description: "Lớp tiếng Anh, học thử, học viên, học phí",
     color: "#2563EB",
     soft: "#EFF6FF",
@@ -32,6 +36,7 @@ export const VERTICALS: VerticalOption[] = [
   {
     id: "nhac",
     label: "Edu Music",
+    emoji: "🎵",
     description: "Lớp nhạc, học thử, học viên, học phí",
     color: "#7C3AED",
     soft: "#F5F3FF",
@@ -39,6 +44,7 @@ export const VERTICALS: VerticalOption[] = [
   {
     id: "boi",
     label: "Edu Swim",
+    emoji: "🏊",
     description: "Lớp bơi, học thử, học viên, học phí",
     color: "#0891B2",
     soft: "#ECFEFF",

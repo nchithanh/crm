@@ -58,5 +58,29 @@
     "courseId": "k-test-adv",
     "teacherId": "u_phuong",
     "role": "main"
+  },
+  {
+    "id": "ct-assist-kp",
+    "courseId": "k-kp-inter",
+    "teacherId": "u_bao",
+    "role": "assistant"
+  },
+  {
+    "id": "ct-assist-ct",
+    "courseId": "k-ct-adv",
+    "teacherId": "u_nam",
+    "role": "assistant"
+  },
+  {
+    "id": "ct-assist-am7",
+    "courseId": "k-am-7",
+    "teacherId": "u_nam",
+    "role": "assistant"
+  },
+  {
+    "id": "ct-assist-am8",
+    "courseId": "k-am-8",
+    "teacherId": "u_phuong",
+    "role": "assistant"
   }
 ]

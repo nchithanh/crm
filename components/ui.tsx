@@ -78,3 +78,7 @@ export function Field({
 
 export const inputClass =
   "h-10 w-full min-w-0 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-base font-normal text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
+
+/** Toolbar / filter selects — không `w-full` (tránh full-bleed trên desktop). */
+export const inputClassInline =
+  "h-10 w-auto min-w-[9rem] shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-base font-normal text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";

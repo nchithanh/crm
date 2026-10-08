@@ -1,0 +1,29 @@
+[
+  {
+    "classId": "k-hh-begin-c3",
+    "teacherId": "u_phuong",
+    "roomId": "r2",
+    "note": "GV phụ đứng lớp"
+  },
+  {
+    "classId": "k-hh-begin-c5",
+    "teacherId": "u_bao",
+    "roomId": "r2",
+    "note": "Đổi phòng"
+  },
+  {
+    "classId": "k-kp-inter-c2",
+    "teacherId": "u_bao",
+    "note": "Backup Bao dạy"
+  },
+  {
+    "classId": "k-am-7-c4",
+    "teacherId": "u_nam",
+    "note": "Assistant đứng lớp sáng"
+  },
+  {
+    "classId": "k-am-8-c3",
+    "roomId": "r4",
+    "note": "Đổi phòng tạm"
+  }
+]

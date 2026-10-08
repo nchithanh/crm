@@ -78,5 +78,215 @@
     "amount": 4200000,
     "paid": 0,
     "dueOffset": 5
+  },
+  {
+    "id": "debt-sub1",
+    "subscriptionId": "sub1",
+    "studentId": "s1",
+    "branchId": "b-a",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub3",
+    "subscriptionId": "sub3",
+    "studentId": "s3",
+    "branchId": "b-b",
+    "title": "Gói 6 tháng",
+    "amount": 7800000,
+    "paid": 7800000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub5",
+    "subscriptionId": "sub5",
+    "studentId": "s5",
+    "branchId": "b-a",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub6",
+    "subscriptionId": "sub6",
+    "studentId": "s6",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub7",
+    "subscriptionId": "sub7",
+    "studentId": "s7",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub9",
+    "subscriptionId": "sub9",
+    "studentId": "s9",
+    "branchId": "b-a",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub10",
+    "subscriptionId": "sub10",
+    "studentId": "s10",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub12",
+    "subscriptionId": "sub12",
+    "studentId": "s12",
+    "branchId": "b-a",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub13",
+    "subscriptionId": "sub13",
+    "studentId": "s13",
+    "branchId": "b-b",
+    "title": "Gói 6 tháng",
+    "amount": 7800000,
+    "paid": 7800000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub15",
+    "subscriptionId": "sub15",
+    "studentId": "s15",
+    "branchId": "b-b",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub17",
+    "subscriptionId": "sub17",
+    "studentId": "s17",
+    "branchId": "b-b",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub18",
+    "subscriptionId": "sub18",
+    "studentId": "s18",
+    "branchId": "b-c",
+    "title": "Gói 12 tháng",
+    "amount": 14400000,
+    "paid": 14400000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub19",
+    "subscriptionId": "sub19",
+    "studentId": "s19",
+    "branchId": "b-c",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub21",
+    "subscriptionId": "sub21",
+    "studentId": "s21",
+    "branchId": "b-c",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub22",
+    "subscriptionId": "sub22",
+    "studentId": "s22",
+    "branchId": "b-a",
+    "title": "Gói 3 tháng",
+    "amount": 4200000,
+    "paid": 4200000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub25",
+    "subscriptionId": "sub25",
+    "studentId": "s25",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub26",
+    "subscriptionId": "sub26",
+    "studentId": "s26",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1000000,
+    "dueOffset": -3
+  },
+  {
+    "id": "debt-sub27",
+    "subscriptionId": "sub27",
+    "studentId": "s27",
+    "branchId": "b-a",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub28",
+    "subscriptionId": "sub28",
+    "studentId": "s28",
+    "branchId": "b-b",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
+  },
+  {
+    "id": "debt-sub29",
+    "subscriptionId": "sub29",
+    "studentId": "s29",
+    "branchId": "b-b",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 0,
+    "dueOffset": -3
+  },
+  {
+    "id": "debt-sub30",
+    "subscriptionId": "sub30",
+    "studentId": "s30",
+    "branchId": "b-b",
+    "title": "Gói 1 tháng",
+    "amount": 1500000,
+    "paid": 1500000,
+    "dueOffset": -20
   }
 ]

@@ -515,6 +515,10 @@
       {
         "offset": 0,
         "text": "Hết buổi gói tháng. Lễ tân mời gia hạn."
+      },
+      {
+        "offset": 0,
+        "text": "Subscription hết buổi — cần renew."
       }
     ],
     "subscriptionId": "sub23"
@@ -643,5 +647,140 @@
       }
     ],
     "subscriptionId": ""
+  },
+  {
+    "id": "s25",
+    "name": "Mai Sáng",
+    "phone": "0900 200 029",
+    "email": "mai.sang@edudance.demo",
+    "birthYears": 13,
+    "avatarColor": "#F59E0B",
+    "status": "active",
+    "courseId": "k-am-7",
+    "branchId": "b-a",
+    "level": "begin",
+    "remainingSessions": 6,
+    "debt": 0,
+    "parentName": "Mai Lan",
+    "parentPhone": "0900 200 129",
+    "flagged": false,
+    "joinedOffset": -10,
+    "notes": [
+      {
+        "offset": -10,
+        "text": "HV lớp sáng 07:00."
+      }
+    ],
+    "subscriptionId": "sub25"
+  },
+  {
+    "id": "s26",
+    "name": "Hồ Bình",
+    "phone": "0900 200 030",
+    "email": "ho.binh@edudance.demo",
+    "birthYears": 15,
+    "avatarColor": "#10B981",
+    "status": "active",
+    "courseId": "k-am-7",
+    "branchId": "b-a",
+    "level": "begin",
+    "remainingSessions": 5,
+    "debt": 500000,
+    "parentName": "Hồ Đức",
+    "parentPhone": "0900 200 130",
+    "flagged": false,
+    "joinedOffset": -8,
+    "notes": [],
+    "subscriptionId": "sub26"
+  },
+  {
+    "id": "s27",
+    "name": "Lý Châu",
+    "phone": "0900 200 031",
+    "email": "ly.chau@edudance.demo",
+    "birthYears": 11,
+    "avatarColor": "#6366F1",
+    "status": "active",
+    "courseId": "k-am-7",
+    "branchId": "b-a",
+    "level": "begin",
+    "remainingSessions": 7,
+    "debt": 0,
+    "parentName": "Lý Hoa",
+    "parentPhone": "0900 200 131",
+    "flagged": false,
+    "joinedOffset": -12,
+    "notes": [],
+    "subscriptionId": "sub27"
+  },
+  {
+    "id": "s28",
+    "name": "Đinh Dawn",
+    "phone": "0900 200 032",
+    "email": "dinh.dawn@edudance.demo",
+    "birthYears": 16,
+    "avatarColor": "#EC4899",
+    "status": "active",
+    "courseId": "k-am-8",
+    "branchId": "b-b",
+    "level": "begin",
+    "remainingSessions": 4,
+    "debt": 0,
+    "parentName": "",
+    "parentPhone": "",
+    "flagged": false,
+    "joinedOffset": -9,
+    "notes": [
+      {
+        "offset": -2,
+        "text": "Thường đến sớm."
+      }
+    ],
+    "subscriptionId": "sub28"
+  },
+  {
+    "id": "s29",
+    "name": "Cao Early",
+    "phone": "0900 200 033",
+    "email": "cao.early@edudance.demo",
+    "birthYears": 14,
+    "avatarColor": "#14B8A6",
+    "status": "active",
+    "courseId": "k-am-8",
+    "branchId": "b-b",
+    "level": "begin",
+    "remainingSessions": 6,
+    "debt": 1500000,
+    "parentName": "Cao Minh",
+    "parentPhone": "0900 200 133",
+    "flagged": true,
+    "joinedOffset": -7,
+    "notes": [],
+    "subscriptionId": "sub29"
+  },
+  {
+    "id": "s30",
+    "name": "Võ Fresh",
+    "phone": "0900 200 034",
+    "email": "vo.fresh@edudance.demo",
+    "birthYears": 17,
+    "avatarColor": "#8B5CF6",
+    "status": "active",
+    "courseId": "k-am-8",
+    "branchId": "b-b",
+    "level": "begin",
+    "remainingSessions": 2,
+    "debt": 0,
+    "parentName": "",
+    "parentPhone": "",
+    "flagged": false,
+    "joinedOffset": -14,
+    "notes": [
+      {
+        "offset": 0,
+        "text": "Sắp hết buổi — mời renew."
+      }
+    ],
+    "subscriptionId": "sub30"
   }
 ]

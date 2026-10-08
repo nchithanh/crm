@@ -249,7 +249,7 @@
     "offset": -42,
     "sessions": 8,
     "remainingSessions": 0,
-    "status": "active",
+    "status": "expired",
     "months": 1
   },
   {
@@ -262,5 +262,93 @@
     "remainingSessions": 18,
     "status": "active",
     "months": 3
+  },
+  {
+    "id": "sub1-old",
+    "studentId": "s1",
+    "courseId": "k-hh-begin",
+    "planId": "p1",
+    "offset": -100,
+    "sessions": 8,
+    "remainingSessions": 0,
+    "status": "expired",
+    "months": 1
+  },
+  {
+    "id": "sub3-old",
+    "studentId": "s3",
+    "courseId": "k-kp-inter",
+    "planId": "p1",
+    "offset": -120,
+    "sessions": 8,
+    "remainingSessions": 0,
+    "status": "expired",
+    "months": 1
+  },
+  {
+    "id": "sub25",
+    "studentId": "s25",
+    "courseId": "k-am-7",
+    "planId": "p1",
+    "offset": -10,
+    "sessions": 8,
+    "remainingSessions": 6,
+    "status": "active",
+    "months": 1
+  },
+  {
+    "id": "sub26",
+    "studentId": "s26",
+    "courseId": "k-am-7",
+    "planId": "p1",
+    "offset": -8,
+    "sessions": 8,
+    "remainingSessions": 5,
+    "status": "active",
+    "months": 1
+  },
+  {
+    "id": "sub27",
+    "studentId": "s27",
+    "courseId": "k-am-7",
+    "planId": "p1",
+    "offset": -12,
+    "sessions": 8,
+    "remainingSessions": 7,
+    "status": "active",
+    "months": 1
+  },
+  {
+    "id": "sub28",
+    "studentId": "s28",
+    "courseId": "k-am-8",
+    "planId": "p1",
+    "offset": -9,
+    "sessions": 8,
+    "remainingSessions": 4,
+    "status": "active",
+    "months": 1
+  },
+  {
+    "id": "sub29",
+    "studentId": "s29",
+    "courseId": "k-am-8",
+    "planId": "p1",
+    "offset": -7,
+    "sessions": 8,
+    "remainingSessions": 6,
+    "status": "active",
+    "months": 1
+  },
+  {
+    "id": "sub30",
+    "studentId": "s30",
+    "courseId": "k-am-8",
+    "planId": "p1",
+    "offset": -14,
+    "sessions": 8,
+    "remainingSessions": 2,
+    "status": "active",
+    "months": 1
   }
 ]

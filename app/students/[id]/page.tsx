@@ -73,7 +73,7 @@ export default function StudentDetailPage() {
           <div>
             <dt className="text-slate-400">{t.students.debt}</dt>
             <dd className="font-semibold">
-              <Link href={`/fees?student=${student.id}`} className="text-[var(--brand-600)] hover:underline">
+              <Link href={`/finance/collect?student=${student.id}`} className="text-[var(--brand-600)] hover:underline">
                 {formatVnd(student.debt)}
               </Link>
             </dd>

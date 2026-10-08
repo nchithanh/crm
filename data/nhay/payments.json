@@ -286,5 +286,41 @@
     "billNote": "",
     "subscriptionId": "sub23",
     "installmentId": ""
+  },
+  {
+    "id": "pay-am-s25",
+    "studentId": "s25",
+    "branchId": "b-a",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -10,
+    "note": "Gói 1 tháng sáng",
+    "billNote": "",
+    "subscriptionId": "sub25",
+    "installmentId": "debt-sub25"
+  },
+  {
+    "id": "pay-am-s28",
+    "studentId": "s28",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "cash",
+    "offset": -9,
+    "note": "Gói 1 tháng K-pop sáng",
+    "billNote": "",
+    "subscriptionId": "sub28",
+    "installmentId": "debt-sub28"
+  },
+  {
+    "id": "pay-am-s26",
+    "studentId": "s26",
+    "branchId": "b-a",
+    "amount": 1000000,
+    "method": "transfer",
+    "offset": -8,
+    "note": "Thu một phần",
+    "billNote": "",
+    "subscriptionId": "sub26",
+    "installmentId": "debt-sub26"
   }
 ]

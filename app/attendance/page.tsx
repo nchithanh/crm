@@ -167,7 +167,7 @@ export default function AttendancePage() {
   const course = courses.find((c) => c.id === session?.courseId);
 
   return (
-    <div className="pb-28">
+    <div className="pb-36 lg:pb-28">
       <h1 className="crm-page-title">{t.attend.title}</h1>
       <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">{t.attend.rule}</p>
       <div className="mt-3">
@@ -237,11 +237,13 @@ export default function AttendancePage() {
           );
         })}
       </ul>
-      <div className="sticky bottom-20 z-30 mt-4 rounded-[12px] border border-slate-200 bg-white p-3 shadow-sm lg:bottom-0">
-        <p className="text-xs text-slate-500">{t.attend.rule}</p>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="text-base font-semibold tabular-nums">{fill(t.attend.marked, { done: marked.length, total: eligible.length })}</p>
-          <Button onClick={() => setSummary(true)}>{t.attend.done}</Button>
+      <div className="fixed inset-x-0 bottom-[calc(3.75rem+env(safe-area-inset-bottom,0px))] z-30 border-t border-slate-200 bg-white/95 px-3 py-3 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur lg:bottom-0 lg:left-[260px] lg:px-5">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-xs text-slate-500 lg:hidden">{t.attend.rule}</p>
+          <div className="mt-1 flex items-center justify-between gap-3 lg:mt-0">
+            <p className="text-base font-semibold tabular-nums">{fill(t.attend.marked, { done: marked.length, total: eligible.length })}</p>
+            <Button onClick={() => setSummary(true)}>{t.attend.done}</Button>
+          </div>
         </div>
       </div>
       {summary ? (

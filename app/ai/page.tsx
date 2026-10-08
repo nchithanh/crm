@@ -1,6 +1,7 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
+import { Sparkles } from "lucide-react";
 import { Card } from "@/components/ui";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
@@ -16,7 +17,12 @@ export default function AiPage() {
 
   return (
     <div>
-      <h1 className="crm-page-title">{t.pages.ai}</h1>
+      <h1 className="crm-page-title inline-flex items-center gap-2">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--brand-50)] text-[var(--brand-600)]">
+          <Sparkles size={18} aria-hidden />
+        </span>
+        {t.pages.ai}
+      </h1>
       <p className="mt-1 text-sm text-slate-500">{t.pages.aiLead}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Card className="p-4">

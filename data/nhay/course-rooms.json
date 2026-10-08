@@ -43,5 +43,10 @@
     "id": "cr-test-adv",
     "courseId": "k-test-adv",
     "roomId": "r6"
+  },
+  {
+    "id": "cr-hh-begin-2",
+    "courseId": "k-hh-begin",
+    "roomId": "r2"
   }
 ]

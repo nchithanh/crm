@@ -47,12 +47,13 @@ export default function CourseDetailPage() {
   const room = rooms.find((r) => r.id === course.roomId);
 
   const tabLabel: Record<Tab, string> = {
-    overview: "Overview",
+    overview: t.nav.overview,
     classes: `${t.nav.classes} (${sortedClasses.length})`,
     students: `${t.nav.students} (${students.length})`,
     teachers: `${t.nav.teachers} (${teachers.length})`,
     subscriptions: `Subscriptions (${subscriptions.length})`,
   };
+  const show = (id: Tab) => tab === "overview" || tab === id;
 
   return (
     <div>
@@ -109,41 +110,38 @@ export default function CourseDetailPage() {
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className={cn("mt-4", tab === "overview" && "space-y-8")}>
         {tab === "overview" ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {(
-              [
-                { label: t.nav.classes, n: String(sortedClasses.length), tab: "classes" as Tab },
-                { label: t.catalog.capacityCurrent, n: String(students.length), tab: "students" as Tab },
-                { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), tab: null },
-                { label: t.nav.teachers, n: String(teachers.length), tab: "teachers" as Tab },
-                { label: "Subscriptions", n: String(subscriptions.length), tab: "subscriptions" as Tab },
-              ] as const
-            ).map((card) => {
-              const className =
-                "rounded-[12px] border border-[#E2E8F0] bg-white p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]";
-              if (card.tab) {
+          <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {(
+                [
+                  { label: t.nav.classes, n: String(sortedClasses.length), go: "classes" as Tab },
+                  { label: t.catalog.capacityCurrent, n: String(students.length), go: "students" as Tab },
+                  { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), go: null },
+                  { label: t.nav.teachers, n: String(teachers.length), go: "teachers" as Tab },
+                  { label: "Subscriptions", n: String(subscriptions.length), go: "subscriptions" as Tab },
+                ] as const
+              ).map((card) => {
+                const className =
+                  "rounded-[12px] border border-[#E2E8F0] bg-white p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]";
+                if (card.go) {
+                  return (
+                    <button key={card.label} type="button" onClick={() => setTab(card.go)} className={`${className} hover:border-[var(--brand-300)]`}>
+                      <p className="crm-lead">{card.label}</p>
+                      <p className="crm-kpi mt-1 text-slate-900">{card.n}</p>
+                    </button>
+                  );
+                }
                 return (
-                  <button
-                    key={card.label}
-                    type="button"
-                    onClick={() => setTab(card.tab)}
-                    className={`${className} hover:border-[var(--brand-300)]`}
-                  >
+                  <div key={card.label} className={className}>
                     <p className="crm-lead">{card.label}</p>
                     <p className="crm-kpi mt-1 text-slate-900">{card.n}</p>
-                  </button>
+                  </div>
                 );
-              }
-              return (
-                <div key={card.label} className={className}>
-                  <p className="crm-lead">{card.label}</p>
-                  <p className="crm-kpi mt-1 text-slate-900">{card.n}</p>
-                </div>
-              );
-            })}
-            <div className="md:col-span-2 xl:col-span-3 rounded-[12px] border border-[#E2E8F0] bg-white p-4 text-sm text-slate-600">
+              })}
+            </div>
+            <div className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 text-sm text-slate-600">
               <p>{course.description || "—"}</p>
               <p className="mt-2 text-slate-400">
                 {course.startDay} → {course.endDay} · {course.sessionCount} buổi · {t.catalog.capacityCurrent} {students.length} · {t.catalog.capacityMax} {course.capacity ?? 12}
@@ -152,137 +150,146 @@ export default function CourseDetailPage() {
           </div>
         ) : null}
 
-        {tab === "classes" ? (
-          <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-slate-50 text-left">
-                <tr>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">#</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">Day</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">Time</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.teachers}</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.rooms}</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedClasses.map((c) => {
-                  const teacher = users.find((u) => u.id === c.teacherId);
-                  const r = rooms.find((x) => x.id === c.roomId);
-                  return (
-                    <tr key={c.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
+        {show("classes") ? (
+          <section>
+            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.classes}</h2> : null}
+            <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead className="bg-slate-50 text-left">
+                  <tr>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">#</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">Day</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">Time</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.teachers}</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.rooms}</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedClasses.map((c) => {
+                    const teacher = users.find((u) => u.id === c.teacherId);
+                    const r = rooms.find((x) => x.id === c.roomId);
+                    return (
+                      <tr key={c.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
+                        <td className="px-3 py-2.5">
+                          <Link href={`/classes/${c.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">{c.index}</Link>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Link href={`/classes/${c.id}`} className="text-slate-800 hover:underline">{c.day}</Link>
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{c.start}–{c.end}</td>
+                        <td className="px-3 py-2.5">
+                          {teacher ? (
+                            <Link href={`/teachers/${teacher.id}`} className="text-[var(--brand-600)] hover:underline">{teacher.name}</Link>
+                          ) : "—"}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{r ? <Link href="/rooms" className="hover:underline">{r.name}</Link> : "—"}</td>
+                        <td className="px-3 py-2.5"><Badge tone={c.status === "cancelled" ? "danger" : c.status === "completed" ? "neutral" : "ok"}>{c.status}</Badge></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {show("students") ? (
+          <section>
+            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.students}</h2> : null}
+            <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="bg-slate-50 text-left">
+                  <tr>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.students}</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">Sub left</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((s) => (
+                    <tr key={s.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
                       <td className="px-3 py-2.5">
-                        <Link href={`/classes/${c.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">
-                          {c.index}
+                        <Link href={`/students/${s.id}`} className="flex items-center gap-2 font-semibold text-[var(--brand-600)] hover:underline">
+                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
+                          {s.name}
                         </Link>
                       </td>
-                      <td className="px-3 py-2.5">
-                        <Link href={`/classes/${c.id}`} className="text-slate-800 hover:underline">{c.day}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600">{c.start}–{c.end}</td>
-                      <td className="px-3 py-2.5">
-                        {teacher ? (
-                          <Link href={`/teachers/${teacher.id}`} className="text-[var(--brand-600)] hover:underline">{teacher.name}</Link>
-                        ) : "—"}
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600">{r ? <Link href="/rooms" className="hover:underline">{r.name}</Link> : "—"}</td>
-                      <td className="px-3 py-2.5"><Badge tone={c.status === "cancelled" ? "danger" : c.status === "completed" ? "neutral" : "ok"}>{c.status}</Badge></td>
+                      <td className="px-3 py-2.5 tabular-nums">{s.remainingSessions}</td>
+                      <td className="px-3 py-2.5"><Badge>{s.status}</Badge></td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         ) : null}
 
-        {tab === "students" ? (
-          <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-slate-50 text-left">
-                <tr>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.students}</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">Sub left</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((s) => (
-                  <tr key={s.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
-                    <td className="px-3 py-2.5">
-                      <Link href={`/students/${s.id}`} className="flex items-center gap-2 font-semibold text-[var(--brand-600)] hover:underline">
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
-                        {s.name}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2.5 tabular-nums">{s.remainingSessions}</td>
-                    <td className="px-3 py-2.5"><Badge>{s.status}</Badge></td>
+        {show("teachers") ? (
+          <section>
+            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.teachers}</h2> : null}
+            <ul className="space-y-2">
+              {teachers.map((ct) => {
+                const u = users.find((x) => x.id === ct.teacherId);
+                if (!u) return null;
+                return (
+                  <li key={ct.id}>
+                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-[12px] border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: u.avatarColor }}>{initials(u.name)}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-slate-900">{u.name}</span>
+                        <span className="text-xs text-slate-500">{u.phone}</span>
+                      </span>
+                      <Badge tone={ct.role === "main" ? "ok" : "info"}>{ct.role}</Badge>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
+
+        {show("subscriptions") ? (
+          <section>
+            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.subscriptions}</h2> : null}
+            <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead className="bg-slate-50 text-left">
+                  <tr>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.students}</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">Plan</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">End</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">Left</th>
+                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-
-        {tab === "teachers" ? (
-          <ul className="space-y-2">
-            {teachers.map((ct) => {
-              const u = users.find((x) => x.id === ct.teacherId);
-              if (!u) return null;
-              return (
-                <li key={ct.id}>
-                  <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-[12px] border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: u.avatarColor }}>{initials(u.name)}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-semibold text-slate-900">{u.name}</span>
-                      <span className="text-xs text-slate-500">{u.phone}</span>
-                    </span>
-                    <Badge tone={ct.role === "main" ? "ok" : "info"}>{ct.role}</Badge>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-
-        {tab === "subscriptions" ? (
-          <div className="overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-slate-50 text-left">
-                <tr>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.students}</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">Plan</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">End</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">Left</th>
-                  <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscriptions.map((sub) => {
-                  const st = students.find((s) => s.id === sub.studentId) ?? users.find(() => false);
-                  const student = students.find((s) => s.id === sub.studentId);
-                  const plan = plans.find((p) => p.id === sub.planId);
-                  const needRenew = sub.status === "active" && sub.endDay <= today;
-                  return (
-                    <tr key={sub.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2.5">
-                        {student ? (
-                          <Link href={`/students/${student.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">{student.name}</Link>
-                        ) : sub.studentId}
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600">{plan?.name ?? sub.planId}</td>
-                      <td className="px-3 py-2.5 tabular-nums">{sub.endDay}</td>
-                      <td className="px-3 py-2.5 tabular-nums">{sub.remainingSessions}</td>
-                      <td className="px-3 py-2.5">
-                        <Badge tone={needRenew ? "danger" : sub.status === "active" ? "ok" : "neutral"}>
-                          {needRenew ? "renew" : sub.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {subscriptions.map((sub) => {
+                    const student = students.find((s) => s.id === sub.studentId);
+                    const plan = plans.find((p) => p.id === sub.planId);
+                    const needRenew = sub.status === "active" && sub.endDay <= today;
+                    return (
+                      <tr key={sub.id} className="border-t border-slate-100">
+                        <td className="px-3 py-2.5">
+                          {student ? (
+                            <Link href={`/students/${student.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">{student.name}</Link>
+                          ) : sub.studentId}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{plan?.name ?? sub.planId}</td>
+                        <td className="px-3 py-2.5 tabular-nums">{sub.endDay}</td>
+                        <td className="px-3 py-2.5 tabular-nums">{sub.remainingSessions}</td>
+                        <td className="px-3 py-2.5">
+                          <Badge tone={needRenew ? "danger" : sub.status === "active" ? "ok" : "neutral"}>
+                            {needRenew ? "renew" : sub.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
         ) : null}
       </div>
     </div>

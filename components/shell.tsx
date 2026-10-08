@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
+  ArrowLeftRight,
   CalendarDays,
   ClipboardCheck,
   DoorOpen,
@@ -68,9 +69,11 @@ const groups = [
   {
     title: "finance" as const,
     items: [
-      { href: "/fees", key: "collect" as const, icon: Wallet },
-      { href: "/holds", key: "holds" as const, icon: PauseCircle },
-      { href: "/revenue", key: "revenue" as const, icon: LineChart },
+      { href: "/finance", key: "financeOverview" as const, icon: LayoutDashboard },
+      { href: "/finance/collect", key: "collect" as const, icon: Wallet },
+      { href: "/finance/debts", key: "debts" as const, icon: Receipt },
+      { href: "/finance/revenue", key: "revenue" as const, icon: LineChart },
+      { href: "/finance/ledger", key: "ledger" as const, icon: ArrowLeftRight },
     ],
   },
   {
@@ -78,6 +81,7 @@ const groups = [
     items: [
       { href: "/attendance", key: "attend" as const, icon: Receipt },
       { href: "/diem-danh-qr", key: "attendQr" as const, icon: QrCode },
+      { href: "/holds", key: "holds" as const, icon: PauseCircle },
       { href: "/tasks", key: "tasks" as const, icon: ListTodo },
       { href: "/dat-phong", key: "bookings" as const, icon: DoorOpen },
     ],
@@ -88,32 +92,32 @@ const ai = { href: "/ai", key: "ai" as const, icon: Sparkles };
 
 const ZALO_FOUNDER = "https://zalo.me/0779937633";
 
-type MobileItem =
-  | { href: string; key: "overview" | "schedule" | "attendShort" | "enrollShort" | "tasks"; icon: typeof LayoutDashboard }
-  | { href: string; key: "support"; external: true };
+type MobileItem = {
+  href: string;
+  key: "overview" | "schedule" | "attendShort" | "enrollShort" | "tasks" | "feesShort";
+  icon: typeof LayoutDashboard;
+};
 
 function mobileForRole(role: Role | undefined): MobileItem[] {
-  const base: MobileItem[] = [
-    { href: "/", key: "overview", icon: LayoutDashboard },
-    { href: "/schedule", key: "schedule", icon: CalendarDays },
-    { href: "/attendance", key: "attendShort", icon: Receipt },
-  ];
   if (role === "teacher") {
     return [
-      ...base,
+      { href: "/", key: "overview", icon: LayoutDashboard },
+      { href: "/schedule", key: "schedule", icon: CalendarDays },
+      { href: "/attendance", key: "attendShort", icon: Receipt },
       { href: "/tasks", key: "tasks", icon: ListTodo },
-      { href: ZALO_FOUNDER, key: "support", external: true },
     ];
   }
   return [
-    ...base,
+    { href: "/", key: "overview", icon: LayoutDashboard },
+    { href: "/schedule", key: "schedule", icon: CalendarDays },
+    { href: "/finance/collect", key: "feesShort", icon: Wallet },
     { href: "/enroll", key: "enrollShort", icon: Plus },
-    { href: ZALO_FOUNDER, key: "support", external: true },
+    { href: "/attendance", key: "attendShort", icon: Receipt },
   ];
 }
 
 function active(href: string, path: string) {
-  if (href === "/") return path === "/";
+  if (href === "/" || href === "/finance") return path === href;
   return path === href || path.startsWith(`${href}/`);
 }
 
@@ -163,7 +167,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
       ) : null}
       {seeReport ? (
-        <Link href={`/doanh-thu${branchQuery}`} className={cn(ctaGhost, extra)}>
+        <Link href={`/finance/revenue${branchQuery}`} className={cn(ctaGhost, extra)}>
           <LineChart size={16} /> {t.header.report}
         </Link>
       ) : null}
@@ -297,7 +301,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900">{studio}</p>
-            <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
+            <p className="truncate text-xs text-slate-700">{user ? roleLabel(user.role, lang) : ""}</p>
           </div>
           <div
             role="group"
@@ -335,22 +339,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="grid grid-cols-5 gap-1">
+        <div className={cn("grid gap-1", mobile.length === 4 ? "grid-cols-4" : "grid-cols-5")}>
           {mobile.map((item) => {
-            if ("external" in item) {
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex min-h-14 flex-col items-center justify-center gap-1 text-[14px] font-medium text-slate-700"
-                >
-                  <SupportIcon className="h-5 w-5" />
-                  {t.nav.support}
-                </a>
-              );
-            }
             const Icon = item.icon;
             const on = active(item.href, path);
             const label =
@@ -360,7 +350,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   ? t.nav.attendShort
                   : item.key === "enrollShort"
                     ? t.nav.enrollShort
-                    : t.nav[item.key];
+                    : item.key === "feesShort"
+                      ? t.nav.feesShort
+                      : t.nav[item.key];
             return (
               <Link
                 key={item.href}

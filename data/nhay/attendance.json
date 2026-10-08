@@ -190,5 +190,141 @@
     "offset": -4,
     "status": "present",
     "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "s25",
+    "subject": "student",
+    "offset": -3,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "s26",
+    "subject": "student",
+    "offset": -3,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "s27",
+    "subject": "student",
+    "offset": -3,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "s25",
+    "subject": "student",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "s26",
+    "subject": "student",
+    "offset": 0,
+    "status": "excused",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-7",
+    "personId": "u_bao",
+    "subject": "teacher",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-8",
+    "personId": "s28",
+    "subject": "student",
+    "offset": -2,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-8",
+    "personId": "s29",
+    "subject": "student",
+    "offset": -2,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-8",
+    "personId": "s30",
+    "subject": "student",
+    "offset": -2,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-8",
+    "personId": "s28",
+    "subject": "student",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-am-8",
+    "personId": "u_nam",
+    "subject": "teacher",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "u_bao",
+    "subject": "teacher",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "u_nam",
+    "subject": "teacher",
+    "offset": -1,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s24",
+    "subject": "student",
+    "offset": -4,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s22",
+    "subject": "student",
+    "offset": -4,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "s4",
+    "subject": "student",
+    "offset": -2,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "u_phuong",
+    "subject": "teacher",
+    "offset": -2,
+    "status": "present",
+    "waived": false
   }
 ]

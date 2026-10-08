@@ -2,6 +2,6 @@
 
 import { RouteRedirect } from "@/components/route-redirect";
 
-export default function LegacyRedirect() {
-  return <RouteRedirect to="/revenue" />;
+export default function DoanhThuRedirectPage() {
+  return <RouteRedirect to="/finance/revenue" />;
 }

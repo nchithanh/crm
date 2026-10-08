@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Button, inputClass } from "@/components/ui";
+import { Button, ctaOutline, ctaPrimary, inputClass } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { createStudent, enrollMidCourse } from "@/lib/actions";
 import { db } from "@/lib/db";
@@ -12,7 +13,6 @@ import { nextJoinSession, proratedFee, sessionsLeftInCourse } from "@/lib/schedu
 import { formatVnd } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
-import type { PayMethod } from "@/types";
 
 const steps = ["Học viên", "Khóa", "Tính buổi", "Xác nhận"];
 
@@ -31,8 +31,6 @@ export default function MidEnrollPage() {
   const [draft, setDraft] = useState({ name: "", phone: "", branchId: "" });
   const [classId, setClassId] = useState("");
   const [packageId, setPackageId] = useState("");
-  const [payNow, setPayNow] = useState("");
-  const [method, setMethod] = useState<PayMethod>("cash");
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -112,15 +110,13 @@ export default function MidEnrollPage() {
       studentId,
       packageId,
       courseId: classId,
-      payNow: seeMoney ? Number(payNow || 0) : 0,
-      method,
     });
     setBusy(false);
     if (err) {
       setError(err);
       return;
     }
-    setDone(picked ? `Đã ghi danh. Cộng ${picked.granted} buổi còn của khóa.` : "Đã ghi danh.");
+    setDone(picked ? t.enroll.doneWithSessions.replace("{n}", String(picked.granted)) : t.enroll.done);
     setError("");
   }
 
@@ -230,35 +226,53 @@ export default function MidEnrollPage() {
       {step === 4 && picked && student && !done ? (
         <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4 text-sm">
           <dl className="grid gap-2 sm:grid-cols-2">
-            <div><dt className="text-slate-500">Học viên</dt><dd className="font-semibold">{student.name}</dd></div>
-            <div><dt className="text-slate-500">Khóa</dt><dd className="font-semibold">{picked.course.name}</dd></div>
-            <div><dt className="text-slate-500">Buổi cộng thêm</dt><dd className="font-semibold">{picked.granted}</dd></div>
-            <div><dt className="text-slate-500">Gói</dt><dd className="font-semibold">{pack?.name}</dd></div>
-            {seeMoney ? <div><dt className="text-slate-500">Phải thu</dt><dd className="font-semibold">{formatVnd(price)}</dd></div> : null}
+            <div><dt className="text-slate-500">{t.enroll.student}</dt><dd className="font-semibold">{student.name}</dd></div>
+            <div><dt className="text-slate-500">{t.enroll.course}</dt><dd className="font-semibold">{picked.course.name}</dd></div>
+            <div><dt className="text-slate-500">{t.enroll.extra}</dt><dd className="font-semibold">{picked.granted}</dd></div>
+            <div><dt className="text-slate-500">{t.enroll.pack}</dt><dd className="font-semibold">{pack?.name}</dd></div>
+            {seeMoney ? <div><dt className="text-slate-500">{t.enroll.due}</dt><dd className="font-semibold tabular-nums">{formatVnd(price)}</dd></div> : null}
           </dl>
-          <p className="mt-3 text-slate-600">Có thể ghi danh khi còn nợ. Buổi đã cộng ngay khi xác nhận.</p>
-          {seeMoney ? (
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label>Thu ngay, bỏ trống nếu chưa thu
-                <input className={`${inputClass} mt-1`} inputMode="numeric" placeholder="0" value={payNow} onChange={(e) => setPayNow(e.target.value.replace(/[^\d]/g, ""))} />
-              </label>
-              <label>Hình thức
-                <select className={`${inputClass} mt-1`} value={method} onChange={(e) => setMethod(e.target.value as PayMethod)}>
-                  <option value="cash">Tiền mặt</option>
-                  <option value="transfer">Chuyển khoản</option>
-                </select>
-              </label>
-            </div>
-          ) : null}
+          <p className="mt-3 text-slate-600">{t.enroll.debtOk}</p>
+          {seeMoney ? <p className="mt-2 text-sm text-slate-500">{t.enroll.collectAfter}</p> : null}
         </section>
       ) : null}
 
-      {!done ? (
-        <div className="mt-4 flex gap-2">
-          {step > 1 ? <Button variant="outline" className="min-h-12" onClick={() => { setStep((n) => n - 1); setError(""); }}>Quay lại</Button> : null}
-          {step < 4 ? <Button className="min-h-12" disabled={busy} onClick={() => void nextStep()}>Tiếp tục</Button> : <Button className="min-h-12" disabled={busy} onClick={() => void confirm()}>Xác nhận ghi danh</Button>}
+      {done ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {seeMoney && studentId ? (
+            <Link href={`/finance/collect?student=${studentId}`} className={`${ctaPrimary} min-h-12 px-5`}>
+              {t.nav.collect}
+            </Link>
+          ) : null}
+          <Link href={studentId ? `/students/${studentId}` : "/students"} className={`${ctaOutline} min-h-12 px-5`}>
+            {t.enroll.viewStudent}
+          </Link>
+          <Button
+            variant="ghost"
+            className="min-h-12"
+            onClick={() => {
+              setDone("");
+              setStep(1);
+              setStudentId("");
+              setClassId("");
+              setPackageId("");
+              setQ("");
+              setError("");
+            }}
+          >
+            {t.enroll.again}
+          </Button>
         </div>
-      ) : null}
+      ) : (
+        <div className="mt-4 flex gap-2">
+          {step > 1 ? <Button variant="outline" className="min-h-12" onClick={() => { setStep((n) => n - 1); setError(""); }}>{t.common.back}</Button> : null}
+          {step < 4 ? (
+            <Button className="min-h-12" disabled={busy} onClick={() => void nextStep()}>{t.common.next}</Button>
+          ) : (
+            <Button className="min-h-12" disabled={busy} onClick={() => void confirm()}>{t.enroll.confirm}</Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

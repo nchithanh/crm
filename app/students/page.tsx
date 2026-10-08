@@ -299,7 +299,7 @@ export default function StudentsPage() {
                           {t.students.view}
                         </button>
                         {seeMoney ? (
-                          <Link href={`/fees?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
+                          <Link href={`/finance/collect?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
                             {t.students.collectQuick}
                           </Link>
                         ) : null}

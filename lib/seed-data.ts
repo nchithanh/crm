@@ -15,6 +15,7 @@ import nhay_courses from "@/data/nhay/courses.json";
 import nhay_courseTeachers from "@/data/nhay/course-teachers.json";
 import nhay_courseRooms from "@/data/nhay/course-rooms.json";
 import nhay_legacyClassMap from "@/data/nhay/legacy-class-map.json";
+import nhay_classOverrides from "@/data/nhay/class-overrides.json";
 import nhay_rooms from "@/data/nhay/rooms.json";
 import nhay_promotions from "@/data/nhay/promotions.json";
 import nhay_holds from "@/data/nhay/holds.json";
@@ -106,6 +107,7 @@ export function loadSeed(id: VerticalId) {
       courseTeachers: nhay_courseTeachers,
       courseRooms: nhay_courseRooms,
       legacyClassMap: nhay_legacyClassMap as Record<string, string>,
+      classOverrides: nhay_classOverrides as { classId: string; teacherId?: string; roomId?: string; note?: string }[],
       rooms: nhay_rooms,
       promotions: nhay_promotions,
       holds: nhay_holds,

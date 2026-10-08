@@ -4,5 +4,8 @@
   "c-ct-adv": "k-ct-adv",
   "c-hh-inter": "k-hh-inter",
   "c-am-7": "k-am-7",
-  "c-am-8": "k-am-8"
+  "c-am-8": "k-am-8",
+  "c-test-begin": "k-test-begin",
+  "c-test-inter": "k-test-inter",
+  "c-test-adv": "k-test-adv"
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Badge, Button, ctaOutline, inputClass } from "@/components/ui";
+import { Badge, Button, ctaOutline, inputClass, inputClassInline } from "@/components/ui";
 import { canEditSchedule } from "@/lib/access";
 import { addOneOffSession, cancelSession, moveSession, syncSessionClock, updateSession } from "@/lib/actions";
 import { db } from "@/lib/db";
@@ -267,20 +267,20 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2 overflow-x-auto">
-        <select className={`${inputClass} w-auto shrink-0`} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <select className={inputClassInline} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="all">{t.common.room}</option>
           {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
-        <select className={`${inputClass} w-auto shrink-0`} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
+        <select className={inputClassInline} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
           <option value="all">{t.common.teacher}</option>
           {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
-        <select className={`${inputClass} w-auto shrink-0`} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+        <select className={inputClassInline} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
           <option value="all">{t.common.course}</option>
           {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select className={`${inputClass} w-auto shrink-0`} value={status} onChange={(e) => setStatus(e.target.value as SessionStatus | "all")}>
+        <select className={inputClassInline} value={status} onChange={(e) => setStatus(e.target.value as SessionStatus | "all")}>
           <option value="all">{t.common.status}</option>
           <option value="upcoming">{t.status.upcoming}</option>
           <option value="ongoing">{t.status.ongoing}</option>

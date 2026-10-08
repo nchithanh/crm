@@ -2,6 +2,6 @@
 
 import { RouteRedirect } from "@/components/route-redirect";
 
-export default function LegacyRedirect() {
-  return <RouteRedirect to="/fees" />;
+export default function ThuHocPhiRedirectPage() {
+  return <RouteRedirect to="/finance/collect" />;
 }
