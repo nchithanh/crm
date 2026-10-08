@@ -76,4 +76,4 @@ export function Field({
 }
 
 export const inputClass =
-  "h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
+  "h-10 w-full min-w-0 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-base text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";

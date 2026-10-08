@@ -249,7 +249,7 @@ function CourseForm({
           </div>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
         <Field label={t.schedule.start}><input className={inputClass} type="time" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
         <Field label={t.schedule.end}><input className={inputClass} type="time" value={end} onChange={(e) => setEnd(e.target.value)} /></Field>
       </div>

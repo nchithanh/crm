@@ -2,6 +2,7 @@
 
 ## 2026-10-08
 
+- Form khóa/lớp trên mobile: giờ bắt đầu và kết thúc xếp dọc; input 16px để Safari không zoom khi focus.
 - Menu đáy mobile: Tổng quan, Lịch, Điểm danh, Đăng ký, Support (Zalo founder). Bỏ hàng CTA trùng dưới menu. Máy tính: icon Support cố định góc dưới phải (headset + chat). CTA header giữ nguyên.
 - Lịch mẫu thêm hai khóa sáng: 07:00–08:30 (thứ 2, thứ 4, thứ 7) và 08:00–09:30 (thứ 3, thứ 5, chủ nhật). Seed `8`.
 - Khóa học có nút Xem: chi nhánh, giáo viên, phòng, thứ, giờ và danh sách buổi. Lớp học có nút Xem tới trang sĩ số.
