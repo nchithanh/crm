@@ -5,12 +5,14 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { Card } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
+import { useI18n } from "@/lib/i18n";
 import { debtRemaining } from "@/lib/metrics";
 import { formatVnd, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
 export default function RevenuePage() {
+  const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const payments = useLiveQuery(() => db.payments.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
@@ -35,20 +37,20 @@ export default function RevenuePage() {
   if (!canSeeMoney(role)) {
     return (
       <div>
-        <h1 className="text-xl font-bold">Doanh thu</h1>
-        <p className="mt-2 text-sm text-slate-500">Giáo viên không xem học phí.</p>
+        <h1 className="text-xl font-bold">{t.money.revenue}</h1>
+        <p className="mt-2 text-sm text-slate-500">{t.money.teacher}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Doanh thu</h1>
-      <p className="mt-1 text-sm text-slate-500">Đã thu và còn nợ theo chi nhánh. Số mẫu của studio, không phải báo cáo kế toán.</p>
+      <h1 className="text-xl font-bold">{t.money.revenue}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t.money.revenueLead}</p>
       <Card className="mt-4 overflow-auto">
         <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-slate-50 text-left">
-            <tr>{["Chi nhánh", "Đã thu tháng này", "Còn nợ"].map((h) => <th key={h} className="px-3 py-3">{h}</th>)}</tr>
+            <tr>{[t.common.branch, t.money.collectedMonth, t.money.debt].map((h) => <th key={h} className="px-3 py-3">{h}</th>)}</tr>
           </thead>
           <tbody>
             {branches.filter((b) => !branch || b.id === branch).map((b) => (
@@ -62,9 +64,9 @@ export default function RevenuePage() {
         </table>
       </Card>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Card className="p-4"><p className="text-xs text-slate-500">Tháng này</p><p className="mt-2 text-2xl font-bold">{formatVnd(total)}</p></Card>
-        <Card className="p-4"><p className="text-xs text-slate-500">Tiền mặt</p><p className="mt-2 text-2xl font-bold">{formatVnd(cash)}</p></Card>
-        <Card className="p-4"><p className="text-xs text-slate-500">Chuyển khoản</p><p className="mt-2 text-2xl font-bold">{formatVnd(total - cash)}</p></Card>
+        <Card className="p-4"><p className="text-xs text-slate-500">{t.money.thisMonth}</p><p className="mt-2 text-2xl font-bold">{formatVnd(total)}</p></Card>
+        <Card className="p-4"><p className="text-xs text-slate-500">{t.common.cash}</p><p className="mt-2 text-2xl font-bold">{formatVnd(cash)}</p></Card>
+        <Card className="p-4"><p className="text-xs text-slate-500">{t.common.transfer}</p><p className="mt-2 text-2xl font-bold">{formatVnd(total - cash)}</p></Card>
       </div>
       <Card className="mt-4 h-64 p-4">
         <ResponsiveContainer width="100%" height="100%">
@@ -73,14 +75,14 @@ export default function RevenuePage() {
             <XAxis dataKey="day" fontSize={12} />
             <YAxis fontSize={12} />
             <Tooltip />
-            <Bar dataKey="amount" fill="#F97316" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="amount" fill="var(--brand-500)" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
       <Card className="mt-4 overflow-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="bg-slate-50 text-left">
-            <tr>{["Ngày", "Học viên", "Số tiền", "Ghi chú"].map((h) => <th key={h} className="px-3 py-3">{h}</th>)}</tr>
+            <tr>{[t.money.day, t.common.student, t.money.amount, t.money.note].map((h) => <th key={h} className="px-3 py-3">{h}</th>)}</tr>
           </thead>
           <tbody>
             {[...payments].filter((p) => !branch || p.branchId === branch).sort((a, b) => (a.day < b.day ? 1 : -1)).map((p) => (

@@ -6,6 +6,7 @@ import { Button, inputClass } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { createStudent, enrollMidCourse } from "@/lib/actions";
 import { db } from "@/lib/db";
+import { useI18n } from "@/lib/i18n";
 import { canJoinAtSession, levelLabel } from "@/lib/rules";
 import { nextJoinSession, proratedFee, sessionsLeftInCourse } from "@/lib/schedule";
 import { formatVnd } from "@/lib/utils";
@@ -16,6 +17,7 @@ import type { PayMethod } from "@/types";
 const steps = ["Học viên", "Khóa", "Tính buổi", "Xác nhận"];
 
 export default function MidEnrollPage() {
+  const { lang, t } = useI18n();
   const seeMoney = canSeeMoney(useAuthStore((s) => s.user?.role));
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const packages = useLiveQuery(() => db.packages.filter((p) => p.kind === "course").toArray(), []) ?? [];
@@ -48,13 +50,13 @@ export default function MidEnrollPage() {
       const klass = classes.find((c) => c.id === course.classId);
       const rows = sessions.filter((s) => s.courseId === course.id);
       const next = nextJoinSession(rows);
-      const gate = next ? canJoinAtSession(course.level, next.index) : { ok: false, reason: "Khóa đã hết buổi." };
+      const gate = next ? canJoinAtSession(course.level, next.index, lang) : { ok: false, reason: t.enroll.ended };
       const seated = students.filter((s) => s.classId === course.classId).length;
       const seats = Math.max(0, (klass?.capacity ?? 0) - seated);
       const granted = next ? sessionsLeftInCourse(rows, next.index) : 0;
       return { course, klass, next, gate, seated, seats, granted };
     });
-  }, [courses, classes, sessions, students]);
+  }, [courses, classes, sessions, students, lang, t]);
   const picked = offers.find((o) => o.course.classId === classId);
   const pack = packages.find((p) => p.id === packageId);
   const price = pack && picked ? proratedFee(pack.price, pack.sessions, picked.granted) : 0;
@@ -125,7 +127,7 @@ export default function MidEnrollPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-xl font-bold">Ghi danh giữa khóa</h1>
+      <h1 className="text-xl font-bold">{t.enroll.title}</h1>
       <p className="mt-1 text-sm text-slate-500">Begin chỉ đến buổi 3. Inter chỉ buổi lẻ. Advance chỉ buổi 1 và 5. Học viên vẫn vào lớp khi chưa đóng đủ.</p>
       <ol className="mt-4 grid grid-cols-4 gap-2">
         {steps.map((label, i) => {
@@ -134,8 +136,8 @@ export default function MidEnrollPage() {
           const passed = step > n || Boolean(done);
           return (
             <li key={label}>
-              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 w-full items-center gap-2 rounded-[12px] border px-2 text-left text-sm ${on ? "border-[#F97316] bg-orange-50 font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
-                <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${on || passed ? "bg-[#F97316] text-white" : "bg-slate-100"}`}>{n}</span>
+              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 w-full items-center gap-2 rounded-[12px] border px-2 text-left text-sm ${on ? "border-[var(--brand-500)] bg-[var(--brand-50)] font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
+                <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${on || passed ? "bg-[var(--brand-500)] text-white" : "bg-slate-100"}`}>{n}</span>
                 <span className="truncate">{label}</span>
               </button>
             </li>
@@ -148,8 +150,8 @@ export default function MidEnrollPage() {
       {step === 1 && !done ? (
         <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4">
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={!creating ? "h-10 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => setCreating(false)}>Học viên có sẵn</button>
-            <button type="button" className={creating ? "h-10 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>Tạo mới nhanh</button>
+            <button type="button" className={!creating ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => setCreating(false)}>Học viên có sẵn</button>
+            <button type="button" className={creating ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>Tạo mới nhanh</button>
           </div>
           {creating ? (
             <div className="mt-3 grid gap-2">
@@ -166,7 +168,7 @@ export default function MidEnrollPage() {
               <ul className="mt-2 max-h-64 space-y-1 overflow-auto">
                 {matches.map((s) => (
                   <li key={s.id}>
-                    <button type="button" className={`flex min-h-12 w-full items-center justify-between rounded-[12px] px-3 text-left ${studentId === s.id ? "bg-orange-50 font-semibold" : "hover:bg-slate-50"}`} onClick={() => setStudentId(s.id)}>
+                    <button type="button" className={`flex min-h-12 w-full items-center justify-between rounded-[12px] px-3 text-left ${studentId === s.id ? "bg-[var(--brand-50)] font-semibold" : "hover:bg-slate-50"}`} onClick={() => setStudentId(s.id)}>
                       <span>{s.name}</span>
                       <span className="text-sm text-slate-500">{s.remainingSessions} buổi</span>
                     </button>
@@ -189,7 +191,7 @@ export default function MidEnrollPage() {
                 type="button"
                 disabled={!open}
                 onClick={() => setClassId(offer.course.classId)}
-                className={`w-full rounded-[12px] border p-3 text-left ${selected ? "border-[#F97316] bg-orange-50" : "border-slate-200 bg-white"} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400`}
+                className={`w-full rounded-[12px] border p-3 text-left ${selected ? "border-[var(--brand-500)] bg-[var(--brand-50)]" : "border-slate-200 bg-white"} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400`}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>

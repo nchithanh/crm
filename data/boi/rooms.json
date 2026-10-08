@@ -1,0 +1,9 @@
+[
+  { "id": "r1", "name": "Phòng 1", "branchId": "b-a", "capacity": 15, "floor": "Tầng 1", "note": "Bể Mai" },
+  { "id": "r2", "name": "Phòng 2", "branchId": "b-a", "capacity": 15, "floor": "Tầng 1", "note": "Bể Mai" },
+  { "id": "r3", "name": "Phòng 3", "branchId": "b-a", "capacity": 12, "floor": "Tầng 2", "note": "Bể Mai" },
+  { "id": "r4", "name": "Phòng 1", "branchId": "b-b", "capacity": 15, "floor": "Tầng trệt", "note": "Bể Đào" },
+  { "id": "r5", "name": "Phòng 2", "branchId": "b-b", "capacity": 12, "floor": "Tầng lửng", "note": "Bể Đào" },
+  { "id": "r6", "name": "Phòng 1", "branchId": "b-c", "capacity": 15, "floor": "Tầng 2", "note": "Bể Lý" },
+  { "id": "r7", "name": "Phòng 2", "branchId": "b-c", "capacity": 12, "floor": "Tầng 2", "note": "Bể Lý · cho thuê" }
+]

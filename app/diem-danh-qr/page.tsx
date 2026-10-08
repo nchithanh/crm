@@ -4,10 +4,13 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, Card } from "@/components/ui";
 import { setAttendance } from "@/lib/actions";
+import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
+import { useI18n } from "@/lib/i18n";
 import { localDayKey, weekdayLabel } from "@/lib/utils";
 
 export default function QrAttendancePage() {
+  const { lang, t } = useI18n();
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const weekday = new Date().getDay();
@@ -30,11 +33,11 @@ export default function QrAttendancePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Điểm danh QR</h1>
-      <p className="mt-1 text-sm text-slate-500">Mã giả lập trên máy, không phải QR ngân hàng hay cổng điểm danh thật.</p>
+      <h1 className="text-xl font-bold">{t.pages.qr}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t.pages.qrLead}</p>
       <select className="mt-4 min-h-11 w-full max-w-md rounded-[12px] border border-slate-200 px-3" value={current} onChange={(e) => setClassId(e.target.value)}>
         {classes.map((c) => (
-          <option key={c.id} value={c.id}>{weekdayLabel(c.weekday)} {c.start} · {c.name}</option>
+          <option key={c.id} value={c.id}>{weekdayLabel(c.weekday, lang)} {c.start} · {c.name}</option>
         ))}
       </select>
       {klass ? (
@@ -49,9 +52,9 @@ export default function QrAttendancePage() {
         </Card>
       ) : null}
       <Card className="mt-4 max-w-lg p-4">
-        <h2 className="font-semibold">Giả lập quét</h2>
+        <h2 className="font-semibold">{t.pages.fakeScan}</h2>
         <select className="mt-3 min-h-11 w-full rounded-[12px] border border-slate-200 px-3" value={studentId} onChange={(e) => setStudentId(e.target.value)}>
-          <option value="">Chọn học viên trong lớp</option>
+          <option value="">{t.pages.pickStudent}</option>
           {roster.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <Button
@@ -60,11 +63,11 @@ export default function QrAttendancePage() {
             if (!studentId || !current) return;
             void setAttendance({ classId: current, studentId, day: localDayKey(), status: "present" }).then(() => {
               const name = roster.find((s) => s.id === studentId)?.name ?? "";
-              setMsg(`${name} đã được ghi có mặt.`);
+              setMsg(fill(t.pages.scanned, { name }));
             });
           }}
         >
-          Giả lập quét
+          {t.pages.fakeScan}
         </Button>
         {msg ? <p className="mt-2 text-sm text-emerald-700">{msg}</p> : null}
       </Card>

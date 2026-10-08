@@ -2,7 +2,7 @@
 
 | Path | Ghi chú |
 | --- | --- |
-| `/chon-linh-vuc` | Chọn lĩnh vực. Hiện một mục: dạy nhảy |
+| `/chon-linh-vuc` | Chọn lĩnh vực trước login: Edu Dance, Edu English, Edu Music, Edu Swim. Mỗi mục một IndexedDB |
 | `/login` | PIN |
 | `/` | Tổng quan: hàng 3 nút Điểm danh nhanh, Đăng ký học viên, Xem báo cáo. KPI, doanh thu, phễu, lớp hôm nay, việc cần xử lý. Chi nhánh lấy từ header |
 | `/lich` | Lịch tuần (lưới 07:00–22:00), tháng, theo phòng / giáo viên / chi nhánh. Kéo thả có chặn trùng. Drawer điểm danh, đổi giáo viên, đổi phòng, hủy buổi |

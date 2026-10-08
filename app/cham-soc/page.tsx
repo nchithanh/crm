@@ -5,13 +5,17 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { addLead, addLeadTouch, assignLeads, convertLead, moveLead, setLeadReminder } from "@/lib/actions";
 import { db } from "@/lib/db";
-import { LEAD_STAGES, leadStageLabel } from "@/lib/labels";
+import { fill } from "@/lib/copy";
+import { useI18n } from "@/lib/i18n";
+import { leadStageLabel, leadStages } from "@/lib/labels";
 import { usePageQuery } from "@/lib/page-query";
 import { dayFromOffset, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Lead, LeadStage } from "@/types";
 
-const ZALO_SAMPLE = "Chào bạn, Edu Dance nhận được thông tin quan tâm lớp. Mình gọi lại để xếp lịch học thử nhé.";
+function zaloSample(studio: string, template: string) {
+  return fill(template, { studio });
+}
 
 function lastTouch(lead: Lead) {
   return [...lead.activities.map((a) => a.day), lead.day].sort().at(-1) ?? lead.day;
@@ -23,7 +27,10 @@ function isCold(lead: Lead) {
 }
 
 export default function LeadsPage() {
+  const { lang, t } = useI18n();
+  const stages = leadStages(lang);
   const leads = useLiveQuery(() => db.leads.toArray(), []) ?? [];
+  const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const me = useAuthStore((s) => s.user);
@@ -72,7 +79,7 @@ export default function LeadsPage() {
     for (const lead of chosen) {
       const href = zaloHref(lead.phone);
       if (href) window.open(href, "_blank", "noopener,noreferrer");
-      void addLeadTouch(lead.id, "zalo", ZALO_SAMPLE);
+      void addLeadTouch(lead.id, "zalo", zaloSample(settings?.name || t.brand, t.care.zaloText));
     }
   }
 
@@ -80,13 +87,13 @@ export default function LeadsPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">Chăm sóc</h1>
-          <p className="mt-1 text-sm text-slate-500">Mới → Đã liên hệ → Học thử → Chốt → Thất bại</p>
+          <h1 className="text-xl font-bold">{t.care.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t.care.flow}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant={mode === "kanban" ? "primary" : "outline"} onClick={() => setMode("kanban")}>Kanban</Button>
-          <Button variant={mode === "table" ? "primary" : "outline"} onClick={() => setMode("table")}>Bảng</Button>
-          <Button onClick={() => setForm(true)}>+ Thêm lead</Button>
+          <Button variant={mode === "kanban" ? "primary" : "outline"} onClick={() => setMode("kanban")}>{t.care.kanban}</Button>
+          <Button variant={mode === "table" ? "primary" : "outline"} onClick={() => setMode("table")}>{t.care.table}</Button>
+          <Button onClick={() => setForm(true)}>{t.care.add}</Button>
         </div>
       </div>
       <div className="mt-4 flex gap-2 overflow-x-auto">
@@ -101,7 +108,7 @@ export default function LeadsPage() {
         </select>
         <select className={`${inputClass} w-auto shrink-0`} value={status} onChange={(e) => setStatus(e.target.value as LeadStage | "all")}>
           <option value="all">Trạng thái</option>
-          {LEAD_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+          {stages.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
         </select>
         <input className={`${inputClass} w-auto shrink-0`} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label="Từ ngày" />
         <input className={`${inputClass} w-auto shrink-0`} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label="Đến ngày" />
@@ -120,7 +127,7 @@ export default function LeadsPage() {
 
       {mode === "kanban" ? (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-          {LEAD_STAGES.map((col) => (
+          {stages.map((col) => (
             <section key={col.id} className="w-72 shrink-0 rounded-[12px] bg-slate-100/80 p-2" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const id = e.dataTransfer.getData("text/plain"); if (id) void moveLead(id, col.id); }}>
               <h2 className="px-2 py-2 text-sm font-semibold">{col.label}<span className="ml-2 text-slate-400">{filtered.filter((l) => l.stage === col.id).length}</span></h2>
               <ul className="space-y-2">
@@ -164,7 +171,7 @@ export default function LeadsPage() {
                   <td className="px-3 py-3">{l.source}</td>
                   <td className="px-3 py-3">{l.interest}</td>
                   <td className="px-3 py-3">{users.find((u) => u.id === l.ownerId)?.name}</td>
-                  <td className="px-3 py-3"><Badge tone={isCold(l) ? "warn" : "info"}>{leadStageLabel(l.stage)}</Badge></td>
+                  <td className="px-3 py-3"><Badge tone={isCold(l) ? "warn" : "info"}>{leadStageLabel(l.stage, lang)}</Badge></td>
                   <td className="px-3 py-3">{l.day}</td>
                   <td className="px-3 py-3">{lastTouch(l)}</td>
                 </tr>
@@ -212,6 +219,8 @@ function LeadDrawer({
   branches: { id: string; name: string }[];
   onClose: () => void;
 }) {
+  const { lang, t } = useI18n();
+  const stages = leadStages(lang);
   const [kind, setKind] = useState<"call" | "zalo" | "note">("call");
   const [text, setText] = useState("");
   const [nextAction, setNextAction] = useState(lead.nextAction ?? "");
@@ -222,58 +231,58 @@ function LeadDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-      <button className="absolute inset-0" aria-label="Đóng" onClick={onClose} />
+        <button className="absolute inset-0" aria-label={t.common.close} onClick={onClose} />
       <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
-        <p className="text-xs text-slate-400">Nguồn {lead.source}</p>
+        <p className="text-xs text-slate-400">{t.care.source} {lead.source}</p>
         <h2 className="mt-1 text-xl font-bold">{lead.name}</h2>
         <p className="text-sm text-slate-500">{lead.phone}</p>
-        <p className="mt-2 text-sm">Khóa quan tâm: {lead.interest || "—"}</p>
-        <p className="text-sm text-slate-500">Phụ trách: {owner}</p>
-        {isCold(lead) ? <p className="mt-2 text-sm font-semibold text-amber-700">Không có hoạt động hơn 3 ngày</p> : null}
+        <p className="mt-2 text-sm">{t.care.interest}: {lead.interest || "—"}</p>
+        <p className="text-sm text-slate-500">{t.care.owner}: {owner}</p>
+        {isCold(lead) ? <p className="mt-2 text-sm font-semibold text-amber-700">{t.care.coldLong}</p> : null}
         <label className="mt-4 block text-sm">
-          <span className="text-slate-500">Trạng thái</span>
+          <span className="text-slate-500">{t.common.status}</span>
           <select className={`${inputClass} mt-1`} value={lead.stage} onChange={(e) => void moveLead(lead.id, e.target.value as LeadStage)}>
-            {LEAD_STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            {stages.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
         </label>
         {lead.stage === "won" ? (
-          <div className="mt-3 rounded-[12px] bg-orange-50 p-3">
-            <p className="text-sm font-semibold">Chuyển thành học viên</p>
-            {lead.convertedStudentId ? <p className="mt-1 text-sm text-slate-600">Đã tạo học viên.</p> : (
+          <div className="mt-3 rounded-[12px] bg-[var(--brand-50)] p-3">
+            <p className="text-sm font-semibold">{t.care.convert}</p>
+            {lead.convertedStudentId ? <p className="mt-1 text-sm text-slate-600">{t.care.converted}</p> : (
               <>
                 <select className={`${inputClass} mt-2`} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
                   {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
-                <Button className="mt-2 min-h-12 w-full" onClick={() => void convertLead(lead.id, branchId).then(setError)}>Chuyển thành học viên</Button>
+                <Button className="mt-2 min-h-12 w-full" onClick={() => void convertLead(lead.id, branchId).then(setError)}>{t.care.convert}</Button>
               </>
             )}
             {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
           </div>
         ) : null}
-        <h3 className="mt-5 text-sm font-semibold">Việc tiếp theo</h3>
-        <input className={`${inputClass} mt-2`} placeholder="Gọi lại, nhắn Zalo..." value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
-        <input className={`${inputClass} mt-2`} type="date" value={reminderDay} onChange={(e) => setReminderDay(e.target.value)} aria-label="Ngày nhắc" />
-        <Button className="mt-2" variant="outline" onClick={() => void setLeadReminder(lead.id, nextAction, reminderDay)}>Lưu nhắc</Button>
-        <h3 className="mt-5 text-sm font-semibold">Thêm hoạt động</h3>
+        <h3 className="mt-5 text-sm font-semibold">{t.care.next}</h3>
+        <input className={`${inputClass} mt-2`} placeholder={t.care.nextPlaceholder} value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+        <input className={`${inputClass} mt-2`} type="date" value={reminderDay} onChange={(e) => setReminderDay(e.target.value)} aria-label={t.care.reminderDay} />
+        <Button className="mt-2" variant="outline" onClick={() => void setLeadReminder(lead.id, nextAction, reminderDay)}>{t.care.saveReminder}</Button>
+        <h3 className="mt-5 text-sm font-semibold">{t.care.addTouch}</h3>
         <div className="mt-2 flex gap-2">
           {(["call", "zalo", "note"] as const).map((item) => (
-            <button key={item} type="button" className={kind === item ? "h-10 rounded-[10px] bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
-              {item === "call" ? "Gọi" : item === "zalo" ? "Zalo" : "Ghi chú"}
+            <button key={item} type="button" className={kind === item ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
+              {item === "call" ? t.care.call : item === "zalo" ? "Zalo" : t.care.note}
             </button>
           ))}
         </div>
         <textarea className={`${inputClass} mt-2 min-h-20`} value={text} onChange={(e) => setText(e.target.value)} />
-        <Button className="mt-2" variant="outline" onClick={() => { void addLeadTouch(lead.id, kind, text); setText(""); }}>Ghi</Button>
-        <h3 className="mt-5 text-sm font-semibold">Dòng thời gian</h3>
+        <Button className="mt-2" variant="outline" onClick={() => { void addLeadTouch(lead.id, kind, text); setText(""); }}>{t.care.write}</Button>
+        <h3 className="mt-5 text-sm font-semibold">{t.care.timeline}</h3>
         <ol className="mt-2 space-y-3">
           {[...lead.activities].reverse().map((a, i) => (
-            <li key={`${a.day}-${i}`} className="border-l-2 border-[#F97316] pl-3">
-              <p className="text-xs text-slate-400">{a.day}{a.kind ? ` · ${a.kind === "call" ? "Gọi" : a.kind === "zalo" ? "Zalo" : "Ghi chú"}` : ""}</p>
+            <li key={`${a.day}-${i}`} className="border-l-2 border-[var(--brand-500)] pl-3">
+              <p className="text-xs text-slate-400">{a.day}{a.kind ? ` · ${a.kind === "call" ? t.care.call : a.kind === "zalo" ? "Zalo" : t.care.note}` : ""}</p>
               <p className="text-sm">{a.text}</p>
             </li>
           ))}
         </ol>
-        <p className="mt-4 text-xs text-slate-400">Hôm nay {localDayKey()}</p>
+        <p className="mt-4 text-xs text-slate-400">{t.common.today} {localDayKey()}</p>
       </aside>
     </div>
   );

@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell";
+import { I18nProvider } from "@/lib/i18n";
 import { reopenDb } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
-import { getStoredVertical, type VerticalId } from "@/lib/vertical";
+import { applyVerticalTheme, getStoredVertical, type VerticalId } from "@/lib/vertical";
 import { useAuthStore } from "@/stores/auth-store";
 
 function pathOf(pathname: string) {
@@ -29,7 +30,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [setHydrated]);
 
   useEffect(() => {
-    setVertical(getStoredVertical());
+    const stored = getStoredVertical();
+    setVertical(stored);
+    if (stored) applyVerticalTheme(stored);
   }, [path, hydrated]);
 
   useEffect(() => {
@@ -66,12 +69,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!hydrated || vertical === undefined || !ready) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-      </div>
+      <I18nProvider>
+        <div className="flex min-h-dvh items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        </div>
+      </I18nProvider>
     );
   }
 
-  if (!user) return children;
-  return <AppShell>{children}</AppShell>;
+  if (!user) return <I18nProvider>{children}</I18nProvider>;
+  return (
+    <I18nProvider>
+      <AppShell>{children}</AppShell>
+    </I18nProvider>
+  );
 }

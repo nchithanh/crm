@@ -10,7 +10,8 @@ import { db } from "@/lib/db";
 import { sessionStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { conflictLabel, formatMinutes, GRID_END, GRID_START, minutesOf } from "@/lib/schedule";
-import { localDayKey, weekdayLabel } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
+import { localDayKey, weekdayLabel, weekdayShort } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { ClassSession, SessionStatus } from "@/types";
@@ -36,7 +37,7 @@ function shortName(name: string) {
 }
 
 function tone(status: SessionStatus) {
-  if (status === "ongoing") return "border-l-4 border-[#F97316] bg-orange-100 text-[#0F172A]";
+  if (status === "ongoing") return "border-l-4 border-[var(--brand-500)] bg-[var(--brand-100)] text-[#0F172A]";
   if (status === "completed") return "border-l-4 border-slate-300 bg-slate-100 text-slate-500";
   if (status === "cancelled") return "border-l-4 border-[#DC2626] bg-rose-50 text-rose-800";
   return "border-l-4 border-sky-500 bg-sky-50 text-sky-950";
@@ -58,6 +59,7 @@ function mondayOf(offsetWeeks: number) {
 }
 
 export default function SchedulePage() {
+  const { lang, t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const canEdit = canEditSchedule(user?.role);
   const sessions = useLiveQuery(() => db.sessions.toArray(), []) ?? [];
@@ -131,10 +133,10 @@ export default function SchedulePage() {
     return weekDays.map((day) => ({
       id: day,
       day,
-      title: weekdayLabel(new Date(`${day}T12:00:00`).getDay()),
-      sub: day === today ? "Hôm nay" : day.slice(5),
+      title: weekdayLabel(new Date(`${day}T12:00:00`).getDay(), lang),
+      sub: day === today ? t.schedule.today : day.slice(5),
     }));
-  }, [group, rooms, teachers, branches, weekDays, focusDay, branchId, roomId, teacherId, today]);
+  }, [group, rooms, teachers, branches, weekDays, focusDay, branchId, roomId, teacherId, today, lang, t]);
 
   function sessionsIn(col: Column) {
     return filtered.filter((s) => {
@@ -219,7 +221,7 @@ export default function SchedulePage() {
         rooms.find((r) => r.id === s.roomId)?.name ?? "",
         branches.find((b) => b.id === s.branchId)?.name ?? "",
         `${seated(s.classId)}/${cap}`,
-        sessionStatusLabel(s.status),
+        sessionStatusLabel(s.status, lang),
       ];
     });
     const csv = `\uFEFF${[header, ...lines].map((line) => line.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n")}`;
@@ -251,64 +253,64 @@ export default function SchedulePage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">Lịch</h1>
+          <h1 className="text-xl font-bold">{t.schedule.title}</h1>
           <p className="text-sm text-slate-500">{group === "day" ? `${weekDays[0].slice(8)}/${weekDays[0].slice(5, 7)} – ${weekDays[6].slice(8)}/${weekDays[6].slice(5, 7)}` : focusDay}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant={mode === "week" ? "primary" : "outline"} onClick={() => setMode("week")}>Tuần</Button>
-          <Button variant={mode === "month" ? "primary" : "outline"} onClick={() => setMode("month")}>Tháng</Button>
-          {canEdit ? <Button variant="outline" onClick={() => { setDraft((d) => ({ ...d, courseId: d.courseId || courses[0]?.id || "", teacherId: d.teacherId || teachers[0]?.id || "", roomId: d.roomId || rooms[0]?.id || "", day: focusDay })); setCreating(true); }}>Tạo buổi lẻ</Button> : null}
-          <Button variant="ghost" onClick={exportCsv}>Xuất lịch</Button>
-          <Button variant="ghost" onClick={() => void syncView()}>Đồng bộ</Button>
+          <Button variant={mode === "week" ? "primary" : "outline"} onClick={() => setMode("week")}>{t.schedule.week}</Button>
+          <Button variant={mode === "month" ? "primary" : "outline"} onClick={() => setMode("month")}>{t.schedule.month}</Button>
+          {canEdit ? <Button variant="outline" onClick={() => { setDraft((d) => ({ ...d, courseId: d.courseId || courses[0]?.id || "", teacherId: d.teacherId || teachers[0]?.id || "", roomId: d.roomId || rooms[0]?.id || "", day: focusDay })); setCreating(true); }}>{t.schedule.create}</Button> : null}
+          <Button variant="ghost" onClick={exportCsv}>{t.schedule.export}</Button>
+          <Button variant="ghost" onClick={() => void syncView()}>{t.schedule.sync}</Button>
         </div>
       </div>
 
       <div className="mt-3 flex gap-2 overflow-x-auto">
         <select className={`${inputClass} w-auto shrink-0`} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          <option value="all">Chi nhánh</option>
+          <option value="all">{t.common.branch}</option>
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <select className={`${inputClass} w-auto shrink-0`} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
-          <option value="all">Phòng</option>
+          <option value="all">{t.common.room}</option>
           {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
         <select className={`${inputClass} w-auto shrink-0`} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
-          <option value="all">Giáo viên</option>
+          <option value="all">{t.common.teacher}</option>
           {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <select className={`${inputClass} w-auto shrink-0`} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-          <option value="all">Khóa</option>
+          <option value="all">{t.common.course}</option>
           {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select className={`${inputClass} w-auto shrink-0`} value={status} onChange={(e) => setStatus(e.target.value as SessionStatus | "all")}>
-          <option value="all">Trạng thái</option>
-          <option value="upcoming">Sắp học</option>
-          <option value="ongoing">Đang học</option>
-          <option value="completed">Đã học</option>
-          <option value="cancelled">Hủy</option>
+          <option value="all">{t.common.status}</option>
+          <option value="upcoming">{t.status.upcoming}</option>
+          <option value="ongoing">{t.status.ongoing}</option>
+          <option value="completed">{t.status.completed}</option>
+          <option value="cancelled">{t.status.cancelled}</option>
         </select>
       </div>
 
       {mode === "week" ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button variant="ghost" onClick={() => setWeekOffset((n) => n - 1)}>Tuần trước</Button>
-          <Button variant="ghost" onClick={() => setWeekOffset((n) => n + 1)}>Tuần sau</Button>
+          <Button variant="ghost" onClick={() => setWeekOffset((n) => n - 1)}>{t.schedule.prevWeek}</Button>
+          <Button variant="ghost" onClick={() => setWeekOffset((n) => n + 1)}>{t.schedule.nextWeek}</Button>
           {(["room", "teacher", "branch"] as const).map((key) => (
             <Button key={key} variant={group === key ? "primary" : "outline"} onClick={() => setGroup((g) => (g === key ? "day" : key))}>
-              {key === "room" ? "Theo phòng" : key === "teacher" ? "Theo giáo viên" : "Theo chi nhánh"}
+              {key === "room" ? t.schedule.byRoom : key === "teacher" ? t.schedule.byTeacher : t.schedule.byBranch}
             </Button>
           ))}
           {group !== "day" ? weekDays.map((day) => (
-            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[10px] bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
-              {weekdayLabel(new Date(`${day}T12:00:00`).getDay()).replace("Thứ ", "T")} {day.slice(8)}
+            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
+              {weekdayShort(new Date(`${day}T12:00:00`).getDay(), lang)} {day.slice(8)}
             </button>
           )) : null}
         </div>
       ) : (
         <div className="mt-3 flex items-center gap-2">
-          <Button variant="outline" onClick={() => setMonthOffset((n) => n - 1)}>Tháng trước</Button>
+          <Button variant="outline" onClick={() => setMonthOffset((n) => n - 1)}>{t.schedule.prevMonth}</Button>
           <p className="text-sm font-semibold capitalize">{monthTitle}</p>
-          <Button variant="outline" onClick={() => setMonthOffset((n) => n + 1)}>Tháng sau</Button>
+          <Button variant="outline" onClick={() => setMonthOffset((n) => n + 1)}>{t.schedule.nextMonth}</Button>
         </div>
       )}
 
@@ -344,7 +346,7 @@ export default function SchedulePage() {
                   {HOURS.slice(0, -1).map((hour) => (
                     <div key={hour} className="absolute inset-x-0 border-t border-slate-100" style={{ top: (hour - GRID_START) * HOUR_PX }} />
                   ))}
-                  {col.day === today ? <div className="absolute inset-x-0 z-[1] h-px bg-[#F97316]" style={{ top: Math.min(gridHeight, Math.max(0, ((new Date().getHours() * 60 + new Date().getMinutes() - GRID_START * 60) / 60) * HOUR_PX)) }} /> : null}
+                  {col.day === today ? <div className="absolute inset-x-0 z-[1] h-px bg-[var(--brand-500)]" style={{ top: Math.min(gridHeight, Math.max(0, ((new Date().getHours() * 60 + new Date().getMinutes() - GRID_START * 60) / 60) * HOUR_PX)) }} /> : null}
                   {sessionsIn(col).map((s) => {
                     const course = courses.find((c) => c.id === s.courseId);
                     const teacher = users.find((u) => u.id === s.teacherId);
@@ -385,7 +387,7 @@ export default function SchedulePage() {
             <p key={d} className="px-1 text-center text-xs font-semibold text-slate-400">{d}</p>
           ))}
           {monthCells.map((day, i) => (
-            <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[12px] border p-1 ${day === today ? "border-[#F97316]" : "border-slate-100"}`}>
+            <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[12px] border p-1 ${day === today ? "border-[var(--brand-500)]" : "border-slate-100"}`}>
               {day ? (
                 <button type="button" className="text-xs text-slate-500" onClick={() => { setFocusDay(day); setMode("week"); const target = new Date(`${day}T12:00:00`); const current = new Date(`${mondayOf(0)}T12:00:00`); setWeekOffset(Math.floor((target.getTime() - current.getTime()) / (7 * 86400000))); }}>
                   {Number(day.slice(8))}
@@ -403,11 +405,11 @@ export default function SchedulePage() {
 
       {creating ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-          <button className="absolute inset-0" aria-label="Đóng" onClick={() => setCreating(false)} />
+          <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setCreating(false)} />
           <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
-            <h2 className="text-lg font-bold">Tạo buổi lẻ</h2>
+            <h2 className="text-lg font-bold">{t.schedule.create}</h2>
             <div className="mt-4 space-y-3">
-              <label className="block text-sm"><span className="text-slate-500">Khóa</span>
+              <label className="block text-sm"><span className="text-slate-500">{t.schedule.course}</span>
                 <select className={`${inputClass} mt-1`} value={draft.courseId} onChange={(e) => {
                   const course = courses.find((c) => c.id === e.target.value);
                   setDraft((d) => ({ ...d, courseId: e.target.value, teacherId: course?.teacherId || d.teacherId, roomId: course?.roomId || d.roomId }));
@@ -415,28 +417,28 @@ export default function SchedulePage() {
                   {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </label>
-              <label className="block text-sm"><span className="text-slate-500">Ngày</span>
+              <label className="block text-sm"><span className="text-slate-500">{t.schedule.day}</span>
                 <input className={`${inputClass} mt-1`} type="date" value={draft.day} onChange={(e) => setDraft((d) => ({ ...d, day: e.target.value }))} />
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <label className="block text-sm"><span className="text-slate-500">Bắt đầu</span>
+                <label className="block text-sm"><span className="text-slate-500">{t.schedule.start}</span>
                   <input className={`${inputClass} mt-1`} type="time" value={draft.start} onChange={(e) => setDraft((d) => ({ ...d, start: e.target.value }))} />
                 </label>
-                <label className="block text-sm"><span className="text-slate-500">Kết thúc</span>
+                <label className="block text-sm"><span className="text-slate-500">{t.schedule.end}</span>
                   <input className={`${inputClass} mt-1`} type="time" value={draft.end} onChange={(e) => setDraft((d) => ({ ...d, end: e.target.value }))} />
                 </label>
               </div>
-              <label className="block text-sm"><span className="text-slate-500">Giáo viên</span>
+              <label className="block text-sm"><span className="text-slate-500">{t.common.teacher}</span>
                 <select className={`${inputClass} mt-1`} value={draft.teacherId} onChange={(e) => setDraft((d) => ({ ...d, teacherId: e.target.value }))}>
                   {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </label>
-              <label className="block text-sm"><span className="text-slate-500">Phòng</span>
+              <label className="block text-sm"><span className="text-slate-500">{t.common.room}</span>
                 <select className={`${inputClass} mt-1`} value={draft.roomId} onChange={(e) => setDraft((d) => ({ ...d, roomId: e.target.value }))}>
                   {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </label>
-              <Button onClick={() => void createSession()}>Lưu buổi</Button>
+              <Button onClick={() => void createSession()}>{t.schedule.save}</Button>
             </div>
           </aside>
         </div>
@@ -444,48 +446,48 @@ export default function SchedulePage() {
 
       {open ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-          <button className="absolute inset-0" aria-label="Đóng" onClick={() => setOpenId(null)} />
+          <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setOpenId(null)} />
           <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
-            <p className="text-xs text-slate-400">Buổi {open.index} · {open.day}</p>
+            <p className="text-xs text-slate-400">{t.schedule.session} {open.index} · {open.day}</p>
             <h2 className="text-xl font-bold">{courses.find((c) => c.id === open.courseId)?.name}</h2>
             <p className="text-sm text-slate-500">{levelLabel(courses.find((c) => c.id === open.courseId)?.level ?? "")} · {open.start}–{open.end}</p>
             <div className="mt-2 flex flex-wrap gap-1">
-              <Badge tone={open.status === "cancelled" ? "danger" : open.status === "completed" ? "neutral" : open.status === "ongoing" ? "warn" : "info"}>{sessionStatusLabel(open.status)}</Badge>
+              <Badge tone={open.status === "cancelled" ? "danger" : open.status === "completed" ? "neutral" : open.status === "ongoing" ? "warn" : "info"}>{sessionStatusLabel(open.status, lang)}</Badge>
               {conflictLabel(sessions, open) ? <Badge tone="danger">{conflictLabel(sessions, open)}</Badge> : null}
             </div>
             {open.note ? <p className="mt-2 text-sm text-rose-600">{open.note}</p> : null}
-            <h3 className="mt-4 text-sm font-semibold">Sĩ số {seated(open.classId)}/{classes.find((c) => c.id === open.classId)?.capacity ?? 0}</h3>
+            <h3 className="mt-4 text-sm font-semibold">{t.schedule.roster} {seated(open.classId)}/{classes.find((c) => c.id === open.classId)?.capacity ?? 0}</h3>
             <ul className="mt-1 space-y-1 text-sm">
               {students.filter((st) => st.classId === open.classId).map((st) => <li key={st.id}>{st.name}</li>)}
-              {students.filter((st) => st.classId === open.classId).length === 0 ? <li className="text-slate-400">Chưa có học viên trong lớp.</li> : null}
+              {students.filter((st) => st.classId === open.classId).length === 0 ? <li className="text-slate-400">{t.schedule.emptyClass}</li> : null}
             </ul>
-            <Link href={`/diem-danh?branch=${open.branchId}&class=${open.classId}`} className={`${ctaOutline} mt-4`}>Điểm danh</Link>
+            <Link href={`/diem-danh?branch=${open.branchId}&class=${open.classId}`} className={`${ctaOutline} mt-4`}>{t.schedule.attend}</Link>
             {canEdit && open.status !== "cancelled" && open.status !== "completed" ? (
               <div className="mt-4 space-y-3">
                 <label className="block text-sm">
-                  <span className="text-slate-500">Đổi giáo viên</span>
+                  <span className="text-slate-500">{t.schedule.changeTeacher}</span>
                   <select className={`${inputClass} mt-1`} value={open.teacherId} onChange={(e) => user && void updateSession({ sessionId: open.id, actorId: user.id, teacherId: e.target.value }).then(setNotice)}>
                     {teachers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                   </select>
                 </label>
                 <label className="block text-sm">
-                  <span className="text-slate-500">Đổi phòng</span>
+                  <span className="text-slate-500">{t.schedule.changeRoom}</span>
                   <select className={`${inputClass} mt-1`} value={open.roomId} onChange={(e) => user && void updateSession({ sessionId: open.id, actorId: user.id, roomId: e.target.value }).then(setNotice)}>
                     {rooms.filter((r) => r.branchId === open.branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                   </select>
                 </label>
                 {user?.role === "owner" ? (
                   <div>
-                    <input className={inputClass} placeholder="Lý do hủy" value={reason} onChange={(e) => setReason(e.target.value)} />
-                    <Button className="mt-2" variant="outline" onClick={() => void cancelSession(open.id, user.id, reason || "Hủy buổi").then(() => setOpenId(null))}>Hủy buổi</Button>
+                    <input className={inputClass} placeholder={t.schedule.cancelReason} value={reason} onChange={(e) => setReason(e.target.value)} />
+                    <Button className="mt-2" variant="outline" onClick={() => void cancelSession(open.id, user.id, reason || t.schedule.cancel).then(() => setOpenId(null))}>{t.schedule.cancel}</Button>
                   </div>
                 ) : null}
               </div>
             ) : null}
-            <h3 className="mt-5 text-sm font-semibold">Nhật ký</h3>
+            <h3 className="mt-5 text-sm font-semibold">{t.schedule.log}</h3>
             <ul className="mt-2 space-y-1 text-sm text-slate-600">
               {audits.filter((a) => a.sessionId === open.id).map((a) => <li key={a.id}>{a.day} · {a.text}</li>)}
-              {audits.filter((a) => a.sessionId === open.id).length === 0 ? <li className="text-slate-400">Chưa có thay đổi.</li> : null}
+              {audits.filter((a) => a.sessionId === open.id).length === 0 ? <li className="text-slate-400">{t.schedule.noChanges}</li> : null}
             </ul>
           </aside>
         </div>

@@ -6,6 +6,7 @@ import { Badge, Button, inputClass } from "@/components/ui";
 import { canApproveHold } from "@/lib/access";
 import { decideHold, endHoldEarly } from "@/lib/actions";
 import { db } from "@/lib/db";
+import { useI18n } from "@/lib/i18n";
 import { holdStatusLabel } from "@/lib/labels";
 import { localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -27,6 +28,7 @@ function bucket(hold: Hold, today: string): Exclude<Tab, "all"> {
 }
 
 export default function HoldsPage() {
+  const { lang, t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const manager = canApproveHold(user?.role);
   const holds = useLiveQuery(() => db.holds.toArray(), []) ?? [];
@@ -73,12 +75,12 @@ export default function HoldsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Bảo lưu</h1>
+      <h1 className="text-xl font-bold">{t.hold.title}</h1>
       <p className="mt-1 text-sm text-slate-500">Gói từ 3 tháng được tặng bảo lưu. Gói ngắn hơn phải mua gói bảo lưu lẻ. Buổi còn được đóng băng. Học viên vẫn giữ chỗ. Buổi hủy không tính vào thời gian bảo lưu.</p>
       {message ? <p className="mt-3 rounded-[12px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {tabs.map((item) => (
-          <button key={item.id} type="button" className={tab === item.id ? "h-10 shrink-0 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-4 text-sm"} onClick={() => setTab(item.id)}>
+          <button key={item.id} type="button" className={tab === item.id ? "h-10 shrink-0 rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-4 text-sm"} onClick={() => setTab(item.id)}>
             {item.label}
           </button>
         ))}
@@ -105,7 +107,7 @@ export default function HoldsPage() {
                   <td className="px-3 py-3">{h.fromDay}</td>
                   <td className="px-3 py-3">{h.toDay}</td>
                   <td className="px-3 py-3">{users.find((u) => u.id === h.approverId)?.name ?? "—"}</td>
-                  <td className="px-3 py-3"><Badge tone={h.status === "pending" ? "warn" : h.status === "approved" ? "info" : h.status === "rejected" ? "danger" : "neutral"}>{holdStatusLabel(h.status)}</Badge></td>
+                  <td className="px-3 py-3"><Badge tone={h.status === "pending" ? "warn" : h.status === "approved" ? "info" : h.status === "rejected" ? "danger" : "neutral"}>{holdStatusLabel(h.status, lang)}</Badge></td>
                 </tr>
               );
             })}
@@ -128,7 +130,7 @@ export default function HoldsPage() {
                 <>
                   <h2 className="text-xl font-bold">{student?.name}</h2>
                   <p className="text-sm text-slate-500">{pack?.name} · còn {student?.remainingSessions ?? open.credits} buổi</p>
-                  <Badge tone={open.status === "pending" ? "warn" : open.status === "approved" ? "info" : "neutral"}>{holdStatusLabel(open.status)}</Badge>
+                  <Badge tone={open.status === "pending" ? "warn" : open.status === "approved" ? "info" : "neutral"}>{holdStatusLabel(open.status, lang)}</Badge>
                   <h3 className="mt-4 text-sm font-semibold">Lý do xin bảo lưu</h3>
                   <p className="mt-1 text-sm">{open.reason}</p>
                   <h3 className="mt-4 text-sm font-semibold">Thời gian đề xuất</h3>

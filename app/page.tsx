@@ -29,6 +29,8 @@ import { debtRemaining } from "@/lib/metrics";
 import { levelLabel } from "@/lib/rules";
 import { formatVnd, initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import { fill } from "@/lib/copy";
+import { useI18n } from "@/lib/i18n";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { LucideIcon } from "lucide-react";
 
@@ -47,14 +49,14 @@ function monthShift(prefix: string, delta: number) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function relativeDay(day: string, today: string) {
-  if (day === today) return "hôm nay";
-  if (day === addDays(today, -1)) return "hôm qua";
+function relativeDay(day: string, today: string, words: { today: string; yesterday: string; ago: string }) {
+  if (day === today) return words.today;
+  if (day === addDays(today, -1)) return words.yesterday;
   const n = Math.round(
     (new Date(`${today}T12:00:00`).getTime() - new Date(`${day}T12:00:00`).getTime()) / 86400000,
   );
   if (Number.isNaN(n)) return day;
-  return n > 0 ? `${n} ngày trước` : day;
+  return n > 0 ? words.ago.replace("{n}", String(n)) : day;
 }
 
 function trend(current: number, previous: number) {
@@ -67,7 +69,7 @@ function Spark({ values }: { values: number[] }) {
   return (
     <span className="mt-2 flex h-6 items-end gap-0.5" aria-hidden>
       {values.map((v, i) => (
-        <span key={i} className="w-1.5 rounded-sm bg-[#F97316]" style={{ height: `${Math.max(12, (v / max) * 100)}%` }} />
+        <span key={i} className="w-1.5 rounded-sm bg-[var(--brand-500)]" style={{ height: `${Math.max(12, (v / max) * 100)}%` }} />
       ))}
     </span>
   );
@@ -77,10 +79,12 @@ function ChartTip({
   active,
   payload,
   label,
+  receipts,
 }: {
   active?: boolean;
   payload?: { payload?: { amount?: number; count?: number } }[];
   label?: string;
+  receipts?: string;
 }) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
@@ -88,7 +92,7 @@ function ChartTip({
     <div className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-bold tabular-nums">{formatVnd(row?.amount ?? 0)}</p>
-      <p className="tabular-nums text-slate-500">{row?.count ?? 0} phiếu thu</p>
+      <p className="tabular-nums text-slate-500">{row?.count ?? 0} {receipts}</p>
     </div>
   );
 }
@@ -97,10 +101,11 @@ function phaseLabel(start: string) {
   const [h, m] = start.split(":").map(Number);
   const now = new Date();
   const mins = now.getHours() * 60 + now.getMinutes();
-  return mins < (h || 0) * 60 + (m || 0) ? "Sắp tới" : "Đang diễn ra";
+  return mins < (h || 0) * 60 + (m || 0) ? "soon" : "live";
 }
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const showMoney = canSeeMoney(role);
   const branches = useLiveQuery(() => db.branches.toArray());
@@ -116,6 +121,7 @@ export default function DashboardPage() {
   const holds = useLiveQuery(() => db.holds.toArray());
   const leads = useLiveQuery(() => db.leads.toArray());
   const audits = useLiveQuery(() => db.audits.toArray());
+  const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
   const [period, setPeriod] = useState<Period>("month");
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
@@ -225,10 +231,10 @@ export default function DashboardPage() {
     const chartTotal = chart.reduce((s, d) => s + d.amount, 0);
 
     const funnel = [
-      { id: "new", label: "Lead mới", count: leads.filter((l) => l.stage === "new").length },
-      { id: "contacted", label: "Đã liên hệ", count: leads.filter((l) => l.stage === "contacted").length },
-      { id: "trial", label: "Học thử", count: leads.filter((l) => l.stage === "trial").length },
-      { id: "won", label: "Đã ghi danh", count: leads.filter((l) => l.stage === "won").length },
+      { id: "new", label: t.dash.leadNew, count: leads.filter((l) => l.stage === "new").length },
+      { id: "contacted", label: t.status.leadContacted, count: leads.filter((l) => l.stage === "contacted").length },
+      { id: "trial", label: t.status.trial, count: leads.filter((l) => l.stage === "trial").length },
+      { id: "won", label: t.dash.enrolled, count: leads.filter((l) => l.stage === "won").length },
     ];
 
     const ranking = [...branchCourses]
@@ -245,21 +251,21 @@ export default function DashboardPage() {
       ...payments.filter((p) => inBranch(p.branchId)).map((p) => ({
         id: p.id,
         day: p.day,
-        text: `Đã thu ${formatVnd(p.amount)} từ ${students.find((s) => s.id === p.studentId)?.name ?? "học viên"}`,
+        text: fill(t.dash.paidFrom, { amount: formatVnd(p.amount), name: students.find((s) => s.id === p.studentId)?.name ?? t.dash.student }),
       })),
       ...attendance
         .filter((a) => inBranch(students.find((s) => s.id === a.studentId)?.branchId ?? ""))
         .map((a) => ({
           id: a.id,
           day: a.day,
-          text: `${students.find((s) => s.id === a.studentId)?.name ?? "Học viên"} vừa điểm danh lớp ${classes.find((c) => c.id === a.classId)?.name ?? ""}`.trim(),
+          text: fill(t.dash.marked, { name: students.find((s) => s.id === a.studentId)?.name ?? t.dash.student, className: classes.find((c) => c.id === a.classId)?.name ?? "" }),
         })),
       ...holds
         .filter((h) => h.status === "approved" && inBranch(students.find((s) => s.id === h.studentId)?.branchId ?? ""))
         .map((h) => ({
           id: h.id,
           day: h.fromDay,
-          text: `Duyệt bảo lưu cho ${students.find((s) => s.id === h.studentId)?.name ?? "học viên"}`,
+          text: fill(t.dash.holdApproved, { name: students.find((s) => s.id === h.studentId)?.name ?? t.dash.student }),
         })),
       ...audits.map((a) => ({ id: a.id, day: a.day, text: a.text })),
     ]
@@ -268,16 +274,16 @@ export default function DashboardPage() {
 
     const q = branchId === "all" ? "" : `?branch=${branchId}`;
     const urgent = [
-      pendingHolds.length ? { id: "hold", label: "Bảo lưu chờ duyệt", count: pendingHolds.length, href: "/bao-luu" } : null,
-      needBackup.length ? { id: "backup", label: "Giáo viên nghỉ chưa có backup", count: needBackup.length, href: `/lich${q}` } : null,
-      fullClasses.length ? { id: "full", label: "Lớp đã đầy", count: fullClasses.length, href: "/lop-hoc" } : null,
+      pendingHolds.length ? { id: "hold", label: t.dash.urgentHold, count: pendingHolds.length, href: "/bao-luu" } : null,
+      needBackup.length ? { id: "backup", label: t.dash.urgentBackup, count: needBackup.length, href: `/lich${q}` } : null,
+      fullClasses.length ? { id: "full", label: t.dash.urgentFull, count: fullClasses.length, href: "/lop-hoc" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const watch = [
-      showMoney && oldDebtStudents.size ? { id: "debt", label: "Học viên nợ hơn 7 ngày", count: oldDebtStudents.size, href: `/thu-hoc-phi${q}` } : null,
-      ending3.length ? { id: "end", label: "Khóa kết thúc trong 3 ngày", count: ending3.length, href: `/khoa-hoc${q}` } : null,
+      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/thu-hoc-phi${q}` } : null,
+      ending3.length ? { id: "end", label: t.dash.watchEnd, count: ending3.length, href: `/khoa-hoc${q}` } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const info = [
-      freshLeads.length ? { id: "lead", label: "Lead mới chưa liên hệ", count: freshLeads.length, href: "/cham-soc?stage=new" } : null,
+      freshLeads.length ? { id: "lead", label: t.dash.infoLead, count: freshLeads.length, href: "/cham-soc?stage=new" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     return {
       today,
@@ -298,9 +304,9 @@ export default function DashboardPage() {
       attendSpark,
       ending7: ending7.length,
       groups: [
-        urgent.length ? { title: "Khẩn cấp", tone: "danger" as const, items: urgent } : null,
-        watch.length ? { title: "Cần chú ý", tone: "warn" as const, items: watch } : null,
-        info.length ? { title: "Thông tin", tone: "neutral" as const, items: info } : null,
+        urgent.length ? { title: t.dash.urgent, tone: "danger" as const, items: urgent } : null,
+        watch.length ? { title: t.dash.watch, tone: "warn" as const, items: watch } : null,
+        info.length ? { title: t.dash.info, tone: "neutral" as const, items: info } : null,
       ].filter((x): x is NonNullable<typeof x> => Boolean(x)),
       chart,
       chartTotal,
@@ -310,7 +316,7 @@ export default function DashboardPage() {
       ranking,
       activity,
     };
-  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, audits, branchId, period, chartSpan, showMoney]);
+  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, audits, branchId, period, chartSpan, showMoney, t]);
 
   const q = branchId === "all" ? "" : `?branch=${branchId}`;
 
@@ -332,6 +338,7 @@ export default function DashboardPage() {
   }
 
   const kpis: {
+    id?: string;
     label: string;
     value: string;
     hint: string;
@@ -340,47 +347,49 @@ export default function DashboardPage() {
     warn?: boolean;
   }[] = [
     {
-      label: "Học viên đang học",
+      label: t.dash.activeStudents,
       value: String(model.active),
-      hint: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta} so với tháng trước`,
+      hint: fill(t.dash.vsLast, { n: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta}` }),
       href: `/hoc-vien${q}`,
       icon: Users,
     },
     {
-      label: "Buổi học hôm nay",
+      label: t.dash.todaySessions,
       value: String(model.todaySessions.length),
-      hint: `${model.todayClassCount} lớp · ${model.todayStudentCount} học viên`,
+      hint: fill(t.dash.classStudents, { classes: model.todayClassCount, students: model.todayStudentCount }),
       href: `/lich${q}`,
       icon: CalendarDays,
     },
     {
-      label: period === "month" ? "Doanh thu tháng này" : "Doanh thu kỳ này",
+      label: period === "month" ? t.dash.revenueMonth : t.dash.revenuePeriod,
       value: showMoney ? formatVnd(model.revenue) : "—",
       hint: showMoney
-        ? `${model.revenueTrend >= 0 ? "↑" : "↓"} ${Math.abs(model.revenueTrend)}% · kỳ trước ${formatVnd(model.revenuePrev)}`
-        : "Ẩn với giáo viên",
+        ? fill(t.dash.revenueHint, { arrow: model.revenueTrend >= 0 ? "↑" : "↓", pct: Math.abs(model.revenueTrend), prev: formatVnd(model.revenuePrev) })
+        : t.common.hiddenTeacher,
       href: showMoney ? `/doanh-thu${q}` : "",
       icon: Wallet,
     },
     {
-      label: "Công nợ chưa thu",
+      id: "debt",
+      label: t.dash.debtOpen,
       value: showMoney ? formatVnd(model.debtTotal) : "—",
-      hint: showMoney ? `${model.debtStudents} học viên · ${model.debtShare}% số phải thu` : "Ẩn với giáo viên",
+      hint: showMoney ? fill(t.dash.debtHint, { n: model.debtStudents, share: model.debtShare }) : t.common.hiddenTeacher,
       href: showMoney ? `/thu-hoc-phi${q}` : "",
       icon: AlertTriangle,
       warn: showMoney && model.debtTotal > 0,
     },
     {
-      label: "Tỷ lệ điểm danh",
+      id: "rate",
+      label: t.dash.attendRate,
       value: `${model.rate}%`,
-      hint: `${model.rate - model.prevRate >= 0 ? "↑" : "↓"} ${Math.abs(model.rate - model.prevRate)} điểm so với kỳ trước`,
+      hint: fill(t.dash.attendHint, { arrow: model.rate - model.prevRate >= 0 ? "↑" : "↓", n: Math.abs(model.rate - model.prevRate) }),
       href: `/diem-danh${q}`,
       icon: Check,
     },
     {
-      label: "Khóa sắp kết thúc",
+      label: t.dash.endingCourses,
       value: String(model.ending7),
-      hint: "Trong 7 ngày · cần gia hạn",
+      hint: t.dash.endingHint,
       href: `/khoa-hoc${q}`,
       icon: Clock,
     },
@@ -391,25 +400,25 @@ export default function DashboardPage() {
   return (
     <div className="space-y-3">
       <div>
-        <h1 className="text-xl font-bold">Tổng quan</h1>
-        <p className="mt-1 text-sm text-slate-500">Edu Dance · dữ liệu mẫu</p>
+        <h1 className="text-xl font-bold">{t.dash.title}</h1>
+        <p className="mt-1 text-sm text-slate-500">{settings?.name || "Edu Dance"} · {t.common.sample}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link href={`/diem-danh${q}`} className={ctaPrimary}>
-            <Check size={16} /> Điểm danh nhanh
+            <Check size={16} /> {t.dash.quickAttend}
           </Link>
           <Link href={`/ghi-danh${q}`} className={ctaOutline}>
-            <Plus size={16} /> Đăng ký học viên
+            <Plus size={16} /> {t.dash.enrollStudent}
           </Link>
           {showMoney ? (
             <Link href={`/doanh-thu${q}`} className={ctaGhost}>
-              <LineChart size={16} /> Xem báo cáo
+              <LineChart size={16} /> {t.dash.viewReport}
             </Link>
           ) : null}
           <select className="ml-auto h-10 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-slate-700" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
-            <option value="today">Hôm nay</option>
-            <option value="d7">7 ngày</option>
-            <option value="d30">30 ngày</option>
-            <option value="month">Tháng này</option>
+            <option value="today">{t.common.today}</option>
+            <option value="d7">{t.dash.days7}</option>
+            <option value="d30">{t.dash.days30}</option>
+            <option value="month">{t.dash.thisMonth}</option>
           </select>
         </div>
       </div>
@@ -421,21 +430,21 @@ export default function DashboardPage() {
             <>
               <div className="flex items-start justify-between gap-2">
                 <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-orange-50 text-[#EA580C]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--brand-50)] text-[var(--brand-600)]">
                   <Icon size={16} />
                 </span>
               </div>
               <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${card.warn ? "text-amber-700" : "text-[#0F172A]"}`}>{card.value}</p>
               <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") ? "text-green-600" : card.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
-              {card.label === "Tỷ lệ điểm danh" ? <Spark values={model.attendSpark} /> : null}
-              {card.label === "Công nợ chưa thu" && showMoney ? (
+              {card.id === "rate" ? <Spark values={model.attendSpark} /> : null}
+              {card.id === "debt" && showMoney ? (
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                   <div className="h-full rounded-full bg-amber-500" style={{ width: `${model.debtShare}%` }} />
                 </div>
               ) : null}
             </>
           );
-          const className = "block rounded-[12px] border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-orange-200";
+          const className = "block rounded-[12px] border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-[var(--brand-100)]";
           return card.href ? (
             <Link key={card.label} href={card.href} className={className}>{body}</Link>
           ) : (
@@ -447,11 +456,11 @@ export default function DashboardPage() {
       <div className="grid gap-3 lg:grid-cols-5">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">Doanh thu {chartSpan} ngày</h2>
+            <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
             <div className="flex gap-1">
               {([7, 30] as const).map((n) => (
-                <button key={n} type="button" className={`h-10 rounded-[10px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[#F97316] text-white" : "border border-[#E2E8F0] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
-                  {n} ngày
+                <button key={n} type="button" className={`h-10 rounded-[10px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[#E2E8F0] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
+                  {n} {t.dash.dayUnit}
                 </button>
               ))}
             </div>
@@ -464,26 +473,26 @@ export default function DashboardPage() {
                     <CartesianGrid stroke="#F1F5F9" />
                     <XAxis dataKey="label" fontSize={11} />
                     <YAxis fontSize={11} />
-                    <Tooltip content={<ChartTip />} />
-                    <Line type="monotone" dataKey="amount" stroke="#F97316" strokeWidth={2} dot={false} />
+                    <Tooltip content={<ChartTip receipts={t.dash.receipts} />} />
+                    <Line type="monotone" dataKey="amount" stroke="var(--brand-500)" strokeWidth={2} dot={false} />
                   </RLineChart>
                 </ResponsiveContainer>
               </div>
               <p className="mt-2 text-sm text-slate-500">
-                Tổng <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartTotal)}</span>
-                {" · "}trung bình <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartAvg)}</span>/ngày
+                {t.dash.total} <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartTotal)}</span>
+                {" · "}{t.dash.average} <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartAvg)}</span>{t.dash.perDay}
               </p>
             </>
           ) : (
-            <p className="mt-6 text-sm text-slate-500">Giáo viên không xem doanh thu.</p>
+            <p className="mt-6 text-sm text-slate-500">{t.dash.teacherNoRevenue}</p>
           )}
         </section>
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
-          <h2 className="text-base font-semibold">Phễu tuyển sinh</h2>
-          <p className="mt-1 text-xs text-slate-400">Lead chưa gắn chi nhánh nên phễu là của cả studio.</p>
+          <h2 className="text-base font-semibold">{t.dash.funnel}</h2>
+          <p className="mt-1 text-xs text-slate-400">{t.dash.funnelNote}</p>
           {model.staleLeads > 0 ? (
             <p className="mt-2 rounded-[12px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              {model.staleLeads} lead chưa xử lý hơn 3 ngày
+              {fill(t.dash.stale, { n: model.staleLeads })}
             </p>
           ) : null}
           <ul className="mt-4 space-y-3">
@@ -498,9 +507,9 @@ export default function DashboardPage() {
                       <span className="font-semibold tabular-nums">{step.count}</span>
                     </div>
                     <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-[#F97316]" style={{ width: step.count === 0 ? "0%" : `${Math.max(8, (step.count / funnelMax) * 100)}%` }} />
+                      <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: step.count === 0 ? "0%" : `${Math.max(8, (step.count / funnelMax) * 100)}%` }} />
                     </div>
-                    {conv !== null ? <p className="mt-1 text-sm font-semibold text-emerald-700 tabular-nums">{conv}% sang bước sau</p> : null}
+                    {conv !== null ? <p className="mt-1 text-sm font-semibold text-emerald-700 tabular-nums">{fill(t.dash.nextStep, { n: conv })}</p> : null}
                   </Link>
                 </li>
               );
@@ -511,12 +520,12 @@ export default function DashboardPage() {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-base font-semibold">Lớp học hôm nay</h2>
+          <h2 className="text-base font-semibold">{t.dash.todayClasses}</h2>
           {model.todaySessions.length === 0 ? (
             <div className="mt-6 text-center">
               <CalendarDays className="mx-auto text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">Hôm nay không có buổi học.</p>
-              <Link href={`/lich${q}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700">Xem toàn bộ lịch</Link>
+              <p className="mt-2 text-sm text-slate-500">{t.dash.noClassToday}</p>
+              <Link href={`/lich${q}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
             </div>
           ) : (
             <ul className="mt-3 space-y-3">
@@ -527,7 +536,7 @@ export default function DashboardPage() {
                 const seated = students?.filter((st) => st.classId === s.classId).length ?? 0;
                 const cap = classes?.find((c) => c.id === s.classId)?.capacity ?? 15;
                 const ratio = cap === 0 ? 0 : seated / cap;
-                const bar = ratio >= 0.95 ? "bg-rose-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-[#F97316]";
+                const bar = ratio >= 0.95 ? "bg-rose-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-[var(--brand-500)]";
                 const phase = phaseLabel(s.start);
                 return (
                   <li key={s.id} className="rounded-[12px] border border-slate-100 p-3">
@@ -541,12 +550,12 @@ export default function DashboardPage() {
                           <p className="text-sm text-slate-500">{teacher?.name} · {room?.name}</p>
                           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span>{branches?.find((b) => b.id === s.branchId)?.name}</span>
-                            <span className={`rounded-[6px] px-2 py-0.5 font-semibold ${phase === "Đang diễn ra" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase}</span>
+                            <span className={`rounded-[6px] px-2 py-0.5 font-semibold ${phase === "live" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase === "live" ? t.dash.live : t.dash.soon}</span>
                           </p>
                         </div>
                       </div>
                       <Link href={`/diem-danh?branch=${s.branchId}&class=${s.classId}`} className={ctaOutline}>
-                        Điểm danh
+                        {t.dash.attend}
                       </Link>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
@@ -561,17 +570,17 @@ export default function DashboardPage() {
             </ul>
           )}
           {model.todaySessions.length > 0 ? (
-            <Link href={`/lich${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">Xem toàn bộ lịch</Link>
+            <Link href={`/lich${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
           ) : null}
         </section>
         <section className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-          <h2 className="text-base font-semibold">Việc cần xử lý</h2>
+          <h2 className="text-base font-semibold">{t.dash.tasks}</h2>
           {model.groups.length === 0 ? (
             <div className="mt-8 text-center">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
                 <Check />
               </span>
-              <p className="mt-3 text-sm font-medium">Không có việc cần xử lý</p>
+              <p className="mt-3 text-sm font-medium">{t.dash.noTasks}</p>
             </div>
           ) : (
             <div className="mt-2 space-y-2">
@@ -579,13 +588,13 @@ export default function DashboardPage() {
                 <div key={group.title} className={`rounded-[10px] border-l-4 px-2 py-1 ${group.tone === "danger" ? "border-[#DC2626] bg-rose-50/70" : group.tone === "warn" ? "border-[#D97706] bg-amber-50/70" : "border-slate-300 bg-slate-50"}`}>
                   <p className={`text-xs font-semibold uppercase ${group.tone === "danger" ? "text-rose-700" : group.tone === "warn" ? "text-amber-700" : "text-slate-500"}`}>{group.title}</p>
                   <ul className="mt-1 space-y-1">
-                    {group.items.map((t) => (
-                      <li key={t.id}>
-                        <Link href={t.href} className="flex items-center justify-between gap-2 rounded-[12px] px-2 py-2 hover:bg-slate-50">
-                          <span className="text-sm">{t.label}</span>
+                    {group.items.map((item) => (
+                      <li key={item.id}>
+                        <Link href={item.href} className="flex items-center justify-between gap-2 rounded-[12px] px-2 py-2 hover:bg-slate-50">
+                          <span className="text-sm">{item.label}</span>
                           <span className="flex items-center gap-2">
-                            <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{t.count}</span>
-                            <span className="text-xs font-semibold text-emerald-700">Xem tất cả</span>
+                            <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{item.count}</span>
+                            <span className="text-xs font-semibold text-emerald-700">{t.dash.viewAll}</span>
                           </span>
                         </Link>
                       </li>
@@ -600,28 +609,28 @@ export default function DashboardPage() {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-base font-semibold">Top 5 khóa đang chạy</h2>
+          <h2 className="text-base font-semibold">{t.dash.topCourses}</h2>
           <ol className="mt-3 space-y-2">
-            {model.ranking.length === 0 ? <li className="text-sm text-slate-500">Chưa có khóa trong chi nhánh này.</li> : null}
+            {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
             {model.ranking.map((c, i) => (
               <li key={c.id}>
                 <Link href={`/khoa-hoc${q}`} className="flex items-center justify-between rounded-[12px] px-1 py-1 text-sm hover:bg-slate-50">
                   <span>{i + 1}. {c.name} · {levelLabel(c.level)}</span>
-                  <span className="font-semibold tabular-nums">{c.count} học viên</span>
+                  <span className="font-semibold tabular-nums">{fill(t.dash.studentCount, { n: c.count })}</span>
                 </Link>
               </li>
             ))}
           </ol>
         </section>
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="flex items-center gap-2 text-base font-semibold"><LineChart size={16} /> Hoạt động gần đây</h2>
+          <h2 className="flex items-center gap-2 text-base font-semibold"><LineChart size={16} /> {t.dash.recent}</h2>
           <ul className="mt-3 space-y-3">
-            {model.activity.length === 0 ? <li className="text-sm text-slate-500">Chưa có hoạt động.</li> : null}
+            {model.activity.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noActivity}</li> : null}
             {model.activity.map((a) => (
               <li key={a.id} className="relative border-l border-slate-200 pl-3 text-sm">
-                <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#F97316]" />
+                <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
                 <p>{a.text}</p>
-                <p className="text-xs text-slate-400">{relativeDay(a.day, model.today)}</p>
+                <p className="text-xs text-slate-400">{relativeDay(a.day, model.today, { today: t.dash.todayWord, yesterday: t.dash.yesterday, ago: t.dash.daysAgo })}</p>
               </li>
             ))}
           </ul>

@@ -3,9 +3,11 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { Card } from "@/components/ui";
 import { db } from "@/lib/db";
+import { useI18n } from "@/lib/i18n";
 import { formatVnd, localDayKey } from "@/lib/utils";
 
 export default function AiPage() {
+  const { t } = useI18n();
   const tasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const today = localDayKey();
@@ -14,18 +16,18 @@ export default function AiPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold">AI vận hành</h1>
-      <p className="mt-1 text-sm text-slate-500">Chưa nối mô hình. Gợi ý dưới đây chỉ đọc dữ liệu mẫu trên máy.</p>
+      <h1 className="text-xl font-bold">{t.pages.ai}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t.pages.aiLead}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <Card className="p-4">
-          <h2 className="font-semibold">Tác vụ quá hạn</h2>
+          <h2 className="font-semibold">{t.pages.overdueTasks}</h2>
           <ul className="mt-2 space-y-2 text-sm">
-            {overdue.length === 0 ? <li className="text-slate-500">Không có tác vụ quá hạn.</li> : null}
+            {overdue.length === 0 ? <li className="text-slate-500">{t.pages.noOverdue}</li> : null}
             {overdue.map((t) => <li key={t.id}>{t.title} · {t.day}</li>)}
           </ul>
         </Card>
         <Card className="p-4">
-          <h2 className="font-semibold">Học viên còn nợ</h2>
+          <h2 className="font-semibold">{t.pages.debtors}</h2>
           <ul className="mt-2 space-y-2 text-sm">
             {debtors.map((s) => <li key={s.id}>{s.name} · {formatVnd(s.debt)}</li>)}
           </ul>

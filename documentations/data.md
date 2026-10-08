@@ -2,7 +2,7 @@
 
 Mỗi lĩnh vực một thư mục `data/{id}/`.
 
-Hiện có `nhay`:
+Hiện có `nhay` (Edu Dance), `anh` (Edu English), `nhac` (Edu Music), `boi` (Edu Swim). Cùng schema. Khác tên cơ sở, khóa và gói.
 
 - `settings.json` `users.json` `demo-accounts.json`
 - `branches.json` `courses.json` `rooms.json` `classes.json` `packages.json`
@@ -16,4 +16,4 @@ Seed `7`: 24 học viên, 20 lead, phiếu thu / nợ / ghi danh / điểm danh 
 
 IndexedDB: `dolphin_crm_{id}`. Đổi lĩnh vực là đổi database, không trộn dữ liệu.
 
-Thêm lĩnh vực sau: copy folder, sửa `lib/vertical.ts` và `lib/seed.ts`.
+Thêm lĩnh vực sau: copy folder, sửa `lib/vertical.ts` và `lib/seed-data.ts`.

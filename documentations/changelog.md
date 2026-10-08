@@ -2,6 +2,11 @@
 
 ## 2026-10-08
 
+- Header: logo chỉ trong sidebar và menu mobile. Chi nhánh và VI/EN nằm trên header. Ba nút chính trên mobile nằm dưới menu đáy; trên máy tính vẫn ở header. Lựa chọn ngôn ngữ được nhớ trên máy.
+- Logo Dolphin trên login, chọn lĩnh vực, sidebar và menu mobile. Favicon tab là icon Dolphin. Ảnh logo giữ màu gốc.
+- Nhãn giao diện theo ngôn ngữ máy: tiếng Việt nếu `navigator.language` bắt đầu bằng `vi`, còn lại tiếng Anh. Tên học viên, khóa, chi nhánh trong JSON giữ nguyên. Không có nút đổi ngôn ngữ.
+- Chọn lĩnh vực trước login: Edu Dance, Edu English, Edu Music, Edu Swim. Mỗi lĩnh vực một folder JSON.
+- Mỗi lĩnh vực một màu: cam, xanh dương, tím, xanh nước. Nút chính và sidebar đang mở đi theo màu đó.
 - Siết mật độ giao diện: nút cao 40px bo 10px, card bóng nhẹ, lịch và điểm danh rõ trạng thái hơn.
 - Sidebar có lại logo Dolphin CRM và mục Tổng quan, phía trên Lịch.
 

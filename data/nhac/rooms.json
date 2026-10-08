@@ -1,0 +1,9 @@
+[
+  { "id": "r1", "name": "Phòng 1", "branchId": "b-a", "capacity": 15, "floor": "Tầng 1", "note": "Nhà Đàn" },
+  { "id": "r2", "name": "Phòng 2", "branchId": "b-a", "capacity": 15, "floor": "Tầng 1", "note": "Nhà Đàn" },
+  { "id": "r3", "name": "Phòng 3", "branchId": "b-a", "capacity": 12, "floor": "Tầng 2", "note": "Nhà Đàn" },
+  { "id": "r4", "name": "Phòng 1", "branchId": "b-b", "capacity": 15, "floor": "Tầng trệt", "note": "Nhà Sáo" },
+  { "id": "r5", "name": "Phòng 2", "branchId": "b-b", "capacity": 12, "floor": "Tầng lửng", "note": "Nhà Sáo" },
+  { "id": "r6", "name": "Phòng 1", "branchId": "b-c", "capacity": 15, "floor": "Tầng 2", "note": "Nhà Trống" },
+  { "id": "r7", "name": "Phòng 2", "branchId": "b-c", "capacity": 12, "floor": "Tầng 2", "note": "Nhà Trống · cho thuê" }
+]

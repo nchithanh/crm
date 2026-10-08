@@ -9,6 +9,8 @@ import { db } from "@/lib/db";
 import { initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
+import { fill } from "@/lib/copy";
+import { useI18n } from "@/lib/i18n";
 import { usePageQuery } from "@/lib/page-query";
 import type { Attendance, AttendStatus, Student } from "@/types";
 
@@ -38,6 +40,7 @@ function last4(phone: string) {
 }
 
 export default function AttendancePage() {
+  const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const seeContact = canSeeContact(role);
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
@@ -152,11 +155,11 @@ export default function AttendancePage() {
 
   return (
     <div className="pb-28">
-      <h1 className="text-xl font-bold">Điểm danh tay</h1>
-      <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
+      <h1 className="text-xl font-bold">{t.attend.title}</h1>
+      <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">{t.attend.rule}</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <select className={inputClass} value={branchId} onChange={(e) => { setBranchId(e.target.value); setPick(""); }}>
-          <option value="all">Mọi chi nhánh</option>
+          <option value="all">{t.common.allBranches}</option>
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <select className={inputClass} value={session ? session.id : currentClassId ? `class:${currentClassId}` : ""} onChange={(e) => setPick(e.target.value)}>
@@ -166,23 +169,23 @@ export default function AttendancePage() {
             const c = courses.find((courseRow) => courseRow.id === s.courseId);
             return <option key={s.id} value={s.id}>{s.start}–{s.end} · {c?.name} · {t?.name} · {r?.name}</option>;
           })}
-          {idleClasses.map((c) => <option key={c.id} value={`class:${c.id}`}>{c.name} · không có buổi hôm nay</option>)}
+          {idleClasses.map((c) => <option key={c.id} value={`class:${c.id}`}>{c.name} · {t.attend.noSession}</option>)}
         </select>
       </div>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm text-slate-500">{course?.name ?? klass?.name}{teacher ? ` · ${teacher.name}` : ""}{room ? ` · ${room.name}` : ""}</p>
           <p className={`text-3xl font-bold tabular-nums ${seats === 0 ? "text-rose-600" : ""}`}>{seats}</p>
-          <p className="text-xs text-slate-500">Chỗ trống · {roster.length}/{klass?.capacity ?? 0}</p>
+          <p className="text-xs text-slate-500">{t.attend.seats} · {roster.length}/{klass?.capacity ?? 0}</p>
         </div>
-        <input className={`${inputClass} max-w-xs`} placeholder="Tìm tên học viên" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className={`${inputClass} max-w-xs`} placeholder={t.attend.search} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {cancelled ? <p className="mt-3 rounded-[12px] bg-rose-50 px-3 py-2 text-sm text-rose-700">Buổi đã hủy. Ghi nhận không trừ buổi.</p> : null}
-      {hiddenHolds > 0 ? <p className="mt-3 rounded-[12px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{hiddenHolds} học viên đang bảo lưu, không có trong danh sách điểm danh. Chỗ trong lớp vẫn giữ.</p> : null}
-      {!session ? <p className="mt-3 text-sm text-slate-500">Hôm nay lớp này không có buổi. Vẫn ghi nhận được nếu cần.</p> : null}
+      {cancelled ? <p className="mt-3 rounded-[12px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{t.attend.cancelled}</p> : null}
+      {hiddenHolds > 0 ? <p className="mt-3 rounded-[12px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{fill(t.attend.hidden, { n: hiddenHolds })}</p> : null}
+      {!session ? <p className="mt-3 text-sm text-slate-500">{t.attend.noSessionNote}</p> : null}
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button onClick={() => void markAllPresent()} disabled={eligible.length === 0}>Điểm danh tất cả Có mặt</Button>
-        <Button variant="outline" onClick={() => void undoLast()} disabled={undo.length === 0}>Hoàn tác</Button>
+        <Button onClick={() => void markAllPresent()} disabled={eligible.length === 0}>{t.attend.markAll}</Button>
+        <Button variant="outline" onClick={() => void undoLast()} disabled={undo.length === 0}>{t.attend.undo}</Button>
       </div>
       <ul className="mt-4 space-y-3">
         {visible.map((s) => {
@@ -196,11 +199,11 @@ export default function AttendancePage() {
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-base font-semibold">{s.name}</p>
-                  <p className="text-sm text-slate-500">{seeContact ? `···${last4(s.phone)}` : "Ẩn số điện thoại"}{hold ? " · Đang bảo lưu" : ""}</p>
+                  <p className="text-sm text-slate-500">{seeContact ? `···${last4(s.phone)}` : t.common.noPhone}{hold ? ` · ${t.attend.onHold}` : ""}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-3xl font-bold tabular-nums leading-none ${s.remainingSessions <= 2 ? "text-rose-600" : ""}`}>{s.remainingSessions}</p>
-                  <p className="text-xs text-slate-400">buổi còn</p>
+                  <p className="text-xs text-slate-400">{t.attend.remain}</p>
                 </div>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">
@@ -212,7 +215,7 @@ export default function AttendancePage() {
                     onClick={() => void markOne(s, status)}
                     className={`h-10 rounded-[10px] border-[1.5px] text-sm font-semibold disabled:cursor-not-allowed ${row?.status === status ? buttonTone[status] : buttonIdle[status]}`}
                   >
-                    {status === "present" ? "Có mặt" : status === "absent" ? "Vắng" : "Có phép"}
+                    {status === "present" ? t.status.present : status === "absent" ? t.status.absent : t.status.excused}
                   </button>
                 ))}
               </div>
@@ -221,25 +224,25 @@ export default function AttendancePage() {
         })}
       </ul>
       <div className="sticky bottom-20 z-30 mt-4 rounded-[12px] border border-slate-200 bg-white p-3 shadow-sm lg:bottom-0">
-        <p className="text-xs text-slate-500">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
+        <p className="text-xs text-slate-500">{t.attend.rule}</p>
         <div className="mt-2 flex items-center justify-between gap-3">
-          <p className="text-base font-semibold tabular-nums">Đã điểm danh {marked.length}/{eligible.length}</p>
-          <Button onClick={() => setSummary(true)}>Xong</Button>
+          <p className="text-base font-semibold tabular-nums">{fill(t.attend.marked, { done: marked.length, total: eligible.length })}</p>
+          <Button onClick={() => setSummary(true)}>{t.attend.done}</Button>
         </div>
       </div>
       {summary ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <button className="absolute inset-0" aria-label="Đóng" onClick={() => setSummary(false)} />
+          <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setSummary(false)} />
           <div className="relative w-full max-w-md rounded-[12px] bg-white p-5 shadow-xl">
-            <h2 className="text-lg font-bold">Tóm tắt buổi</h2>
+            <h2 className="text-lg font-bold">{t.attend.summary}</h2>
             <p className="mt-1 text-sm text-slate-500">{klass?.name} · {today}</p>
             <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-[12px] bg-green-50 p-3"><dt className="text-sm text-green-800">Có mặt</dt><dd className="text-3xl font-bold tabular-nums">{counts.present}</dd></div>
-              <div className="rounded-[12px] bg-slate-100 p-3"><dt className="text-sm">Vắng</dt><dd className="text-3xl font-bold tabular-nums">{counts.absent}</dd></div>
-              <div className="rounded-[12px] bg-amber-50 p-3"><dt className="text-sm text-amber-800">Có phép</dt><dd className="text-3xl font-bold tabular-nums">{counts.excused}</dd></div>
+              <div className="rounded-[12px] bg-green-50 p-3"><dt className="text-sm text-green-800">{t.status.present}</dt><dd className="text-3xl font-bold tabular-nums">{counts.present}</dd></div>
+              <div className="rounded-[12px] bg-slate-100 p-3"><dt className="text-sm">{t.status.absent}</dt><dd className="text-3xl font-bold tabular-nums">{counts.absent}</dd></div>
+              <div className="rounded-[12px] bg-amber-50 p-3"><dt className="text-sm text-amber-800">{t.status.excused}</dt><dd className="text-3xl font-bold tabular-nums">{counts.excused}</dd></div>
             </dl>
-            <p className="mt-4 text-sm text-slate-600">{cancelled ? "Buổi đã hủy nên không trừ buổi." : "Học viên đã điểm danh đã bị trừ 1 buổi. Xác nhận không trừ thêm."}</p>
-            <Button className="mt-4 w-full" onClick={() => setSummary(false)}>Xác nhận</Button>
+            <p className="mt-4 text-sm text-slate-600">{cancelled ? t.attend.cancelledNote : t.attend.confirmNote}</p>
+            <Button className="mt-4 w-full" onClick={() => setSummary(false)}>{t.common.confirm}</Button>
           </div>
         </div>
       ) : null}

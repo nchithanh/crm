@@ -1,0 +1,52 @@
+[
+  {
+    "id": "p1",
+    "name": "Bơi 1 tháng",
+    "sessions": 8,
+    "months": 1,
+    "price": 1500000,
+    "note": "Học phí mẫu. Bảo lưu phải mua riêng.",
+    "kind": "course",
+    "deposit": 0
+  },
+  {
+    "id": "p3",
+    "name": "Bơi 3 tháng",
+    "sessions": 24,
+    "months": 3,
+    "price": 4200000,
+    "note": "Học phí mẫu. Được bảo lưu miễn phí.",
+    "kind": "course",
+    "deposit": 0
+  },
+  {
+    "id": "p6",
+    "name": "Bơi 6 tháng",
+    "sessions": 48,
+    "months": 6,
+    "price": 7800000,
+    "note": "Học phí mẫu. Có cọc. Được bảo lưu.",
+    "kind": "course",
+    "deposit": 1500000
+  },
+  {
+    "id": "p12",
+    "name": "Bơi 12 tháng",
+    "sessions": 96,
+    "months": 12,
+    "price": 14400000,
+    "note": "Học phí mẫu. Có cọc. Được bảo lưu.",
+    "kind": "course",
+    "deposit": 2500000
+  },
+  {
+    "id": "phold",
+    "name": "Gói bảo lưu",
+    "sessions": 0,
+    "months": 0,
+    "price": 400000,
+    "note": "Dành cho gói dưới 3 tháng. Giá mẫu.",
+    "kind": "hold",
+    "deposit": 0
+  }
+]

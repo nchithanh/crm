@@ -1,3 +1,4 @@
+import { copy, type Lang } from "@/lib/copy";
 import type { Level } from "@/types";
 
 export function levelLabel(level: string) {
@@ -8,20 +9,21 @@ export function levelLabel(level: string) {
 }
 
 /** Buổi kế tiếp mà học viên có thể vào giữa khóa. */
-export function canJoinAtSession(level: Level, sessionIndex: number) {
+export function canJoinAtSession(level: Level, sessionIndex: number, lang: Lang = "vi") {
+  const t = copy[lang].enroll;
   if (sessionIndex < 1) {
-    return { ok: false, reason: "Khóa chưa có buổi để ghi danh." };
+    return { ok: false, reason: t.noSession };
   }
   if (level === "begin" && sessionIndex >= 4) {
-    return { ok: false, reason: "Begin ngừng nhận từ buổi 4." };
+    return { ok: false, reason: t.beginStop };
   }
   if (level === "inter" && sessionIndex % 2 === 0) {
-    return { ok: false, reason: "Inter chỉ nhận các buổi lẻ." };
+    return { ok: false, reason: t.interOdd };
   }
   if (level === "advance" && sessionIndex !== 1 && sessionIndex !== 5) {
-    return { ok: false, reason: "Advance chỉ nhận buổi 1 và buổi 5." };
+    return { ok: false, reason: t.advanceOnly };
   }
-  return { ok: true, reason: `Được vào từ buổi ${sessionIndex}.` };
+  return { ok: true, reason: t.joinFrom.replace("{n}", String(sessionIndex)) };
 }
 
 export function deductsCredit(status: string) {

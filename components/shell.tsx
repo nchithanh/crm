@@ -28,66 +28,68 @@ import {
   LineChart,
   Plus,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
+import { useI18n } from "@/lib/i18n";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
 const top = [
-  { href: "/", label: "Tổng quan", icon: LayoutDashboard },
-  { href: "/lich", label: "Lịch", icon: CalendarDays },
+  { href: "/", key: "overview" as const, icon: LayoutDashboard },
+  { href: "/lich", key: "schedule" as const, icon: CalendarDays },
 ];
 
 const groups = [
   {
-    title: "Quản lý",
+    title: "manage" as const,
     items: [
-      { href: "/hoc-vien", label: "Học viên", icon: Users },
-      { href: "/khoa-hoc", label: "Khóa học", icon: BookOpen },
-      { href: "/lop-hoc", label: "Lớp học", icon: GraduationCap },
-      { href: "/giao-vien", label: "Giáo viên", icon: UserRound },
-      { href: "/phong", label: "Phòng", icon: DoorOpen },
-      { href: "/goi-buoi", label: "Gói buổi", icon: Package },
+      { href: "/hoc-vien", key: "students" as const, icon: Users },
+      { href: "/khoa-hoc", key: "courses" as const, icon: BookOpen },
+      { href: "/lop-hoc", key: "classes" as const, icon: GraduationCap },
+      { href: "/giao-vien", key: "teachers" as const, icon: UserRound },
+      { href: "/phong", key: "rooms" as const, icon: DoorOpen },
+      { href: "/goi-buoi", key: "packages" as const, icon: Package },
     ],
   },
   {
-    title: "Tuyển sinh",
+    title: "enrollGroup" as const,
     items: [
-      { href: "/ghi-danh", label: "Ghi danh giữa khóa", icon: ClipboardCheck },
-      { href: "/promotion", label: "Promotion", icon: Tags },
-      { href: "/cham-soc", label: "Chăm sóc", icon: HeartHandshake },
+      { href: "/ghi-danh", key: "midEnroll" as const, icon: ClipboardCheck },
+      { href: "/promotion", key: "promotion" as const, icon: Tags },
+      { href: "/cham-soc", key: "care" as const, icon: HeartHandshake },
     ],
   },
   {
-    title: "Tài chính",
+    title: "finance" as const,
     items: [
-      { href: "/thu-hoc-phi", label: "Thu học phí", icon: Wallet },
-      { href: "/bao-luu", label: "Bảo lưu", icon: PauseCircle },
-      { href: "/doanh-thu", label: "Doanh thu", icon: LineChart },
+      { href: "/thu-hoc-phi", key: "collect" as const, icon: Wallet },
+      { href: "/bao-luu", key: "holds" as const, icon: PauseCircle },
+      { href: "/doanh-thu", key: "revenue" as const, icon: LineChart },
     ],
   },
   {
-    title: "Vận hành",
+    title: "ops" as const,
     items: [
-      { href: "/diem-danh", label: "Điểm danh tay", icon: Receipt },
-      { href: "/diem-danh-qr", label: "Điểm danh QR", icon: QrCode },
-      { href: "/tac-vu", label: "Tác vụ", icon: ListTodo },
-      { href: "/dat-phong", label: "Đặt phòng thuê", icon: DoorOpen },
+      { href: "/diem-danh", key: "attend" as const, icon: Receipt },
+      { href: "/diem-danh-qr", key: "attendQr" as const, icon: QrCode },
+      { href: "/tac-vu", key: "tasks" as const, icon: ListTodo },
+      { href: "/dat-phong", key: "bookings" as const, icon: DoorOpen },
     ],
   },
 ];
 
-const ai = { href: "/ai", label: "AI vận hành", icon: Sparkles };
+const ai = { href: "/ai", key: "ai" as const, icon: Sparkles };
 
 const mobile = [
-  { href: "/lich", label: "Lịch", icon: CalendarDays },
-  { href: "/hoc-vien", label: "Học viên", icon: Users },
-  { href: "/diem-danh", label: "Điểm danh", icon: Receipt },
-  { href: "/cham-soc", label: "Chăm sóc", icon: HeartHandshake },
-  { href: "/thu-hoc-phi", label: "Học phí", icon: Wallet },
+  { href: "/lich", key: "schedule" as const, icon: CalendarDays },
+  { href: "/hoc-vien", key: "students" as const, icon: Users },
+  { href: "/diem-danh", key: "attend" as const, icon: Receipt },
+  { href: "/cham-soc", key: "care" as const, icon: HeartHandshake },
+  { href: "/thu-hoc-phi", key: "feesShort" as const, icon: Wallet },
 ];
 
 function active(href: string, path: string) {
@@ -108,17 +110,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const studio = settings?.name || "Edu Dance";
+  const { lang, t, setLang } = useI18n();
+
+  const ctas = (extra: string) => (
+    <>
+      <Link href={`/diem-danh${branchQuery}`} className={cn(ctaPrimary, extra)}>
+        <Receipt size={16} /> {t.header.attend}
+      </Link>
+      <Link href={`/ghi-danh${branchQuery}`} className={cn(ctaOutline, extra)}>
+        <Plus size={16} /> {t.header.enroll}
+      </Link>
+      {seeReport ? (
+        <Link href={`/doanh-thu${branchQuery}`} className={cn(ctaGhost, extra)}>
+          <LineChart size={16} /> {t.header.report}
+        </Link>
+      ) : null}
+    </>
+  );
 
   const linkClass = (href: string) =>
     cn(
       "flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-medium",
-      active(href, path) ? "bg-orange-50 text-[#F97316]" : "text-slate-600 hover:bg-slate-50",
+      active(href, path) ? "bg-[var(--brand-50)] text-[var(--brand-600)]" : "text-slate-600 hover:bg-slate-50",
     );
 
   const nav = (
     <div className="flex h-full flex-col">
       <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 pt-4 pb-3">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F97316] text-sm font-bold text-white">D</span>
+        <BrandMark className="h-9 w-9" />
         <span className="min-w-0 pr-6">
           <span className="block truncate text-sm font-bold text-slate-900">Dolphin CRM</span>
           <span className="block truncate text-xs text-slate-500">{studio}</span>
@@ -129,10 +148,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {top.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-                <Icon size={16} />
-                {item.label}
-              </Link>
+            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
+              <Icon size={16} />
+              {t.nav[item.key]}
+            </Link>
             );
           })}
         </div>
@@ -145,7 +164,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           .map((group) => (
           <div key={group.title}>
             <p className="mt-2 border-t border-[#E2E8F0] px-2.5 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase">
-              {group.title}
+              {t.nav[group.title]}
             </p>
             <ul className="space-y-0.5">
               {group.items.map((item) => {
@@ -154,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <li key={item.href}>
                     <Link href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
                       <Icon size={16} />
-                      {item.label}
+                      {t.nav[item.key]}
                     </Link>
                   </li>
                 );
@@ -164,7 +183,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ))}
         <Link href={ai.href} onClick={() => setOpen(false)} className={linkClass(ai.href)}>
           <Sparkles size={16} />
-          {ai.label}
+          {t.nav[ai.key]}
         </Link>
       </nav>
     </div>
@@ -175,9 +194,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:block">{nav}</aside>
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} aria-label="Đóng menu" />
+          <button className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} aria-label={t.common.close} />
           <aside className="relative h-full w-72 bg-white shadow-xl">
-            <button className="absolute top-3 right-3 z-10" onClick={() => setOpen(false)} aria-label="Đóng">
+            <button className="absolute top-3 right-3 z-10" onClick={() => setOpen(false)} aria-label={t.common.close}>
               <X size={18} />
             </button>
             {nav}
@@ -186,64 +205,65 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:px-4">
-            <div className="flex min-w-0 items-center gap-2">
-              <button className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[#E2E8F0] lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
-                <Menu size={18} />
-              </button>
-              <Link href="/" className="flex min-w-0 items-center gap-2">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F97316] text-sm font-bold text-white">D</span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold leading-tight text-slate-900">Dolphin CRM</span>
-                  <span className="block truncate text-xs text-slate-500">{studio} · {user ? roleLabel(user.role) : ""}</span>
-                </span>
-              </Link>
+          <div className="flex items-center gap-2 px-3 py-2 sm:px-4">
+            <button className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[#E2E8F0] lg:hidden" onClick={() => setOpen(true)} aria-label={t.common.menu}>
+              <Menu size={18} />
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-900">{studio}</p>
+              <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
             </div>
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              <select className="h-10 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-slate-700" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-                <option value="all">Mọi chi nhánh</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-              <Link href={`/diem-danh${branchQuery}`} className={ctaPrimary}>
-                <Receipt size={16} /> Điểm danh
-              </Link>
-              <Link href={`/ghi-danh${branchQuery}`} className={ctaOutline}>
-                <Plus size={16} /> Đăng ký
-              </Link>
-              {seeReport ? (
-                <Link href={`/doanh-thu${branchQuery}`} className={ctaGhost}>
-                  <LineChart size={16} /> Báo cáo
-                </Link>
-              ) : null}
-              <button
-                className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
-                aria-label="Đăng xuất"
-                onClick={() => {
-                  logout();
-                  router.replace("/login");
-                }}
-              >
-                <LogOut size={18} />
-              </button>
+            <select className="h-10 max-w-[7.5rem] shrink-0 rounded-[8px] border border-[#E2E8F0] bg-white px-2 text-sm text-slate-700 sm:max-w-none sm:px-3" aria-label={t.common.branch} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+              <option value="all">{t.common.allBranches}</option>
+              {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+            <div role="group" aria-label={t.common.language} className="inline-flex h-10 shrink-0 items-center rounded-[10px] border border-[#E2E8F0] p-0.5 text-xs font-bold">
+              {(["vi", "en"] as const).map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  aria-pressed={lang === code}
+                  onClick={() => setLang(code)}
+                  className={cn("h-8 rounded-[8px] px-2", lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500 hover:bg-slate-100")}
+                >
+                  {code.toUpperCase()}
+                </button>
+              ))}
             </div>
+            <div className="hidden items-center gap-2 lg:flex">{ctas("")}</div>
+            <button
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
+              aria-label={t.common.logout}
+              onClick={() => {
+                logout();
+                router.replace("/login");
+              }}
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-40 sm:px-5 lg:pb-6">{children}</main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-1 pt-1 pb-[max(0.4rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="grid grid-cols-5">
-          {mobile.map((item) => {
-            const Icon = item.icon;
-            const on = active(item.href, path);
-            return (
-              <Link key={item.href} href={item.href} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium", on ? "text-[#C2410C]" : "text-slate-400")}>
-                <Icon size={18} />
-                {item.label}
-              </Link>
-            );
-          })}
+      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+        <nav className="border-t border-slate-200 bg-white px-1 pt-1">
+          <div className="grid grid-cols-5">
+            {mobile.map((item) => {
+              const Icon = item.icon;
+              const on = active(item.href, path);
+              return (
+                <Link key={item.href} href={item.href} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium", on ? "text-[var(--brand-600)]" : "text-slate-400")}>
+                  <Icon size={18} />
+                  {t.nav[item.key]}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+        <div className="flex gap-2 border-t border-slate-200 bg-white px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {ctas("min-w-0 flex-1 px-2")}
         </div>
-      </nav>
+      </div>
     </div>
   );
 }

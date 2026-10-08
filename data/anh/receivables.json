@@ -1,0 +1,74 @@
+[
+  {
+    "id": "debt-s2",
+    "studentId": "s2",
+    "branchId": "b-a",
+    "title": "Tiếng Anh 1 tháng",
+    "amount": 1500000,
+    "paid": 0,
+    "dueOffset": -5
+  },
+  {
+    "id": "debt-s4",
+    "studentId": "s4",
+    "branchId": "b-c",
+    "title": "Tiếng Anh 12 tháng còn lại",
+    "amount": 11900000,
+    "paid": 8400000,
+    "dueOffset": 10
+  },
+  {
+    "id": "debt-s8",
+    "studentId": "s8",
+    "branchId": "b-b",
+    "title": "Tiếng Anh 1 tháng",
+    "amount": 1500000,
+    "paid": 750000,
+    "dueOffset": -1
+  },
+  {
+    "id": "debt-s11",
+    "studentId": "s11",
+    "branchId": "b-a",
+    "title": "Tiếng Anh 1 tháng",
+    "amount": 1500000,
+    "paid": 0,
+    "dueOffset": -4
+  },
+  {
+    "id": "debt-s14",
+    "studentId": "s14",
+    "branchId": "b-b",
+    "title": "Tiếng Anh 1 tháng",
+    "amount": 1500000,
+    "paid": 1000000,
+    "dueOffset": -2
+  },
+  {
+    "id": "debt-s16",
+    "studentId": "s16",
+    "branchId": "b-b",
+    "title": "Tiếng Anh 6 tháng còn lại",
+    "amount": 7800000,
+    "paid": 1500000,
+    "dueOffset": 7
+  },
+  {
+    "id": "debt-s20",
+    "studentId": "s20",
+    "branchId": "b-c",
+    "title": "Tiếng Anh 6 tháng còn lại",
+    "amount": 7800000,
+    "paid": 5800000,
+    "dueOffset": 3
+  },
+  {
+    "id": "debt-s24",
+    "studentId": "s24",
+    "branchId": "b-a",
+    "title": "Tiếng Anh 3 tháng",
+    "amount": 4200000,
+    "paid": 0,
+    "dueOffset": 5
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "h1",
+    "studentId": "s6",
+    "fromOffset": 1,
+    "toOffset": 21,
+    "reason": "Xin qua Zalo: đi công tác cùng mẹ",
+    "status": "pending",
+    "credits": 5,
+    "needsPackage": true
+  },
+  {
+    "id": "h2",
+    "studentId": "s1",
+    "fromOffset": 3,
+    "toOffset": 17,
+    "reason": "Xin qua Zalo: nghỉ giữa tháng",
+    "status": "pending",
+    "credits": 18,
+    "needsPackage": false
+  },
+  {
+    "id": "h3",
+    "studentId": "s5",
+    "fromOffset": -40,
+    "toOffset": -20,
+    "reason": "Đã bảo lưu xong kỳ trước",
+    "status": "done",
+    "credits": 8,
+    "needsPackage": false
+  },
+  {
+    "id": "h4",
+    "studentId": "s11",
+    "fromOffset": 2,
+    "toOffset": 16,
+    "reason": "Xin qua quầy: thi học kỳ",
+    "status": "pending",
+    "credits": 1,
+    "needsPackage": true
+  },
+  {
+    "id": "h5",
+    "studentId": "s19",
+    "fromOffset": -1,
+    "toOffset": 14,
+    "reason": "Đi công tác, giữ chỗ Vocal",
+    "status": "approved",
+    "credits": 18,
+    "needsPackage": false
+  },
+  {
+    "id": "h6",
+    "studentId": "s14",
+    "fromOffset": 4,
+    "toOffset": 18,
+    "reason": "Xin bảo lưu nhưng gói 1 tháng chưa mua gói giữ chỗ",
+    "status": "rejected",
+    "credits": 4,
+    "needsPackage": true
+  },
+  {
+    "id": "h7",
+    "studentId": "s9",
+    "fromOffset": 8,
+    "toOffset": 28,
+    "reason": "Gia đình đi xa tháng sau",
+    "status": "pending",
+    "credits": 20,
+    "needsPackage": false
+  }
+]

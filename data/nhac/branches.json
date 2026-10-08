@@ -1,0 +1,5 @@
+[
+  { "id": "b-a", "name": "Nhà Đàn", "address": "12 Đàn Nguyệt, phường demo" },
+  { "id": "b-b", "name": "Nhà Sáo", "address": "9 Sáo Trúc, phường demo" },
+  { "id": "b-c", "name": "Nhà Trống", "address": "3 Trống Cơm, phường demo" }
+]

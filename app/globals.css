@@ -19,7 +19,35 @@
 }
 
 html[data-vertical="nhay"] {
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
   --brand-500: #f97316;
+  --brand-600: #ea580c;
+  --brand-700: #c2410c;
+}
+
+html[data-vertical="anh"] {
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-500: #2563eb;
+  --brand-600: #1d4ed8;
+  --brand-700: #1e40af;
+}
+
+html[data-vertical="nhac"] {
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-500: #7c3aed;
+  --brand-600: #6d28d9;
+  --brand-700: #5b21b6;
+}
+
+html[data-vertical="boi"] {
+  --brand-50: #ecfeff;
+  --brand-100: #cffafe;
+  --brand-500: #0891b2;
+  --brand-600: #0e7490;
+  --brand-700: #155e75;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }
@@ -50,6 +78,7 @@ a { text-decoration: none; }
 
 button.bg-emerald-500,
 a.bg-emerald-500,
-a[class*="bg-[#F97316]"] {
+a[class*="bg-[#F97316]"],
+a[class*="bg-[var(--brand-500)]"] {
   color: #fff;
 }

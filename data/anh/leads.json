@@ -1,0 +1,370 @@
+[
+  {
+    "id": "ld1",
+    "name": "Mai Phương Thảo",
+    "phone": "0931 300 401",
+    "source": "Facebook",
+    "stage": "new",
+    "interest": "Starter Kids",
+    "ownerId": "u_reception",
+    "offset": 0,
+    "note": "Mẹ hỏi lịch tối thứ 2.",
+    "activities": [
+      {
+        "offset": 0,
+        "text": "Để lại form Facebook."
+      }
+    ]
+  },
+  {
+    "id": "ld2",
+    "name": "Đỗ Gia Bảo",
+    "phone": "0932 300 402",
+    "source": "Zalo",
+    "stage": "new",
+    "interest": "IELTS Speaking",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Học sinh cấp 2.",
+    "activities": [
+      {
+        "offset": -1,
+        "text": "Nhắn Zalo hỏi học phí."
+      }
+    ]
+  },
+  {
+    "id": "ld3",
+    "name": "Lý Hà My",
+    "phone": "0933 300 403",
+    "source": "Giới thiệu",
+    "stage": "contacted",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -3,
+    "note": "Đã gọi, hẹn xem phòng.",
+    "activities": [
+      {
+        "offset": -4,
+        "text": "Phụ huynh của Bùi Lan Chi giới thiệu."
+      },
+      {
+        "offset": -3,
+        "text": "Đã gọi, hẹn ghé studio."
+      }
+    ]
+  },
+  {
+    "id": "ld4",
+    "name": "Phan Tuấn Kiệt",
+    "phone": "0934 300 404",
+    "source": "Walk-in",
+    "stage": "contacted",
+    "interest": "Conversation nâng cao",
+    "ownerId": "u_owner",
+    "offset": -6,
+    "note": "Đã học nơi khác 1 năm.",
+    "activities": [
+      {
+        "offset": -6,
+        "text": "Ghé studio hỏi lịch thầy Bảo."
+      }
+    ]
+  },
+  {
+    "id": "ld5",
+    "name": "Ngô Khánh Linh",
+    "phone": "0914 100 204",
+    "source": "Facebook",
+    "stage": "trial",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -2,
+    "note": "Đã học thử, chờ chốt gói.",
+    "activities": [
+      {
+        "offset": -5,
+        "text": "Đặt lịch học thử."
+      },
+      {
+        "offset": -2,
+        "text": "Học thử xong. Phụ huynh muốn xem gói 8 buổi."
+      }
+    ]
+  },
+  {
+    "id": "ld6",
+    "name": "Trịnh Ngọc Ánh",
+    "phone": "0936 300 406",
+    "source": "TikTok",
+    "stage": "trial",
+    "interest": "IELTS Speaking",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Học thử tối thứ 4.",
+    "activities": [
+      {
+        "offset": -1,
+        "text": "Xác nhận học thử IELTS."
+      }
+    ]
+  },
+  {
+    "id": "ld7",
+    "name": "Võ Minh Khôi",
+    "phone": "0937 300 407",
+    "source": "Website",
+    "stage": "won",
+    "interest": "Business English",
+    "ownerId": "u_owner",
+    "offset": -12,
+    "note": "Đã đóng gói 8 buổi.",
+    "activities": [
+      {
+        "offset": -14,
+        "text": "Đăng ký form."
+      },
+      {
+        "offset": -12,
+        "text": "Chốt gói 8 buổi, vào lớp Business English."
+      }
+    ]
+  },
+  {
+    "id": "ld8",
+    "name": "Cao Nhật Lan",
+    "phone": "0938 300 408",
+    "source": "Facebook",
+    "stage": "lost",
+    "interest": "Ballet cơ bản",
+    "ownerId": "u_reception",
+    "offset": -9,
+    "note": "Chọn studio gần nhà hơn.",
+    "activities": [
+      {
+        "offset": -9,
+        "text": "Phụ huynh báo không học."
+      }
+    ]
+  },
+  {
+    "id": "ld9",
+    "name": "Nguyễn Gia Hân",
+    "phone": "0939 300 409",
+    "source": "Facebook",
+    "stage": "new",
+    "interest": "Starter A1",
+    "ownerId": "u_reception",
+    "offset": 0,
+    "note": "Mẹ hỏi lớp tối thứ 2.",
+    "activities": [
+      {
+        "offset": 0,
+        "text": "Để lại form Facebook."
+      }
+    ]
+  },
+  {
+    "id": "ld10",
+    "name": "Trần Quốc Huy",
+    "phone": "0940 300 410",
+    "source": "Zalo",
+    "stage": "new",
+    "interest": "IELTS Inter",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Muốn luyện nói hàng ngày.",
+    "activities": [
+      {
+        "offset": -1,
+        "text": "Nhắn Zalo hỏi lịch thử."
+      }
+    ]
+  },
+  {
+    "id": "ld11",
+    "name": "Lê Bảo Châu",
+    "phone": "0941 300 411",
+    "source": "Walk-in",
+    "stage": "new",
+    "interest": "Business English",
+    "ownerId": "u_owner",
+    "offset": -8,
+    "note": "Ghé xem phòng rồi về.",
+    "activities": [
+      {
+        "offset": -8,
+        "text": "Walk-in hỏi học phí Business English."
+      }
+    ]
+  },
+  {
+    "id": "ld12",
+    "name": "Phạm Minh Đức",
+    "phone": "0942 300 412",
+    "source": "Giới thiệu",
+    "stage": "contacted",
+    "interest": "Conversation B1",
+    "ownerId": "u_reception",
+    "offset": -2,
+    "note": "Bạn của Bùi Em giới thiệu.",
+    "activities": [
+      {
+        "offset": -3,
+        "text": "Nhận giới thiệu."
+      },
+      {
+        "offset": -2,
+        "text": "Đã gọi, hẹn học thử thứ 6."
+      }
+    ]
+  },
+  {
+    "id": "ld13",
+    "name": "Vũ Thanh Hà",
+    "phone": "0943 300 413",
+    "source": "TikTok",
+    "stage": "contacted",
+    "interest": "Starter A1",
+    "ownerId": "u_reception",
+    "offset": -5,
+    "note": "Học sinh lớp 8.",
+    "activities": [
+      {
+        "offset": -5,
+        "text": "Gọi lại sau comment TikTok."
+      }
+    ]
+  },
+  {
+    "id": "ld14",
+    "name": "Đặng Kiều Trang",
+    "phone": "0944 300 414",
+    "source": "Website",
+    "stage": "contacted",
+    "interest": "IELTS Inter",
+    "ownerId": "u_owner",
+    "offset": -11,
+    "note": "Để form, chưa bắt máy.",
+    "activities": [
+      {
+        "offset": -11,
+        "text": "Gọi nhỡ hai lần."
+      }
+    ]
+  },
+  {
+    "id": "ld15",
+    "name": "Bùi Hoàng Nam",
+    "phone": "0945 300 415",
+    "source": "Facebook",
+    "stage": "trial",
+    "interest": "Business English",
+    "ownerId": "u_reception",
+    "offset": -1,
+    "note": "Học thử cuối tuần.",
+    "activities": [
+      {
+        "offset": -4,
+        "text": "Đặt lịch thử."
+      },
+      {
+        "offset": -1,
+        "text": "Xác nhận tới buổi thử."
+      }
+    ]
+  },
+  {
+    "id": "ld16",
+    "name": "Ngô Thu Trang",
+    "phone": "0946 300 416",
+    "source": "Zalo",
+    "stage": "trial",
+    "interest": "Conversation B1",
+    "ownerId": "u_reception",
+    "offset": -6,
+    "note": "Đã thử, đang hỏi bố mẹ.",
+    "activities": [
+      {
+        "offset": -6,
+        "text": "Học thử xong, chờ phản hồi."
+      }
+    ]
+  },
+  {
+    "id": "ld17",
+    "name": "Lý Gia Bảo",
+    "phone": "0947 300 417",
+    "source": "Walk-in",
+    "stage": "won",
+    "interest": "Starter A1",
+    "ownerId": "u_owner",
+    "offset": -15,
+    "note": "Đã vào lớp Starter A1.",
+    "activities": [
+      {
+        "offset": -16,
+        "text": "Ghé studio."
+      },
+      {
+        "offset": -15,
+        "text": "Chốt gói 3 tháng."
+      }
+    ]
+  },
+  {
+    "id": "ld18",
+    "name": "Mai Anh Thư",
+    "phone": "0948 300 418",
+    "source": "Website",
+    "stage": "won",
+    "interest": "IELTS Inter",
+    "ownerId": "u_owner",
+    "offset": -9,
+    "note": "Đã đóng gói 1 tháng.",
+    "activities": [
+      {
+        "offset": -10,
+        "text": "Đăng ký form."
+      },
+      {
+        "offset": -9,
+        "text": "Chốt và vào lớp IELTS."
+      }
+    ]
+  },
+  {
+    "id": "ld19",
+    "name": "Cao Đức Anh",
+    "phone": "0949 300 419",
+    "source": "TikTok",
+    "stage": "lost",
+    "interest": "Business English",
+    "ownerId": "u_reception",
+    "offset": -7,
+    "note": "Lịch cuối tuần không hợp.",
+    "activities": [
+      {
+        "offset": -7,
+        "text": "Báo không học vì trùng lịch."
+      }
+    ]
+  },
+  {
+    "id": "ld20",
+    "name": "Hoàng Nhật Minh",
+    "phone": "0950 300 420",
+    "source": "Facebook",
+    "stage": "lost",
+    "interest": "Starter A1",
+    "ownerId": "u_reception",
+    "offset": -18,
+    "note": "Chuyển studio khác.",
+    "activities": [
+      {
+        "offset": -18,
+        "text": "Phụ huynh chọn nơi gần nhà."
+      }
+    ]
+  }
+]

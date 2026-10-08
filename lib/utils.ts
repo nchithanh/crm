@@ -23,8 +23,18 @@ export function dayFromOffset(offset: number) {
   return localDayKey(d);
 }
 
-export function weekdayLabel(weekday: number) {
-  return ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"][weekday] ?? "";
+export function weekdayLabel(weekday: number, lang: "vi" | "en" = "vi") {
+  const names = lang === "en"
+    ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    : ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+  return names[weekday] ?? "";
+}
+
+export function weekdayShort(weekday: number, lang: "vi" | "en" = "vi") {
+  const names = lang === "en"
+    ? ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    : ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  return names[weekday] ?? "";
 }
 
 export function ageYears(birthDay: string, today = new Date()) {

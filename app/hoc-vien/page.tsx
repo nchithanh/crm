@@ -7,8 +7,10 @@ import { StudentDrawer } from "@/components/student-drawer";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
 import { setStudentsFlag } from "@/lib/actions";
+import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { usePageQuery } from "@/lib/page-query";
+import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
 import { studentBadges } from "@/lib/student-badges";
 import { formatVnd, initials, isMinor, localDayKey, zaloHref } from "@/lib/utils";
@@ -25,8 +27,7 @@ function parentText(st: Student, seeContact: boolean) {
   return seeContact ? `${st.parentName} · ${st.parentPhone}` : st.parentName;
 }
 
-function exportCsv(rows: Student[], seeContact: boolean, seeMoney: boolean, className: (id: string) => string, branchName: (id: string) => string) {
-  const header = ["Học viên", "Điện thoại", "Phụ huynh", "Chi nhánh", "Level", "Lớp", "Buổi còn", "Nợ"];
+function exportCsv(rows: Student[], seeContact: boolean, seeMoney: boolean, className: (id: string) => string, branchName: (id: string) => string, header: string[]) {
   const lines = rows.map((st) => [
     st.name,
     seeContact ? st.phone : "",
@@ -45,6 +46,7 @@ function exportCsv(rows: Student[], seeContact: boolean, seeMoney: boolean, clas
 }
 
 export default function StudentsPage() {
+  const { lang, t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const seeContact = canSeeContact(role);
   const seeMoney = canSeeMoney(role);
@@ -133,61 +135,61 @@ export default function StudentsPage() {
   }
 
   const columns: { key: SortKey; label: string; show: boolean }[] = [
-    { key: "name", label: "Học viên", show: true },
-    { key: "branch", label: "Chi nhánh", show: true },
-    { key: "level", label: "Level", show: true },
-    { key: "class", label: "Lớp", show: true },
-    { key: "remain", label: "Buổi còn", show: true },
-    { key: "debt", label: "Nợ", show: seeMoney },
-    { key: "parent", label: "Phụ huynh", show: true },
+    { key: "name", label: t.nav.students, show: true },
+    { key: "branch", label: t.common.branch, show: true },
+    { key: "level", label: t.common.level, show: true },
+    { key: "class", label: t.common.class, show: true },
+    { key: "remain", label: t.students.remain, show: true },
+    { key: "debt", label: t.students.badgeDebt, show: seeMoney },
+    { key: "parent", label: t.students.parent, show: true },
   ];
 
   return (
     <div>
-      <h1 className="text-xl font-bold">Học viên</h1>
-      <p className="mt-1 text-sm text-slate-500">{rows.length} học viên</p>
+      <h1 className="text-xl font-bold">{t.students.title}</h1>
+      <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
       <div className="mt-4 grid gap-2 md:grid-cols-4 xl:grid-cols-8">
-        <input className={`${inputClass} md:col-span-2`} placeholder={seeContact ? "Tên, số học viên, số phụ huynh" : "Tìm tên"} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className={`${inputClass} md:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className={inputClass} value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          <option value="all">Chi nhánh</option>
+          <option value="all">{t.common.branch}</option>
           {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
         <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
-          <option value="all">Level</option>
+          <option value="all">{t.common.level}</option>
           <option value="begin">Begin</option>
           <option value="inter">Inter</option>
           <option value="advance">Advance</option>
         </select>
         <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
-          <option value="all">Trạng thái</option>
-          <option value="studying">Đang học</option>
-          <option value="hold">Bảo lưu</option>
-          <option value="paused">Nghỉ</option>
-          <option value="trial">Học thử</option>
+          <option value="all">{t.common.status}</option>
+          <option value="studying">{t.students.badgeStudy}</option>
+          <option value="hold">{t.students.hold}</option>
+          <option value="paused">{t.students.paused}</option>
+          <option value="trial">{t.status.trial}</option>
         </select>
         <select className={inputClass} value={classId} onChange={(e) => setClassId(e.target.value)}>
-          <option value="all">Lớp</option>
+          <option value="all">{t.common.class}</option>
           {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select className={inputClass} value={debt} onChange={(e) => setDebt(e.target.value as "all" | "yes")} disabled={!seeMoney}>
-          <option value="all">Công nợ</option>
-          <option value="yes">Có nợ</option>
+          <option value="all">{t.students.debt}</option>
+          <option value="yes">{t.students.hasDebt}</option>
         </select>
         <select className={inputClass} value={low} onChange={(e) => setLow(e.target.value as "all" | "yes")}>
-          <option value="all">Buổi còn</option>
-          <option value="yes">Sắp hết buổi</option>
+          <option value="all">{t.students.remain}</option>
+          <option value="yes">{t.students.lowRemain}</option>
         </select>
       </div>
       {picked.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[12px] border border-slate-200 bg-white px-3 py-2">
-          <span className="text-sm font-semibold">{picked.length} đã chọn</span>
-          {seeContact ? <Button type="button" variant="outline" onClick={openZalo}>Gửi Zalo</Button> : null}
+          <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
+          {seeContact ? <Button type="button" variant="outline" onClick={openZalo}>{t.students.sendZalo}</Button> : null}
           <Button
             type="button"
             variant="outline"
             onClick={() => void setStudentsFlag(picked.map((st) => st.id), !picked.every((st) => st.flagged))}
           >
-            Đánh dấu
+            {t.students.flag}
           </Button>
           <Button
             type="button"
@@ -198,9 +200,10 @@ export default function StudentsPage() {
               seeMoney,
               (id) => classes.find((c) => c.id === id)?.name ?? "",
               (id) => branches.find((b) => b.id === id)?.name ?? "",
+              [t.common.student, t.students.phone, t.students.parent, t.common.branch, t.common.level, t.common.class, t.students.remain, t.students.debt],
             )}
           >
-            Xuất Excel
+            {t.students.export}
           </Button>
         </div>
       ) : null}
@@ -211,7 +214,7 @@ export default function StudentsPage() {
               <th className="w-10 px-3 py-3">
                 <input
                   type="checkbox"
-                  aria-label="Chọn tất cả"
+                  aria-label={t.students.selectAll}
                   checked={allChecked}
                   onChange={(e) => setSelected(e.target.checked ? rows.map((st) => st.id) : [])}
                 />
@@ -223,18 +226,18 @@ export default function StudentsPage() {
                   </button>
                 </th>
               ))}
-              <th className="px-3 py-3 font-semibold">Trạng thái</th>
+              <th className="px-3 py-3 font-semibold">{t.students.status}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((st) => {
-              const badges = studentBadges(st, holds, seeMoney);
+              const badges = studentBadges(st, holds, seeMoney, lang);
               return (
-                <tr key={st.id} className="border-t border-slate-100 hover:bg-orange-50/60">
+                <tr key={st.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
                   <td className="px-3 py-3">
                     <input
                       type="checkbox"
-                      aria-label={`Chọn ${st.name}`}
+                      aria-label={fill(t.students.selectOne, { name: st.name })}
                       checked={selected.includes(st.id)}
                       onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
                     />
@@ -245,9 +248,9 @@ export default function StudentsPage() {
                       <span>
                         <span className="flex items-center gap-1 font-semibold">
                           {st.name}
-                          {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label="Đã đánh dấu" /> : null}
+                          {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
                         </span>
-                        <span className="text-xs text-slate-400">{seeContact ? st.phone : "Ẩn số điện thoại"}</span>
+                        <span className="text-xs text-slate-400">{seeContact ? st.phone : t.common.noPhone}</span>
                       </span>
                     </button>
                   </td>

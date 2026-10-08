@@ -1,0 +1,47 @@
+[
+  {
+    "id": "u_owner",
+    "name": "Nguyễn An",
+    "email": "an@eduenglish.demo",
+    "phone": "0900 100 001",
+    "role": "owner",
+    "pin": "1234",
+    "avatarColor": "#F97316"
+  },
+  {
+    "id": "u_reception",
+    "name": "Trần Bình",
+    "email": "binh@eduenglish.demo",
+    "phone": "0900 100 002",
+    "role": "reception",
+    "pin": "1111",
+    "avatarColor": "#0EA5E9"
+  },
+  {
+    "id": "u_bao",
+    "name": "Lý Chi",
+    "email": "chi@eduenglish.demo",
+    "phone": "0900 100 003",
+    "role": "teacher",
+    "pin": "2222",
+    "avatarColor": "#7C3AED"
+  },
+  {
+    "id": "u_phuong",
+    "name": "Đỗ Dung",
+    "email": "dung@eduenglish.demo",
+    "phone": "0900 100 004",
+    "role": "teacher",
+    "pin": "3333",
+    "avatarColor": "#DB2777"
+  },
+  {
+    "id": "u_nam",
+    "name": "Võ Em",
+    "email": "em@eduenglish.demo",
+    "phone": "0900 100 005",
+    "role": "teacher",
+    "pin": "4444",
+    "avatarColor": "#059669"
+  }
+]

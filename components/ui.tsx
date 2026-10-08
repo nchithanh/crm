@@ -2,9 +2,9 @@ import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export const ctaPrimary =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[#F97316] px-3.5 text-sm font-semibold text-white hover:bg-[#EA580C] active:bg-[#C2410C]";
+  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)] active:bg-[var(--brand-700)]";
 export const ctaOutline =
-  "crm-outline inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[#F97316] bg-white px-3.5 text-sm font-semibold text-[#F97316] hover:bg-orange-50 active:bg-orange-100";
+  "crm-outline inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)] hover:bg-[var(--brand-50)] active:bg-[var(--brand-100)]";
 export const ctaGhost =
   "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200";
 
@@ -76,4 +76,4 @@ export function Field({
 }
 
 export const inputClass =
-  "h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-[#0F172A] outline-none focus:ring-2 focus:ring-[#F97316]";
+  "h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";

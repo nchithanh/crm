@@ -1,0 +1,62 @@
+[
+  {
+    "id": "c-hh-begin",
+    "name": "Piano Begin",
+    "courseId": "k-hh-begin",
+    "branchId": "b-a",
+    "teacherId": "u_bao",
+    "roomId": "r1",
+    "room": "Phòng 1",
+    "capacity": 12,
+    "level": "begin",
+    "weekday": 1,
+    "start": "18:00",
+    "end": "19:30",
+    "active": true
+  },
+  {
+    "id": "c-kp-inter",
+    "name": "Guitar Inter",
+    "courseId": "k-kp-inter",
+    "branchId": "b-b",
+    "teacherId": "u_nam",
+    "roomId": "r4",
+    "room": "Phòng 1",
+    "capacity": 12,
+    "level": "inter",
+    "weekday": 2,
+    "start": "19:00",
+    "end": "20:30",
+    "active": true
+  },
+  {
+    "id": "c-ct-adv",
+    "name": "Vocal Advance",
+    "courseId": "k-ct-adv",
+    "branchId": "b-c",
+    "teacherId": "u_phuong",
+    "roomId": "r6",
+    "room": "Phòng 1",
+    "capacity": 12,
+    "level": "advance",
+    "weekday": 6,
+    "start": "09:00",
+    "end": "10:30",
+    "active": true
+  },
+  {
+    "id": "c-hh-inter",
+    "name": "Piano Inter",
+    "courseId": "k-hh-inter",
+    "branchId": "b-a",
+    "teacherId": "u_bao",
+    "roomId": "r2",
+    "room": "Phòng 2",
+    "capacity": 12,
+    "level": "inter",
+    "weekday": 5,
+    "start": "17:00",
+    "end": "18:30",
+    "active": true
+  }
+]

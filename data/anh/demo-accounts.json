@@ -1,0 +1,5 @@
+[
+  { "role": "owner", "name": "Nguyễn An", "pin": "1234", "hint": "Quản lý" },
+  { "role": "reception", "name": "Trần Bình", "pin": "1111", "hint": "Lễ tân" },
+  { "role": "teacher", "name": "Lý Chi", "pin": "2222", "hint": "Giáo viên" }
+]

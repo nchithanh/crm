@@ -8,6 +8,8 @@ import { Badge, Button, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
 import { addStudentNote, moveStudentClass } from "@/lib/actions";
 import { db } from "@/lib/db";
+import { fill } from "@/lib/copy";
+import { useI18n } from "@/lib/i18n";
 import { attendLabel, holdStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { debtRemaining } from "@/lib/metrics";
@@ -27,6 +29,7 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 export function StudentDrawer({ studentId, onClose }: { studentId: string; onClose: () => void }) {
+  const { lang, t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const seeContact = canSeeContact(role);
   const seeMoney = canSeeMoney(role);
@@ -68,15 +71,15 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
       ...attendance.map((a) => ({
         id: a.id,
         day: a.day,
-        text: `Điểm danh ${classes.find((c) => c.id === a.classId)?.name ?? ""} · ${attendLabel(a.status)}`,
+        text: fill(t.drawer.marked, { className: classes.find((c) => c.id === a.classId)?.name ?? "", status: attendLabel(a.status, lang) }),
       })),
       ...(seeMoney
         ? payments.map((p) => ({ id: p.id, day: p.day, text: `Thanh toán ${formatVnd(p.amount)} · ${p.note || "Học phí"}` }))
         : []),
-      ...holds.map((h) => ({ id: h.id, day: h.fromDay, text: `Bảo lưu ${holdStatusLabel(h.status)} · ${h.reason}` })),
+      ...holds.map((h) => ({ id: h.id, day: h.fromDay, text: fill(t.drawer.holdLine, { status: holdStatusLabel(h.status, lang), reason: h.reason }) })),
     ];
     return rows.sort((a, b) => b.day.localeCompare(a.day));
-  }, [student, enrollments, attendance, payments, holds, packages, classes, seeMoney]);
+  }, [student, enrollments, attendance, payments, holds, packages, classes, seeMoney, lang, t]);
 
   if (student === undefined) {
     return (
@@ -93,7 +96,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const branch = branches.find((b) => b.id === student.branchId);
   const age = ageYears(student.birthDay);
   const kid = isMinor(student.birthDay);
-  const badges = studentBadges(student, holds, seeMoney);
+  const badges = studentBadges(student, holds, seeMoney, lang);
   const currentHold = holds.find((h) => h.status === "approved" || h.status === "pending");
 
   async function saveNote() {
@@ -134,16 +137,16 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
             </div>
           </div>
           <div className="mt-4 flex gap-1 overflow-x-auto" role="tablist">
-            {visibleTabs.map((t) => (
+            {visibleTabs.map((item) => (
               <button
-                key={t.id}
+                key={item.id}
                 type="button"
                 role="tab"
-                aria-selected={tab === t.id}
-                onClick={() => setTab(t.id)}
-                className={tab === t.id ? "shrink-0 border-b-2 border-[#F97316] px-2 py-2 text-sm font-semibold text-[#C2410C]" : "shrink-0 border-b-2 border-transparent px-2 py-2 text-sm text-slate-500"}
+                aria-selected={tab === item.id}
+                onClick={() => setTab(item.id)}
+                className={tab === item.id ? "shrink-0 border-b-2 border-[var(--brand-500)] px-2 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 border-b-2 border-transparent px-2 py-2 text-sm text-slate-500"}
               >
-                {t.label}
+                {t.drawer[item.id]}
               </button>
             ))}
           </div>
@@ -197,7 +200,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white">Ghi danh thêm</Link>
+                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">Ghi danh thêm</Link>
               </div>
               <div className="rounded-[12px] border border-slate-100 p-3">
                 <p className="text-xs font-semibold uppercase text-slate-500">Đổi lớp</p>
@@ -226,7 +229,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                     <tr key={a.id} className="border-t border-slate-100">
                       <td className="py-2">{a.day}</td>
                       <td>{classes.find((c) => c.id === a.classId)?.name}</td>
-                      <td>{attendLabel(a.status)}{a.waived ? " · không trừ" : ""}</td>
+                      <td>{attendLabel(a.status, lang)}{a.waived ? ` · ${t.drawer.notDeducted}` : ""}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -239,7 +242,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">Đã thu</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">Còn nợ</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href="/thu-hoc-phi" className="inline-flex h-10 items-center rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white">Thu học phí</Link>
+              <Link href="/thu-hoc-phi" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">Thu học phí</Link>
               <ul className="space-y-2">
                 {payments.length === 0 ? <li className="text-slate-500">Chưa có phiếu thu.</li> : null}
                 {[...payments].sort((a, b) => b.day.localeCompare(a.day)).map((p) => (
@@ -255,7 +258,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
             <div className="space-y-3 text-sm">
               {currentHold ? (
                 <article className="rounded-[12px] border border-slate-200 p-3">
-                  <Badge tone={currentHold.status === "approved" ? "info" : "warn"}>{holdStatusLabel(currentHold.status)}</Badge>
+                  <Badge tone={currentHold.status === "approved" ? "info" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
                   <p className="mt-2 font-semibold">{currentHold.fromDay} → {currentHold.toDay}</p>
                   <p className="text-slate-500">{currentHold.reason}</p>
                   <p className="mt-1">{currentHold.credits} buổi giữ chỗ</p>
@@ -268,7 +271,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 {holds.length === 0 ? <li className="text-slate-500">Chưa có phiếu bảo lưu.</li> : null}
                 {[...holds].sort((a, b) => b.fromDay.localeCompare(a.fromDay)).map((h) => (
                   <li key={h.id} className="border-t border-slate-100 py-2">
-                    {h.fromDay} → {h.toDay} · {holdStatusLabel(h.status)} · {h.reason}
+                    {h.fromDay} → {h.toDay} · {holdStatusLabel(h.status, lang)} · {h.reason}
                   </li>
                 ))}
               </ul>
@@ -279,7 +282,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
               {activity.length === 0 ? <li className="text-slate-500">Chưa có hoạt động.</li> : null}
               {activity.map((a) => (
                 <li key={a.id} className="relative border-l border-slate-200 pl-3">
-                  <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#F97316]" />
+                  <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
                   <p>{a.text}</p>
                   <p className="text-xs text-slate-400">{a.day}</p>
                 </li>

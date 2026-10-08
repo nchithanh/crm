@@ -1,21 +1,5 @@
-import settings from "@/data/nhay/settings.json";
-import users from "@/data/nhay/users.json";
-import packages from "@/data/nhay/packages.json";
-import classes from "@/data/nhay/classes.json";
-import students from "@/data/nhay/students.json";
-import leads from "@/data/nhay/leads.json";
-import enrollments from "@/data/nhay/enrollments.json";
-import payments from "@/data/nhay/payments.json";
-import receivables from "@/data/nhay/receivables.json";
-import tasks from "@/data/nhay/tasks.json";
-import attendance from "@/data/nhay/attendance.json";
-import courses from "@/data/nhay/courses.json";
-import rooms from "@/data/nhay/rooms.json";
-import promotions from "@/data/nhay/promotions.json";
-import holds from "@/data/nhay/holds.json";
-import bookings from "@/data/nhay/bookings.json";
-import branches from "@/data/nhay/branches.json";
 import { db } from "@/lib/db";
+import { loadSeed } from "@/lib/seed-data";
 import { sessionDates, sessionStatus } from "@/lib/schedule";
 import { dayFromOffset, localDayKey } from "@/lib/utils";
 import type { VerticalId } from "@/lib/vertical";
@@ -48,38 +32,10 @@ function birthFromYears(years: number) {
   return localDayKey(d);
 }
 
-/**
- * Bundle JSON theo lĩnh vực. Thêm ngành = thêm folder `data/{id}` và một nhánh ở đây.
- */
-function bundle(id: VerticalId) {
-  if (id !== "nhay") {
-    throw new Error(`Chưa có JSON cho lĩnh vực ${id}`);
-  }
-  return {
-    settings,
-    users,
-    packages,
-    classes,
-    students,
-    leads,
-    enrollments,
-    payments,
-    receivables,
-    tasks,
-    attendance,
-    courses,
-    rooms,
-    promotions,
-    holds,
-    bookings,
-    branches,
-  };
-}
-
 export async function ensureSeed(id: VerticalId) {
   const current = await db.meta.get(SEED_KEY);
   if (current?.value === SEED_VERSION) return;
-  const raw = bundle(id);
+  const raw = loadSeed(id);
 
   const studentRows: Student[] = raw.students.map((s) => ({
     id: s.id,

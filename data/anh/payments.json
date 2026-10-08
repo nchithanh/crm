@@ -1,0 +1,242 @@
+[
+  {
+    "id": "pay1",
+    "studentId": "s1",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -40,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s1.jpg"
+  },
+  {
+    "id": "pay2",
+    "studentId": "s3",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -2,
+    "note": "Cọc gói 6 tháng",
+    "billNote": "coc-s3.jpg"
+  },
+  {
+    "id": "pay3",
+    "studentId": "s3",
+    "branchId": "b-b",
+    "amount": 6300000,
+    "method": "cash",
+    "offset": -1,
+    "note": "Phần còn lại gói 6 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay4",
+    "studentId": "s4",
+    "branchId": "b-c",
+    "amount": 2500000,
+    "method": "transfer",
+    "offset": 0,
+    "note": "Cọc gói 12 tháng",
+    "billNote": "coc-s4.jpg"
+  },
+  {
+    "id": "pay5",
+    "studentId": "s5",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -30,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s5.jpg"
+  },
+  {
+    "id": "pay6",
+    "studentId": "s6",
+    "branchId": "b-a",
+    "amount": 1500000,
+    "method": "cash",
+    "offset": -15,
+    "note": "Tiếng Anh 1 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay7",
+    "studentId": "s7",
+    "branchId": "b-a",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -12,
+    "note": "Tiếng Anh 1 tháng",
+    "billNote": "bill-s7.jpg"
+  },
+  {
+    "id": "pay8",
+    "studentId": "s8",
+    "branchId": "b-b",
+    "amount": 750000,
+    "method": "cash",
+    "offset": -3,
+    "note": "Thu một phần gói 1 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay9",
+    "studentId": "s9",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -25,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s9.jpg"
+  },
+  {
+    "id": "pay10",
+    "studentId": "s10",
+    "branchId": "b-a",
+    "amount": 1500000,
+    "method": "cash",
+    "offset": -8,
+    "note": "Tiếng Anh 1 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay11",
+    "studentId": "s12",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -35,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s12.jpg"
+  },
+  {
+    "id": "pay12",
+    "studentId": "s13",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -45,
+    "note": "Cọc gói 6 tháng",
+    "billNote": "coc-s13.jpg"
+  },
+  {
+    "id": "pay13",
+    "studentId": "s13",
+    "branchId": "b-b",
+    "amount": 6300000,
+    "method": "cash",
+    "offset": -44,
+    "note": "Phần còn lại gói 6 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay14",
+    "studentId": "s14",
+    "branchId": "b-b",
+    "amount": 1000000,
+    "method": "cash",
+    "offset": -6,
+    "note": "Thu một phần gói 1 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay15",
+    "studentId": "s15",
+    "branchId": "b-b",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -28,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s15.jpg"
+  },
+  {
+    "id": "pay16",
+    "studentId": "s16",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "transfer",
+    "offset": -8,
+    "note": "Cọc gói 6 tháng",
+    "billNote": "coc-s16.jpg"
+  },
+  {
+    "id": "pay17",
+    "studentId": "s17",
+    "branchId": "b-b",
+    "amount": 1500000,
+    "method": "cash",
+    "offset": -11,
+    "note": "Tiếng Anh 1 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay18",
+    "studentId": "s18",
+    "branchId": "b-c",
+    "amount": 2500000,
+    "method": "transfer",
+    "offset": -50,
+    "note": "Cọc gói 12 tháng",
+    "billNote": "coc-s18.jpg"
+  },
+  {
+    "id": "pay19",
+    "studentId": "s18",
+    "branchId": "b-c",
+    "amount": 11900000,
+    "method": "transfer",
+    "offset": -49,
+    "note": "Phần còn lại gói 12 tháng",
+    "billNote": "bill-s18.jpg"
+  },
+  {
+    "id": "pay20",
+    "studentId": "s19",
+    "branchId": "b-c",
+    "amount": 4200000,
+    "method": "cash",
+    "offset": -16,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay21",
+    "studentId": "s20",
+    "branchId": "b-c",
+    "amount": 5800000,
+    "method": "transfer",
+    "offset": -25,
+    "note": "Thu một phần gói 6 tháng",
+    "billNote": "bill-s20.jpg"
+  },
+  {
+    "id": "pay22",
+    "studentId": "s21",
+    "branchId": "b-c",
+    "amount": 4200000,
+    "method": "cash",
+    "offset": -21,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": ""
+  },
+  {
+    "id": "pay23",
+    "studentId": "s22",
+    "branchId": "b-a",
+    "amount": 4200000,
+    "method": "transfer",
+    "offset": -19,
+    "note": "Tiếng Anh 3 tháng",
+    "billNote": "bill-s22.jpg"
+  },
+  {
+    "id": "pay24",
+    "studentId": "s23",
+    "branchId": "b-a",
+    "amount": 1500000,
+    "method": "cash",
+    "offset": -42,
+    "note": "Tiếng Anh 1 tháng",
+    "billNote": ""
+  }
+]
