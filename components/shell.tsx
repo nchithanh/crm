@@ -29,6 +29,7 @@ import {
   Plus,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { SupportIcon } from "@/components/support-icon";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
@@ -84,12 +85,14 @@ const groups = [
 
 const ai = { href: "/ai", key: "ai" as const, icon: Sparkles };
 
+const ZALO_FOUNDER = "https://zalo.me/0779937633";
+
 const mobile = [
+  { href: "/", key: "overview" as const, icon: LayoutDashboard },
   { href: "/lich", key: "schedule" as const, icon: CalendarDays },
-  { href: "/hoc-vien", key: "students" as const, icon: Users },
-  { href: "/diem-danh", key: "attend" as const, icon: Receipt },
-  { href: "/cham-soc", key: "care" as const, icon: HeartHandshake },
-  { href: "/thu-hoc-phi", key: "feesShort" as const, icon: Wallet },
+  { href: "/diem-danh", key: "attendShort" as const, icon: Receipt },
+  { href: "/ghi-danh", key: "enrollShort" as const, icon: Plus },
+  { href: ZALO_FOUNDER, key: "support" as const, external: true as const },
 ];
 
 function active(href: string, path: string) {
@@ -243,27 +246,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-40 sm:px-5 lg:pb-6">{children}</main>
+        <main className="min-h-0 flex-1 overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">{children}</main>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
-        <nav className="border-t border-slate-200 bg-white px-1 pt-1">
-          <div className="grid grid-cols-5">
-            {mobile.map((item) => {
-              const Icon = item.icon;
-              const on = active(item.href, path);
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="grid grid-cols-5">
+          {mobile.map((item) => {
+            const className = cn(
+              "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
+              !("external" in item) && active(item.href, path) ? "text-[var(--brand-600)]" : "text-slate-400",
+            );
+            if ("external" in item && item.external) {
               return (
-                <Link key={item.href} href={item.href} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium", on ? "text-[var(--brand-600)]" : "text-slate-400")}>
-                  <Icon size={18} />
+                <a key={item.href} href={item.href} target="_blank" rel="noreferrer" className={className}>
+                  <SupportIcon className="h-[18px] w-[18px] opacity-70" />
                   {t.nav[item.key]}
-                </Link>
+                </a>
               );
-            })}
-          </div>
-        </nav>
-        <div className="flex gap-2 border-t border-slate-200 bg-white px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          {ctas("min-w-0 flex-1 px-2")}
+            }
+            const Icon = item.icon;
+            return (
+              <Link key={item.href} href={item.href} className={className}>
+                <Icon size={18} />
+                {t.nav[item.key]}
+              </Link>
+            );
+          })}
         </div>
-      </div>
+      </nav>
+      <a
+        href={ZALO_FOUNDER}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={t.nav.support}
+        title={t.nav.support}
+        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_4px_14px_rgba(15,23,42,0.18)] hover:bg-[var(--brand-600)] lg:inline-flex"
+      >
+        <SupportIcon className="h-[22px] w-[22px] brightness-0 invert" />
+      </a>
     </div>
   );
 }

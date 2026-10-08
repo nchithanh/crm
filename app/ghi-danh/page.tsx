@@ -129,16 +129,16 @@ export default function MidEnrollPage() {
     <div className="mx-auto max-w-3xl">
       <h1 className="text-xl font-bold">{t.enroll.title}</h1>
       <p className="mt-1 text-sm text-slate-500">Begin chỉ đến buổi 3. Inter chỉ buổi lẻ. Advance chỉ buổi 1 và 5. Học viên vẫn vào lớp khi chưa đóng đủ.</p>
-      <ol className="mt-4 grid grid-cols-4 gap-2">
+      <ol className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
         {steps.map((label, i) => {
           const n = i + 1;
           const on = step === n;
           const passed = step > n || Boolean(done);
           return (
-            <li key={label}>
-              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 w-full items-center gap-2 rounded-[12px] border px-2 text-left text-sm ${on ? "border-[var(--brand-500)] bg-[var(--brand-50)] font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
+            <li key={label} className="shrink-0">
+              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 items-center gap-2 rounded-[12px] border px-3 text-left text-sm whitespace-nowrap ${on ? "border-[var(--brand-500)] bg-[var(--brand-50)] font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
                 <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${on || passed ? "bg-[var(--brand-500)] text-white" : "bg-slate-100"}`}>{n}</span>
-                <span className="truncate">{label}</span>
+                <span>{label}</span>
               </button>
             </li>
           );

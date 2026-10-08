@@ -27,6 +27,9 @@ const vi = {
     bookings: "Đặt phòng thuê",
     ai: "AI vận hành",
     feesShort: "Học phí",
+    attendShort: "Điểm danh",
+    enrollShort: "Đăng ký",
+    support: "Support",
   },
   role: { owner: "Quản lý", reception: "Lễ tân", teacher: "Giáo viên" },
   status: {
@@ -54,7 +57,7 @@ const vi = {
     leadLost: "Thất bại",
   },
   common: {
-    allBranches: "Mọi chi nhánh",
+    allBranches: "Tất cả",
     branch: "Chi nhánh",
     room: "Phòng",
     teacher: "Giáo viên",
@@ -458,6 +461,9 @@ const en: typeof vi = {
     bookings: "Room bookings",
     ai: "Ops assistant",
     feesShort: "Fees",
+    attendShort: "Attendance",
+    enrollShort: "Enroll",
+    support: "Support",
   },
   role: { owner: "Manager", reception: "Front desk", teacher: "Teacher" },
   status: {
@@ -485,7 +491,7 @@ const en: typeof vi = {
     leadLost: "Lost",
   },
   common: {
-    allBranches: "All branches",
+    allBranches: "All",
     branch: "Branch",
     room: "Room",
     teacher: "Teacher",
