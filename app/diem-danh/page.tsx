@@ -21,9 +21,15 @@ type UndoStep = {
 };
 
 const buttonTone: Record<AttendStatus, string> = {
-  present: "border-green-600 bg-green-600 text-white",
-  absent: "border-slate-500 bg-slate-500 text-white",
-  excused: "border-amber-500 bg-amber-500 text-white",
+  present: "border-[#16A34A] bg-[#16A34A] text-white",
+  absent: "border-slate-600 bg-slate-600 text-white",
+  excused: "border-[#D97706] bg-[#D97706] text-white",
+};
+
+const buttonIdle: Record<AttendStatus, string> = {
+  present: "border-[#16A34A] bg-white text-[#16A34A]",
+  absent: "border-slate-400 bg-white text-slate-700",
+  excused: "border-[#D97706] bg-white text-[#D97706]",
 };
 
 function last4(phone: string) {
@@ -147,7 +153,7 @@ export default function AttendancePage() {
   return (
     <div className="pb-28">
       <h1 className="text-xl font-bold">Điểm danh tay</h1>
-      <p className="mt-2 rounded-[12px] bg-orange-50 px-3 py-2 text-sm text-slate-700">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
+      <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <select className={inputClass} value={branchId} onChange={(e) => { setBranchId(e.target.value); setPick(""); }}>
           <option value="all">Mọi chi nhánh</option>
@@ -175,8 +181,8 @@ export default function AttendancePage() {
       {hiddenHolds > 0 ? <p className="mt-3 rounded-[12px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{hiddenHolds} học viên đang bảo lưu, không có trong danh sách điểm danh. Chỗ trong lớp vẫn giữ.</p> : null}
       {!session ? <p className="mt-3 text-sm text-slate-500">Hôm nay lớp này không có buổi. Vẫn ghi nhận được nếu cần.</p> : null}
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button className="min-h-12" onClick={() => void markAllPresent()} disabled={eligible.length === 0}>Điểm danh tất cả Có mặt</Button>
-        <Button className="min-h-12" variant="outline" onClick={() => void undoLast()} disabled={undo.length === 0}>Hoàn tác</Button>
+        <Button onClick={() => void markAllPresent()} disabled={eligible.length === 0}>Điểm danh tất cả Có mặt</Button>
+        <Button variant="outline" onClick={() => void undoLast()} disabled={undo.length === 0}>Hoàn tác</Button>
       </div>
       <ul className="mt-4 space-y-3">
         {visible.map((s) => {
@@ -204,7 +210,7 @@ export default function AttendancePage() {
                     type="button"
                     disabled={hold}
                     onClick={() => void markOne(s, status)}
-                    className={`min-h-14 rounded-full border text-base font-semibold disabled:cursor-not-allowed ${row?.status === status ? buttonTone[status] : "border-slate-200 bg-white"}`}
+                    className={`h-10 rounded-[10px] border-[1.5px] text-sm font-semibold disabled:cursor-not-allowed ${row?.status === status ? buttonTone[status] : buttonIdle[status]}`}
                   >
                     {status === "present" ? "Có mặt" : status === "absent" ? "Vắng" : "Có phép"}
                   </button>
@@ -215,10 +221,10 @@ export default function AttendancePage() {
         })}
       </ul>
       <div className="sticky bottom-20 z-30 mt-4 rounded-[12px] border border-slate-200 bg-white p-3 shadow-sm lg:bottom-0">
-        <p className="text-sm text-slate-600">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
+        <p className="text-xs text-slate-500">Có mặt, vắng và có phép đều trừ 1 buổi. Buổi hủy không trừ. Không học bù.</p>
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-base font-semibold tabular-nums">Đã điểm danh {marked.length}/{eligible.length}</p>
-          <Button className="min-h-12" onClick={() => setSummary(true)}>Xong</Button>
+          <Button onClick={() => setSummary(true)}>Xong</Button>
         </div>
       </div>
       {summary ? (
@@ -233,7 +239,7 @@ export default function AttendancePage() {
               <div className="rounded-[12px] bg-amber-50 p-3"><dt className="text-sm text-amber-800">Có phép</dt><dd className="text-3xl font-bold tabular-nums">{counts.excused}</dd></div>
             </dl>
             <p className="mt-4 text-sm text-slate-600">{cancelled ? "Buổi đã hủy nên không trừ buổi." : "Học viên đã điểm danh đã bị trừ 1 buổi. Xác nhận không trừ thêm."}</p>
-            <Button className="mt-4 w-full min-h-12" onClick={() => setSummary(false)}>Xác nhận</Button>
+            <Button className="mt-4 w-full" onClick={() => setSummary(false)}>Xác nhận</Button>
           </div>
         </div>
       ) : null}

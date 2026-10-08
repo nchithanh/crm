@@ -197,7 +197,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/ghi-danh" className="inline-flex min-h-11 items-center rounded-full bg-emerald-500 px-4 text-sm font-semibold">Ghi danh thêm</Link>
+                <Link href="/ghi-danh" className="inline-flex h-10 items-center rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white">Ghi danh thêm</Link>
               </div>
               <div className="rounded-[12px] border border-slate-100 p-3">
                 <p className="text-xs font-semibold uppercase text-slate-500">Đổi lớp</p>
@@ -239,7 +239,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">Đã thu</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">Còn nợ</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href="/thu-hoc-phi" className="inline-flex min-h-11 items-center rounded-full bg-emerald-500 px-4 text-sm font-semibold">Thu học phí</Link>
+              <Link href="/thu-hoc-phi" className="inline-flex h-10 items-center rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white">Thu học phí</Link>
               <ul className="space-y-2">
                 {payments.length === 0 ? <li className="text-slate-500">Chưa có phiếu thu.</li> : null}
                 {[...payments].sort((a, b) => b.day.localeCompare(a.day)).map((p) => (

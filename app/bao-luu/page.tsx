@@ -78,7 +78,7 @@ export default function HoldsPage() {
       {message ? <p className="mt-3 rounded-[12px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {tabs.map((item) => (
-          <button key={item.id} type="button" className={tab === item.id ? "min-h-11 shrink-0 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white" : "min-h-11 shrink-0 rounded-full border border-slate-200 bg-white px-4 text-sm"} onClick={() => setTab(item.id)}>
+          <button key={item.id} type="button" className={tab === item.id ? "h-10 shrink-0 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-4 text-sm"} onClick={() => setTab(item.id)}>
             {item.label}
           </button>
         ))}

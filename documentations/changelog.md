@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-08
+
+- Siết mật độ giao diện: nút cao 40px bo 10px, card bóng nhẹ, lịch và điểm danh rõ trạng thái hơn.
+- Sidebar có lại logo Dolphin CRM và mục Tổng quan, phía trên Lịch.
+
 ## 2026-10-07
 
 - Header và nút theo hệ POS: primary cam, secondary viền cam, ghost. Bỏ nút nền đen. Sidebar mục đang mở nền cam nhạt.

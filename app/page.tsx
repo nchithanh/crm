@@ -389,11 +389,11 @@ export default function DashboardPage() {
   const funnelMax = Math.max(1, ...model.funnel.map((f) => f.count));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <h1 className="text-xl font-bold">Tổng quan</h1>
         <p className="mt-1 text-sm text-slate-500">Edu Dance · dữ liệu mẫu</p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link href={`/diem-danh${q}`} className={ctaPrimary}>
             <Check size={16} /> Điểm danh nhanh
           </Link>
@@ -405,7 +405,7 @@ export default function DashboardPage() {
               <LineChart size={16} /> Xem báo cáo
             </Link>
           ) : null}
-          <select className="ml-auto h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-700" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
+          <select className="ml-auto h-10 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-slate-700" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
             <option value="today">Hôm nay</option>
             <option value="d7">7 ngày</option>
             <option value="d30">30 ngày</option>
@@ -414,7 +414,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-6">
         {kpis.map((card) => {
           const Icon = card.icon;
           const body = (
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                   <Icon size={16} />
                 </span>
               </div>
-              <p className={`mt-2 text-2xl font-bold tabular-nums ${card.warn ? "text-amber-700" : ""}`}>{card.value}</p>
+              <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${card.warn ? "text-amber-700" : "text-[#0F172A]"}`}>{card.value}</p>
               <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") ? "text-green-600" : card.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
               {card.label === "Tỷ lệ điểm danh" ? <Spark values={model.attendSpark} /> : null}
               {card.label === "Công nợ chưa thu" && showMoney ? (
@@ -435,7 +435,7 @@ export default function DashboardPage() {
               ) : null}
             </>
           );
-          const className = "block rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md";
+          const className = "block rounded-[12px] border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-orange-200";
           return card.href ? (
             <Link key={card.label} href={card.href} className={className}>{body}</Link>
           ) : (
@@ -444,13 +444,13 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-3 lg:grid-cols-5">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">Doanh thu {chartSpan} ngày</h2>
             <div className="flex gap-1">
               {([7, 30] as const).map((n) => (
-                <button key={n} type="button" className={`h-9 rounded-full px-3 text-xs font-semibold ${chartSpan === n ? "bg-[#F97316] text-white" : "border border-slate-200 bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
+                <button key={n} type="button" className={`h-10 rounded-[10px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[#F97316] text-white" : "border border-[#E2E8F0] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
                   {n} ngày
                 </button>
               ))}
@@ -509,7 +509,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-base font-semibold">Lớp học hôm nay</h2>
           {model.todaySessions.length === 0 ? (
@@ -541,11 +541,11 @@ export default function DashboardPage() {
                           <p className="text-sm text-slate-500">{teacher?.name} · {room?.name}</p>
                           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span>{branches?.find((b) => b.id === s.branchId)?.name}</span>
-                            <span className={`rounded-full px-2 py-0.5 font-semibold ${phase === "Đang diễn ra" ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-600"}`}>{phase}</span>
+                            <span className={`rounded-[6px] px-2 py-0.5 font-semibold ${phase === "Đang diễn ra" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase}</span>
                           </p>
                         </div>
                       </div>
-                      <Link href={`/diem-danh?branch=${s.branchId}&class=${s.classId}`} className="inline-flex min-h-11 items-center rounded-full border border-slate-200 px-3 text-sm font-semibold">
+                      <Link href={`/diem-danh?branch=${s.branchId}&class=${s.classId}`} className={ctaOutline}>
                         Điểm danh
                       </Link>
                     </div>
@@ -564,7 +564,7 @@ export default function DashboardPage() {
             <Link href={`/lich${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">Xem toàn bộ lịch</Link>
           ) : null}
         </section>
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
           <h2 className="text-base font-semibold">Việc cần xử lý</h2>
           {model.groups.length === 0 ? (
             <div className="mt-8 text-center">
@@ -574,9 +574,9 @@ export default function DashboardPage() {
               <p className="mt-3 text-sm font-medium">Không có việc cần xử lý</p>
             </div>
           ) : (
-            <div className="mt-3 space-y-4">
+            <div className="mt-2 space-y-2">
               {model.groups.map((group) => (
-                <div key={group.title}>
+                <div key={group.title} className={`rounded-[10px] border-l-4 px-2 py-1 ${group.tone === "danger" ? "border-[#DC2626] bg-rose-50/70" : group.tone === "warn" ? "border-[#D97706] bg-amber-50/70" : "border-slate-300 bg-slate-50"}`}>
                   <p className={`text-xs font-semibold uppercase ${group.tone === "danger" ? "text-rose-700" : group.tone === "warn" ? "text-amber-700" : "text-slate-500"}`}>{group.title}</p>
                   <ul className="mt-1 space-y-1">
                     {group.items.map((t) => (
@@ -584,7 +584,7 @@ export default function DashboardPage() {
                         <Link href={t.href} className="flex items-center justify-between gap-2 rounded-[12px] px-2 py-2 hover:bg-slate-50">
                           <span className="text-sm">{t.label}</span>
                           <span className="flex items-center gap-2">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-rose-50 text-rose-700" : group.tone === "warn" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>{t.count}</span>
+                            <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{t.count}</span>
                             <span className="text-xs font-semibold text-emerald-700">Xem tất cả</span>
                           </span>
                         </Link>
@@ -598,7 +598,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-base font-semibold">Top 5 khóa đang chạy</h2>
           <ol className="mt-3 space-y-2">

@@ -5,7 +5,8 @@
   --foreground: #0f172a;
   --card: #ffffff;
   --muted: #64748b;
-  --border: #e7e5e4;
+  --border: #e2e8f0;
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
   --brand-50: #fff7ed;
   --brand-100: #ffedd5;
   --brand-300: #fdba74;
@@ -43,6 +44,9 @@ html, body {
 button, input, select, textarea { font: inherit; }
 
 a { text-decoration: none; }
+
+.crm-outline,
+[class*="border-[1.5px]"] { border-width: 1.5px !important; }
 
 button.bg-emerald-500,
 a.bg-emerald-500,

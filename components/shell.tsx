@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   DoorOpen,
   GraduationCap,
+  LayoutDashboard,
   LogOut,
   Menu,
   Package,
@@ -35,7 +36,10 @@ import { roleLabel } from "@/lib/labels";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
-const top = { href: "/lich", label: "Lịch", icon: CalendarDays };
+const top = [
+  { href: "/", label: "Tổng quan", icon: LayoutDashboard },
+  { href: "/lich", label: "Lịch", icon: CalendarDays },
+];
 
 const groups = [
   {
@@ -107,17 +111,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const linkClass = (href: string) =>
     cn(
-      "flex h-10 items-center gap-2 rounded-[12px] px-3 text-sm font-medium",
-      active(href, path) ? "bg-orange-50 text-[#C2410C]" : "text-slate-600 hover:bg-slate-50",
+      "flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-medium",
+      active(href, path) ? "bg-orange-50 text-[#F97316]" : "text-slate-600 hover:bg-slate-50",
     );
 
   const nav = (
     <div className="flex h-full flex-col">
-      <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 py-4">
-        <Link href={top.href} onClick={() => setOpen(false)} className={linkClass(top.href)}>
-          <top.icon size={16} />
-          {top.label}
-        </Link>
+      <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 pt-4 pb-3">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F97316] text-sm font-bold text-white">D</span>
+        <span className="min-w-0 pr-6">
+          <span className="block truncate text-sm font-bold text-slate-900">Dolphin CRM</span>
+          <span className="block truncate text-xs text-slate-500">{studio}</span>
+        </span>
+      </Link>
+      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
+        <div className="space-y-0.5">
+          {top.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
+                <Icon size={16} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
         {groups
           .map((group) => ({
             ...group,
@@ -126,7 +144,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           .filter((group) => group.items.length > 0)
           .map((group) => (
           <div key={group.title}>
-            <p className="border-t border-slate-100 px-2 pt-3 pb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+            <p className="mt-2 border-t border-[#E2E8F0] px-2.5 pt-3 pb-1.5 text-[11px] font-semibold tracking-[0.08em] text-slate-400 uppercase">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -170,7 +188,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2 sm:px-4">
             <div className="flex min-w-0 items-center gap-2">
-              <button className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
+              <button className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[#E2E8F0] lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
                 <Menu size={18} />
               </button>
               <Link href="/" className="flex min-w-0 items-center gap-2">
@@ -182,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <select className="h-11 rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-700" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+              <select className="h-10 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-slate-700" aria-label="Chi nhánh" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
                 <option value="all">Mọi chi nhánh</option>
                 {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -198,7 +216,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               ) : null}
               <button
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
                 aria-label="Đăng xuất"
                 onClick={() => {
                   logout();

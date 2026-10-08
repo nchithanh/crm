@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Badge, Button, inputClass } from "@/components/ui";
+import { Badge, Button, ctaOutline, inputClass } from "@/components/ui";
 import { canEditSchedule } from "@/lib/access";
 import { addOneOffSession, cancelSession, moveSession, syncSessionClock, updateSession } from "@/lib/actions";
 import { db } from "@/lib/db";
@@ -36,10 +36,10 @@ function shortName(name: string) {
 }
 
 function tone(status: SessionStatus) {
-  if (status === "ongoing") return "border-[#F97316] bg-orange-50";
-  if (status === "completed") return "border-slate-200 bg-slate-100 text-slate-500";
-  if (status === "cancelled") return "border-rose-300 bg-rose-50 text-rose-800";
-  return "border-sky-300 bg-sky-50 text-sky-950";
+  if (status === "ongoing") return "border-l-4 border-[#F97316] bg-orange-100 text-[#0F172A]";
+  if (status === "completed") return "border-l-4 border-slate-300 bg-slate-100 text-slate-500";
+  if (status === "cancelled") return "border-l-4 border-[#DC2626] bg-rose-50 text-rose-800";
+  return "border-l-4 border-sky-500 bg-sky-50 text-sky-950";
 }
 
 function shiftDay(day: string, delta: number) {
@@ -258,8 +258,8 @@ export default function SchedulePage() {
           <Button variant={mode === "week" ? "primary" : "outline"} onClick={() => setMode("week")}>Tuần</Button>
           <Button variant={mode === "month" ? "primary" : "outline"} onClick={() => setMode("month")}>Tháng</Button>
           {canEdit ? <Button variant="outline" onClick={() => { setDraft((d) => ({ ...d, courseId: d.courseId || courses[0]?.id || "", teacherId: d.teacherId || teachers[0]?.id || "", roomId: d.roomId || rooms[0]?.id || "", day: focusDay })); setCreating(true); }}>Tạo buổi lẻ</Button> : null}
-          <Button variant="outline" onClick={exportCsv}>Xuất lịch</Button>
-          <Button variant="outline" onClick={() => void syncView()}>Đồng bộ</Button>
+          <Button variant="ghost" onClick={exportCsv}>Xuất lịch</Button>
+          <Button variant="ghost" onClick={() => void syncView()}>Đồng bộ</Button>
         </div>
       </div>
 
@@ -291,15 +291,15 @@ export default function SchedulePage() {
 
       {mode === "week" ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => setWeekOffset((n) => n - 1)}>Tuần trước</Button>
-          <Button variant="outline" onClick={() => setWeekOffset((n) => n + 1)}>Tuần sau</Button>
+          <Button variant="ghost" onClick={() => setWeekOffset((n) => n - 1)}>Tuần trước</Button>
+          <Button variant="ghost" onClick={() => setWeekOffset((n) => n + 1)}>Tuần sau</Button>
           {(["room", "teacher", "branch"] as const).map((key) => (
             <Button key={key} variant={group === key ? "primary" : "outline"} onClick={() => setGroup((g) => (g === key ? "day" : key))}>
               {key === "room" ? "Theo phòng" : key === "teacher" ? "Theo giáo viên" : "Theo chi nhánh"}
             </Button>
           ))}
           {group !== "day" ? weekDays.map((day) => (
-            <button key={day} type="button" className={day === focusDay ? "h-11 rounded-full bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-11 rounded-full border border-slate-200 bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
+            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[10px] bg-[#F97316] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
               {weekdayLabel(new Date(`${day}T12:00:00`).getDay()).replace("Thứ ", "T")} {day.slice(8)}
             </button>
           )) : null}
@@ -364,11 +364,11 @@ export default function SchedulePage() {
                         onDrop={(e) => { e.stopPropagation(); void dropOn(e, col); }}
                         onDragEnd={() => { window.setTimeout(() => { dragged.current = false; }, 0); }}
                         onClick={() => { if (dragged.current) return; setOpenId(s.id); setReason(""); setNotice(""); }}
-                        className={`absolute inset-x-1 overflow-hidden rounded-[10px] border px-1.5 py-1 text-left text-[11px] leading-tight ${tone(s.status)} ${clash ? "ring-2 ring-rose-400" : ""}`}
+                        className={`absolute inset-x-1 overflow-hidden rounded-[10px] border border-[#E2E8F0] px-2 py-1 text-left text-[11px] leading-snug shadow-[0_1px_2px_rgba(15,23,42,0.06)] ${tone(s.status)} ${clash ? "ring-2 ring-rose-400" : ""}`}
                         style={{ top: top + 2, height }}
                       >
-                        <p className="font-semibold">{s.start}–{s.end}</p>
-                        <p className="truncate">{course?.name} · {levelLabel(course?.level ?? "")}</p>
+                        <p className="font-semibold tabular-nums">{s.start}–{s.end}</p>
+                        <p className="truncate font-medium">{course?.name} · {levelLabel(course?.level ?? "")}</p>
                         {height > 52 ? <p className="truncate text-slate-600">{shortName(teacher?.name ?? "")} · {room?.name}</p> : null}
                         {height > 68 ? <p>{seated(s.classId)}/{cap}{clash ? ` · ${clash}` : ""}</p> : null}
                       </button>
@@ -459,7 +459,7 @@ export default function SchedulePage() {
               {students.filter((st) => st.classId === open.classId).map((st) => <li key={st.id}>{st.name}</li>)}
               {students.filter((st) => st.classId === open.classId).length === 0 ? <li className="text-slate-400">Chưa có học viên trong lớp.</li> : null}
             </ul>
-            <Link href={`/diem-danh?branch=${open.branchId}&class=${open.classId}`} className="mt-4 inline-flex min-h-11 items-center rounded-full border border-slate-200 px-4 text-sm font-semibold">Điểm danh</Link>
+            <Link href={`/diem-danh?branch=${open.branchId}&class=${open.classId}`} className={`${ctaOutline} mt-4`}>Điểm danh</Link>
             {canEdit && open.status !== "cancelled" && open.status !== "completed" ? (
               <div className="mt-4 space-y-3">
                 <label className="block text-sm">

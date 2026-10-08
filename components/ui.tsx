@@ -2,11 +2,11 @@ import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export const ctaPrimary =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white hover:bg-[#EA580C]";
+  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] bg-[#F97316] px-3.5 text-sm font-semibold text-white hover:bg-[#EA580C] active:bg-[#C2410C]";
 export const ctaOutline =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#F97316] bg-white px-4 text-sm font-semibold text-[#C2410C] hover:bg-orange-50";
+  "crm-outline inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[#F97316] bg-white px-3.5 text-sm font-semibold text-[#F97316] hover:bg-orange-50 active:bg-orange-100";
 export const ctaGhost =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100";
+  "inline-flex h-10 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200";
 
 export function Button({
   className,
@@ -31,7 +31,7 @@ export function Button({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={cn("rounded-[12px] border border-slate-200 bg-white shadow-sm", className)}>
+    <div className={cn("rounded-[12px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]", className)}>
       {children}
     </div>
   );
@@ -47,10 +47,10 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
-        tone === "ok" && "bg-green-50 text-green-700",
-        tone === "warn" && "bg-amber-50 text-amber-700",
-        tone === "danger" && "bg-rose-50 text-rose-700",
+        "inline-flex items-center rounded-[6px] px-2 py-0.5 text-xs font-semibold",
+        tone === "ok" && "bg-green-50 text-[#16A34A]",
+        tone === "warn" && "bg-amber-50 text-[#D97706]",
+        tone === "danger" && "bg-rose-50 text-[#DC2626]",
         tone === "info" && "bg-sky-50 text-sky-700",
         tone === "neutral" && "bg-slate-100 text-slate-600",
       )}
@@ -76,4 +76,4 @@ export function Field({
 }
 
 export const inputClass =
-  "h-11 w-full rounded-[12px] border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#F97316]";
+  "h-10 w-full rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-[#0F172A] outline-none focus:ring-2 focus:ring-[#F97316]";

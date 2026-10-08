@@ -148,8 +148,8 @@ export default function MidEnrollPage() {
       {step === 1 && !done ? (
         <section className="mt-4 rounded-[12px] border border-slate-200 bg-white p-4">
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={!creating ? "min-h-11 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white" : "min-h-11 rounded-full border border-slate-200 px-4 text-sm"} onClick={() => setCreating(false)}>Học viên có sẵn</button>
-            <button type="button" className={creating ? "min-h-11 rounded-full bg-[#F97316] px-4 text-sm font-semibold text-white" : "min-h-11 rounded-full border border-slate-200 px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>Tạo mới nhanh</button>
+            <button type="button" className={!creating ? "h-10 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => setCreating(false)}>Học viên có sẵn</button>
+            <button type="button" className={creating ? "h-10 rounded-[10px] bg-[#F97316] px-4 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>Tạo mới nhanh</button>
           </div>
           {creating ? (
             <div className="mt-3 grid gap-2">

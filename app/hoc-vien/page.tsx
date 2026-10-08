@@ -206,7 +206,7 @@ export default function StudentsPage() {
       ) : null}
       <div className="mt-4 max-h-[min(70dvh,760px)] overflow-auto rounded-[12px] border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[980px] text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-left shadow-sm">
+          <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-white text-left">
             <tr>
               <th className="w-10 px-3 py-3">
                 <input
@@ -230,7 +230,7 @@ export default function StudentsPage() {
             {rows.map((st) => {
               const badges = studentBadges(st, holds, seeMoney);
               return (
-                <tr key={st.id} className="border-t border-slate-100 hover:bg-slate-50">
+                <tr key={st.id} className="border-t border-slate-100 hover:bg-orange-50/60">
                   <td className="px-3 py-3">
                     <input
                       type="checkbox"
