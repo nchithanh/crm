@@ -23,7 +23,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "7";
+const SEED_VERSION = "8";
 
 function birthFromYears(years: number) {
   const d = new Date();

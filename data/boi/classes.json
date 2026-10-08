@@ -58,5 +58,35 @@
     "start": "17:00",
     "end": "18:30",
     "active": true
+  },
+  {
+    "id": "c-am-7",
+    "name": "Bơi ếch Sáng",
+    "courseId": "k-am-7",
+    "branchId": "b-a",
+    "teacherId": "u_bao",
+    "roomId": "r3",
+    "room": "Phòng 3",
+    "capacity": 12,
+    "level": "begin",
+    "weekday": 1,
+    "start": "07:00",
+    "end": "08:30",
+    "active": true
+  },
+  {
+    "id": "c-am-8",
+    "name": "Tự do Sáng",
+    "courseId": "k-am-8",
+    "branchId": "b-b",
+    "teacherId": "u_nam",
+    "roomId": "r5",
+    "room": "Phòng 2",
+    "capacity": 12,
+    "level": "begin",
+    "weekday": 2,
+    "start": "08:00",
+    "end": "09:30",
+    "active": true
   }
 ]

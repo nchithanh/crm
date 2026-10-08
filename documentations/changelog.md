@@ -2,6 +2,9 @@
 
 ## 2026-10-08
 
+- Lịch mẫu thêm hai khóa sáng: 07:00–08:30 (thứ 2, thứ 4, thứ 7) và 08:00–09:30 (thứ 3, thứ 5, chủ nhật). Seed `8`.
+- Khóa học có nút Xem: chi nhánh, giáo viên, phòng, thứ, giờ và danh sách buổi. Lớp học có nút Xem tới trang sĩ số.
+- Quản lý khóa, lớp, phòng và giáo viên: tạo và sửa trên máy. Khóa mới sinh một lớp và 8 buổi. Giáo viên đăng nhập chỉ xem. Giáo viên mới không có PIN.
 - Header: logo chỉ trong sidebar và menu mobile. Chi nhánh và VI/EN nằm trên header. Ba nút chính trên mobile nằm dưới menu đáy; trên máy tính vẫn ở header. Lựa chọn ngôn ngữ được nhớ trên máy.
 - Logo Dolphin trên login, chọn lĩnh vực, sidebar và menu mobile. Favicon tab là icon Dolphin. Ảnh logo giữ màu gốc.
 - Nhãn giao diện theo ngôn ngữ máy: tiếng Việt nếu `navigator.language` bắt đầu bằng `vi`, còn lại tiếng Anh. Tên học viên, khóa, chi nhánh trong JSON giữ nguyên. Không có nút đổi ngôn ngữ.

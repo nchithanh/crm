@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
-import { conflictLabel, sessionStatus } from "@/lib/schedule";
-import { localDayKey, uid } from "@/lib/utils";
-import type { AttendStatus, LeadStage, PayMethod, Role } from "@/types";
+import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
+import { localDayKey, uid, weekdayShort } from "@/lib/utils";
+import type { AttendStatus, LeadStage, Level, PayMethod, Role } from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
   const lead = await db.leads.get(id);
@@ -596,4 +596,255 @@ export async function cancelSession(sessionId: string, actorId: string, reason: 
       text: `Hủy buổi ${session.index}: ${reason.trim() || "ốm / lễ"}. Không trừ buổi.`,
     });
   });
+}
+
+const TEACHER_COLORS = ["#F97316", "#2563EB", "#7C3AED", "#0891B2", "#0F766E"];
+
+function slotLine(weekdays: number[], start: string) {
+  const days = [...weekdays].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+  return `${days.map((day) => weekdayShort(day, "vi")).join(" · ")} · ${start}`;
+}
+
+export async function createCourse(input: {
+  name: string;
+  style: string;
+  level: Level;
+  branchId: string;
+  teacherId: string;
+  roomId: string;
+  weekdays: number[];
+  start: string;
+  end: string;
+  description: string;
+}) {
+  const name = input.name.trim();
+  if (!name || !input.teacherId || !input.roomId || !input.branchId) return "fields";
+  if (input.weekdays.length === 0) return "weekday";
+  const room = await db.rooms.get(input.roomId);
+  if (!room || room.branchId !== input.branchId) return "room";
+  const startDay = localDayKey();
+  const days = sessionDates(startDay, input.weekdays, 8);
+  const courseId = uid("k");
+  const classId = uid("c");
+  const weekday = [...input.weekdays].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))[0] ?? 1;
+  await db.transaction("rw", [db.courses, db.classes, db.sessions], async () => {
+    await db.courses.add({
+      id: courseId,
+      name,
+      style: input.style.trim() || name,
+      level: input.level,
+      slot: slotLine(input.weekdays, input.start),
+      teacherId: input.teacherId,
+      branchId: input.branchId,
+      roomId: input.roomId,
+      classId,
+      startDay,
+      endDay: days[days.length - 1] ?? startDay,
+      weekdays: input.weekdays,
+      start: input.start,
+      end: input.end,
+      description: input.description.trim(),
+      active: true,
+    });
+    await db.classes.add({
+      id: classId,
+      name,
+      courseId,
+      branchId: input.branchId,
+      teacherId: input.teacherId,
+      roomId: input.roomId,
+      room: room.name,
+      capacity: 12,
+      level: input.level,
+      weekday,
+      start: input.start,
+      end: input.end,
+      active: true,
+    });
+    for (const [i, day] of days.entries()) {
+      const index = i + 1;
+      await db.sessions.add({
+        id: uid("s"),
+        courseId,
+        classId,
+        branchId: input.branchId,
+        index,
+        day,
+        start: input.start,
+        end: input.end,
+        teacherId: input.teacherId,
+        roomId: input.roomId,
+        status: sessionStatus(day, index),
+        note: "",
+      });
+    }
+  });
+  return "";
+}
+
+export async function updateCourse(input: {
+  id: string;
+  name: string;
+  style: string;
+  level: Level;
+  description: string;
+  teacherId: string;
+  roomId: string;
+  start: string;
+  end: string;
+  active: boolean;
+}) {
+  const course = await db.courses.get(input.id);
+  const room = await db.rooms.get(input.roomId);
+  if (!course || !input.name.trim() || !input.teacherId || !room) return "fields";
+  if (room.branchId !== course.branchId) return "room";
+  const today = localDayKey();
+  const sessions = await db.sessions.where("courseId").equals(course.id).toArray();
+  await db.transaction("rw", [db.courses, db.classes, db.sessions], async () => {
+    await db.courses.update(course.id, {
+      name: input.name.trim(),
+      style: input.style.trim() || input.name.trim(),
+      level: input.level,
+      description: input.description.trim(),
+      teacherId: input.teacherId,
+      roomId: room.id,
+      start: input.start,
+      end: input.end,
+      active: input.active,
+      slot: slotLine(course.weekdays, input.start),
+    });
+    await db.classes.update(course.classId, {
+      name: input.name.trim(),
+      level: input.level,
+      teacherId: input.teacherId,
+      roomId: room.id,
+      room: room.name,
+      start: input.start,
+      end: input.end,
+      active: input.active,
+    });
+    for (const session of sessions) {
+      if (session.day < today || session.status === "cancelled" || session.status === "completed") continue;
+      await db.sessions.update(session.id, {
+        teacherId: input.teacherId,
+        roomId: room.id,
+        start: input.start,
+        end: input.end,
+      });
+    }
+  });
+  return "";
+}
+
+export async function updateClass(input: {
+  id: string;
+  capacity: number;
+  teacherId: string;
+  roomId: string;
+  start: string;
+  end: string;
+}) {
+  const klass = await db.classes.get(input.id);
+  const room = await db.rooms.get(input.roomId);
+  if (!klass || !input.teacherId || !room || input.capacity < 1) return "fields";
+  if (room.branchId !== klass.branchId) return "room";
+  const today = localDayKey();
+  const sessions = await db.sessions.where("classId").equals(klass.id).toArray();
+  await db.transaction("rw", [db.classes, db.courses, db.sessions], async () => {
+    await db.classes.update(klass.id, {
+      capacity: input.capacity,
+      teacherId: input.teacherId,
+      roomId: room.id,
+      room: room.name,
+      start: input.start,
+      end: input.end,
+    });
+    const course = await db.courses.get(klass.courseId);
+    if (course && course.classId === klass.id) {
+      await db.courses.update(course.id, {
+        teacherId: input.teacherId,
+        roomId: room.id,
+        start: input.start,
+        end: input.end,
+        slot: slotLine(course.weekdays, input.start),
+      });
+    }
+    for (const session of sessions) {
+      if (session.day < today || session.status === "cancelled" || session.status === "completed") continue;
+      await db.sessions.update(session.id, {
+        teacherId: input.teacherId,
+        roomId: room.id,
+        start: input.start,
+        end: input.end,
+      });
+    }
+  });
+  return "";
+}
+
+export async function createRoom(input: {
+  name: string;
+  branchId: string;
+  floor: string;
+  capacity: number;
+  note: string;
+}) {
+  const name = input.name.trim();
+  if (!name || !input.branchId || input.capacity < 1) return "fields";
+  await db.rooms.add({
+    id: uid("r"),
+    name,
+    branchId: input.branchId,
+    floor: input.floor.trim(),
+    capacity: input.capacity,
+    note: input.note.trim(),
+  });
+  return "";
+}
+
+export async function updateRoom(input: {
+  id: string;
+  name: string;
+  floor: string;
+  capacity: number;
+  note: string;
+}) {
+  const room = await db.rooms.get(input.id);
+  if (!room || !input.name.trim() || input.capacity < 1) return "fields";
+  const name = input.name.trim();
+  await db.transaction("rw", [db.rooms, db.classes], async () => {
+    await db.rooms.update(room.id, {
+      name,
+      floor: input.floor.trim(),
+      capacity: input.capacity,
+      note: input.note.trim(),
+    });
+    const classes = await db.classes.filter((klass) => klass.roomId === room.id).toArray();
+    for (const klass of classes) await db.classes.update(klass.id, { room: name });
+  });
+  return "";
+}
+
+export async function createTeacher(input: { name: string; phone: string }) {
+  const name = input.name.trim();
+  if (!name) return "fields";
+  const id = uid("u");
+  const count = await db.users.where("role").equals("teacher").count();
+  await db.users.add({
+    id,
+    name,
+    phone: input.phone.trim(),
+    email: `${id}@demo.local`,
+    role: "teacher",
+    pin: `locked-${id}`,
+    avatarColor: TEACHER_COLORS[count % TEACHER_COLORS.length],
+  });
+  return "";
+}
+
+export async function updateTeacher(input: { id: string; name: string; phone: string }) {
+  const user = await db.users.get(input.id);
+  if (!user || user.role !== "teacher" || !input.name.trim()) return "fields";
+  await db.users.update(user.id, { name: input.name.trim(), phone: input.phone.trim() });
+  return "";
 }

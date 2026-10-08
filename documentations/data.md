@@ -12,7 +12,7 @@ Hiện có `nhay` (Edu Dance), `anh` (Edu English), `nhac` (Edu Music), `boi` (E
 
 Ngày trong JSON là `offset` so với hôm nay (0 = hôm nay, âm = ngày trước). Lúc seed mới đổi thành `YYYY-MM-DD`. Học viên có `email`, `birthYears` (tuổi, seed đổi thành ngày sinh) và `flagged`.
 
-Seed `7`: 24 học viên, 20 lead, phiếu thu / nợ / ghi danh / điểm danh / bảo lưu / tác vụ / đặt phòng đi kèm. Giữ 3 chi nhánh, 4 khóa và giá gói mẫu.
+Seed `8`: 24 học viên, 20 lead, phiếu thu / nợ / ghi danh / điểm danh / bảo lưu / tác vụ / đặt phòng đi kèm. Giữ 3 chi nhánh và giá gói mẫu. 6 khóa: bốn khóa cũ cộng hai lớp sáng 07:00 và 08:00.
 
 IndexedDB: `dolphin_crm_{id}`. Đổi lĩnh vực là đổi database, không trộn dữ liệu.
 

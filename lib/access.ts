@@ -19,3 +19,7 @@ export function canEditSchedule(role: Role | undefined) {
 export function canCollect(role: Role | undefined) {
   return role === "owner" || role === "reception";
 }
+
+export function canManageCatalog(role: Role | undefined) {
+  return role === "owner" || role === "reception";
+}

@@ -20,7 +20,9 @@ export const useAuthStore = create<AuthState>()(
       hydrated: false,
       setHydrated: (v) => set({ hydrated: v }),
       loginWithPin: async (pin) => {
-        const user = await db.users.filter((u) => u.pin === pin.trim()).first();
+        const code = pin.trim();
+        if (!code) throw new Error("bad-pin");
+        const user = await db.users.filter((u) => u.pin === code).first();
         if (!user) throw new Error("bad-pin");
         set({ user });
         return user;
