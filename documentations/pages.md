@@ -12,7 +12,7 @@ Slug **EN** (canonical). Path VI redirect → EN (dev: `next.config`; Pages: cli
 | `/courses` · `/courses/[id]` | Khóa · hub: **Overview** (gom hết) + Classes / Students / Teachers / Subscriptions; sĩ số hiện tại + tối đa |
 | `/classes` · `/classes/[id]` | Buổi học · roster + điểm danh HV/GV |
 | `/teachers` · `/teachers/[id]` | Giáo viên · courses + upcoming classes |
-| `/rooms` | Phòng |
+| `/rooms` | Phòng — tab **Lịch phòng** (tuần/ngày/tháng: trống vs lớp vs thuê ngoài) + **Danh sách** CRUD |
 | `/subscriptions` | Plan mẫu + list Subscription (valid = start/end + buổi còn). Gate điểm danh |
 | `/enroll` | Ghi danh → Sub + installment + roster (chi tiết `context/flows.md`) |
 | `/promotion` | Promotion mẫu |

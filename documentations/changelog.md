@@ -2,6 +2,7 @@
 
 ## 2026-10-09
 
+- Phòng: tab **Lịch phòng** (tuần / ngày / tháng) — trống vs lớp vs thuê ngoài từ Class + bookings; danh sách CRUD giữ nguyên.
 - Pages export: `generateStaticParams` trên mọi `/[id]` (seed ids + class `{courseId}-cN`) — fix CI `output: export`.
 - Mobile bottom: bỏ Support; owner/lễ tân **Học phí** ở giữa → `/finance/collect`; giáo viên 4 tab (không Support).
 - Thu học phí: lưới Tiền mặt / CK / QR / Nợ; QR demo + Chia sẻ / Gửi Zalo; dialog xác nhận + success kiểu POS.
