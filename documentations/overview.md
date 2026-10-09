@@ -2,7 +2,7 @@
 
 Local-first. Dữ liệu mẫu: **Edu Dance** (studio giả, 3 cơ sở). Accent cam `#F97316`.
 
-Terminology UI: **Khóa** (Course) / **Buổi** (Class). Nav active soft orange. Tạo khóa = drawer + preview sinh buổi; list buổi = filter + session drawer.
+Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Shell Edu craft (Ctrl+K, breadcrumb, Ask Dolphin, Light/Dark, gray pill nav + orange bar, boot splash) + CTA cam POS. Students = KPI + right panel; Overview = ops strip. Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`. Tạo khóa = drawer + preview; buổi = filter + session drawer.
 
 `npm run dev` → http://127.0.0.1:3014
 

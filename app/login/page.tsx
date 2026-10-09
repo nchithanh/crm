@@ -56,7 +56,7 @@ export default function LoginPage() {
             setError("");
             try {
               await loginWithPin(pin);
-              router.replace("/");
+              router.replace("/overview");
             } catch (err) {
               const message = err instanceof Error ? err.message : "";
               setError(message === "bad-pin" ? t.login.badPin : t.login.fail);

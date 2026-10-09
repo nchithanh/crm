@@ -31,6 +31,7 @@ export function canManageTasks(role: Role | undefined) {
 /** Paths giáo viên được vào (prefix match). Owner / lễ tân: mọi path app. */
 const TEACHER_PATHS = [
   "/",
+  "/overview",
   "/schedule",
   "/students",
   "/courses",
@@ -55,7 +56,7 @@ export function canAccessPath(role: Role | undefined, pathname: string) {
   if (role === "owner" || role === "reception") return true;
   const path = normalizePath(pathname);
   return TEACHER_PATHS.some((allowed) => {
-    if (allowed === "/") return path === "/";
+    if (allowed === "/") return path === "/" || path === "/overview";
     return path === allowed || path.startsWith(`${allowed}/`);
   });
 }

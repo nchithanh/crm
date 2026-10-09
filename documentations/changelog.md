@@ -2,6 +2,8 @@
 
 ## 2026-10-09
 
+- E2–E4: Students KPI strip + list/right panel (`StudentDrawer` `variant=panel|drawer`) + pagination; Overview ops strip (buổi hôm nay / học phí chờ / thấp điểm danh / GV / phòng trống); slug canonical `/overview` `/revenue` `/collections` `/dolphin-ai` (+ redirect legacy); boot splash logo brand thay spinner.
+- E1 Shell Edu craft: Ctrl+K command palette · breadcrumb · Ask Dolphin · Light/Dark · gray pill nav + orange accent bar · wordmark **Dolphin Edu CRM** · header densify (search / theme / VI·EN / bell / avatar). CTA vẫn cam POS.
 - Phase C+D UX: Overview KPI/đường dẫn `/attendance` `/receivables` + sĩ số buổi qua `classStudents`; điểm danh roster theo buổi + bulk/undo/summary (giữ); Teacher backup tự mở khi tạm nghỉ; Holds i18n + rule check; Enroll rule banner + chỗ trống; Finance KPI clickable; Follow-up filter i18n + cold badge.
 - Phase A+B UX: terminology Khóa/Buổi; nav active soft orange; Students cột Course (`courses.find`); slug EN mới `/mid-course-enroll` `/follow-up` `/collect-fees` `/receivables` `/qr-attendance` `/room-bookings` (+ redirect legacy); Course create drawer + preview `sessionDates`; Classes filter đầy đủ + session drawer (roster/điểm danh/đổi GV·phòng/hủy/conflict).
 - Phòng: tab **Lịch phòng** (tuần / ngày / tháng) — trống vs lớp vs thuê ngoài từ Class + bookings; danh sách CRUD giữ nguyên.

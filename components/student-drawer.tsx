@@ -20,7 +20,16 @@ import { useAuthStore } from "@/stores/auth-store";
 const tabIds = ["overview", "info", "courses", "attendance", "money", "hold", "activity"] as const;
 type TabId = (typeof tabIds)[number];
 
-export function StudentDrawer({ studentId, onClose }: { studentId: string; onClose: () => void }) {
+export function StudentDrawer({
+  studentId,
+  onClose,
+  variant = "drawer",
+}: {
+  studentId: string;
+  onClose: () => void;
+  /** drawer = mobile overlay; panel = Edu-style right column */
+  variant?: "drawer" | "panel";
+}) {
   const { lang, t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
@@ -51,12 +60,13 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   const [holdBusy, setHoldBusy] = useState(false);
 
   useEffect(() => {
+    if (variant === "panel") return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, variant]);
 
   useEffect(() => {
     setTab("overview");
@@ -96,6 +106,13 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   }, [student, enrollments, attendance, payments, holds, packages, courses, classes, seeMoney, lang, t]);
 
   if (student === undefined) {
+    if (variant === "panel") {
+      return (
+        <aside className="flex h-full min-h-[28rem] w-full flex-col rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-slate-500">
+          {t.drawer.loading}
+        </aside>
+      );
+    }
     return (
       <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
         <aside className="h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
@@ -161,11 +178,15 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
     setHoldReason("");
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.drawer.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-xl">
-        <header className="border-b border-[#E2E8F0] px-5 py-4">
+  const shell = (
+      <aside
+        className={
+          variant === "panel"
+            ? "flex h-full max-h-[calc(100dvh-8rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--card)] shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+            : "relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-xl"
+        }
+      >
+        <header className="shrink-0 border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student.avatarColor }}>
               {initials(student.name)}
@@ -448,6 +469,14 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
           ) : null}
         </div>
       </aside>
+  );
+
+  if (variant === "panel") return shell;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.drawer.close} onClick={onClose} />
+      {shell}
     </div>
   );
 }

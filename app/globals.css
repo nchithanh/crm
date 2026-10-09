@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="light"] {
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -16,6 +17,25 @@
   --brand-700: #c2410c;
   --brand-950: #431407;
   --radius-card: 12px;
+  --nav-active: #f1f5f9;
+  --nav-active-text: #0f172a;
+}
+
+html[data-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --muted: #94a3b8;
+  --border: #334155;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --nav-active: #334155;
+  --nav-active-text: #f8fafc;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 html[data-vertical="nhay"] {
@@ -144,6 +164,21 @@ a { text-decoration: none; }
 
 .crm-outline,
 [class*="border-[1.5px]"] { border-width: 1.5px !important; }
+
+@keyframes crm-boot-bar {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+@keyframes crm-boot-ring {
+  0%, 100% { opacity: 0.35; transform: scale(0.92); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+.crm-boot__bar {
+  animation: crm-boot-bar 1.2s ease-in-out infinite;
+}
+.crm-boot__ring {
+  animation: crm-boot-ring 1.6s ease-in-out infinite;
+}
 
 button.bg-emerald-500,
 a.bg-emerald-500,

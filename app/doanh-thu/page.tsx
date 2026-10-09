@@ -3,5 +3,5 @@
 import { RouteRedirect } from "@/components/route-redirect";
 
 export default function DoanhThuRedirectPage() {
-  return <RouteRedirect to="/finance/revenue" />;
+  return <RouteRedirect to="/revenue" />;
 }

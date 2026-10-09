@@ -22,6 +22,8 @@ import type { Level, Student } from "@/types";
 type StatusFilter = "all" | "studying" | "hold" | "paused" | "trial";
 type SortKey = "name" | "branch" | "level" | "class" | "remain" | "debt" | "parent";
 
+const PAGE_SIZE = 12;
+
 function parentText(st: Student, seeContact: boolean) {
   const kid = isMinor(st.birthDay) || (!st.birthDay && Boolean(st.parentName));
   if (!kid || !st.parentName) return "—";
@@ -32,6 +34,12 @@ function remainTone(n: number) {
   if (n <= 3) return "font-semibold text-rose-600";
   if (n <= 5) return "font-semibold text-amber-600";
   return "font-semibold text-slate-800";
+}
+
+function addDays(base: string, delta: number) {
+  const d = new Date(`${base}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  return localDayKey(d);
 }
 
 function exportCsv(rows: Student[], seeContact: boolean, seeMoney: boolean, className: (id: string) => string, branchName: (id: string) => string, header: string[]) {
@@ -72,11 +80,27 @@ export default function StudentsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
   const { student } = usePageQuery();
+  const today = localDayKey();
 
   useEffect(() => {
     if (student) setOpenId(student);
   }, [student]);
+
+  const branchStudents = useMemo(
+    () => students.filter((st) => branchId === "all" || st.branchId === branchId),
+    [students, branchId],
+  );
+
+  const kpis = useMemo(() => {
+    const from30 = addDays(today, -30);
+    const active = branchStudents.filter((s) => s.status === "active").length;
+    const neu = branchStudents.filter((s) => s.joinedDay >= from30).length;
+    const follow = branchStudents.filter((s) => s.remainingSessions <= 3 || s.flagged || s.debt > 0).length;
+    const unpaid = branchStudents.filter((s) => s.debt > 0).length;
+    return { total: branchStudents.length, neu, active, follow, unpaid };
+  }, [branchStudents, today]);
 
   const rows = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -114,7 +138,24 @@ export default function StudentsPage() {
     });
   }, [students, holds, q, status, courseFilter, branchId, level, debt, low, seeContact, sortKey, sortDir, branches, courses]);
 
-  const allChecked = rows.length > 0 && rows.every((st) => selected.includes(st.id));
+  useEffect(() => {
+    setPage(0);
+  }, [q, status, courseFilter, branchId, level, debt, low]);
+
+  useEffect(() => {
+    if (openId && rows.length && !rows.some((r) => r.id === openId)) {
+      setOpenId(null);
+      return;
+    }
+    if (openId || !rows[0] || typeof window === "undefined") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) setOpenId(rows[0].id);
+  }, [rows, openId]);
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = rows.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+
+  const allChecked = paged.length > 0 && paged.every((st) => selected.includes(st.id));
   const picked = rows.filter((st) => selected.includes(st.id));
 
   function toggleSort(key: SortKey) {
@@ -125,13 +166,20 @@ export default function StudentsPage() {
     }
   }
 
-  function closeDrawer() {
+  function closePanel() {
     setOpenId(null);
     const url = new URL(window.location.href);
     if (url.searchParams.has("student")) {
       url.searchParams.delete("student");
       window.history.replaceState(null, "", `${url.pathname}${url.search}`);
     }
+  }
+
+  function pick(id: string) {
+    setOpenId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("student", id);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
   }
 
   function openZalo() {
@@ -143,16 +191,22 @@ export default function StudentsPage() {
 
   const columns: { key: SortKey; label: string; show: boolean }[] = [
     { key: "name", label: t.nav.students, show: true },
-    { key: "branch", label: t.common.branch, show: true },
-    { key: "level", label: t.common.level, show: true },
     { key: "class", label: t.common.course, show: true },
     { key: "remain", label: t.students.remain, show: true },
     { key: "debt", label: t.students.badgeDebt, show: seeMoney },
-    { key: "parent", label: t.students.parent, show: true },
+    { key: "level", label: t.common.level, show: true },
+  ];
+
+  const kpiCards = [
+    { label: t.students.kpiTotal, value: kpis.total },
+    { label: t.students.kpiNew, value: kpis.neu },
+    { label: t.students.kpiActive, value: kpis.active },
+    { label: t.students.kpiFollow, value: kpis.follow },
+    ...(seeMoney ? [{ label: t.students.kpiUnpaid, value: kpis.unpaid }] : []),
   ];
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="crm-page-title">{t.students.title}</h1>
@@ -165,7 +219,16 @@ export default function StudentsPage() {
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+        {kpiCards.map((k) => (
+          <div key={k.label} className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+            <p className="text-xs text-slate-500">{k.label}</p>
+            <p className="mt-0.5 text-xl font-bold tabular-nums text-[var(--foreground)]">{k.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
         <input className={`${inputClass} md:col-span-2 xl:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
           <option value="all">{t.common.level}</option>
@@ -195,8 +258,8 @@ export default function StudentsPage() {
       </div>
 
       {picked.length > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-          <span className="text-sm font-semibold text-slate-800">{fill(t.students.selected, { n: picked.length })}</span>
+        <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+          <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={openZalo}>{t.students.sendZalo}</Button> : null}
           <Button
             type="button"
@@ -212,107 +275,120 @@ export default function StudentsPage() {
           >
             {t.students.export}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void setStudentsFlag(picked.map((st) => st.id), !picked.every((st) => st.flagged))}
-          >
+          <Button type="button" variant="outline" onClick={() => void setStudentsFlag(picked.map((st) => st.id), !picked.every((st) => st.flagged))}>
             {t.students.flag}
           </Button>
         </div>
       ) : null}
 
-      {rows.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center rounded-[12px] border border-dashed border-[#E2E8F0] bg-white px-6 py-14 text-center">
-          <p className="text-sm text-slate-500">{t.students.empty}</p>
-          <Link href="/mid-course-enroll" className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
-            {t.students.emptyCta}
-          </Link>
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-stretch">
+        <div className="flex min-h-0 flex-col rounded-[10px] border border-[var(--border)] bg-[var(--card)] shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+          {rows.length === 0 ? (
+            <div className="flex flex-col items-center px-6 py-14 text-center">
+              <p className="text-sm text-slate-500">{t.students.empty}</p>
+              <Link href="/mid-course-enroll" className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">
+                {t.students.emptyCta}
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="min-h-0 flex-1 overflow-auto">
+                <table className="w-full min-w-[640px] text-sm">
+                  <thead className="sticky top-0 z-10 border-b border-[var(--border)] bg-slate-50 text-left">
+                    <tr>
+                      <th className="w-10 px-3 py-3">
+                        <input
+                          type="checkbox"
+                          aria-label={t.students.selectAll}
+                          checked={allChecked}
+                          onChange={(e) => setSelected(e.target.checked ? paged.map((st) => st.id) : selected.filter((id) => !paged.some((st) => st.id === id)))}
+                        />
+                      </th>
+                      {columns.filter((c) => c.show).map((c) => (
+                        <th key={c.key} className={cn("px-3 py-3", c.key === "remain" || c.key === "debt" ? "text-right" : "")}>
+                          <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort(c.key)}>
+                            {c.label}{sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+                          </button>
+                        </th>
+                      ))}
+                      <th className="px-3 py-3 font-semibold text-slate-600">{t.students.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paged.map((st) => {
+                      const badges = studentBadges(st, holds, seeMoney, lang);
+                      const on = openId === st.id;
+                      return (
+                        <tr
+                          key={st.id}
+                          className={cn(
+                            "cursor-pointer border-t border-slate-100",
+                            on ? "bg-[var(--brand-50)]" : "hover:bg-slate-50",
+                          )}
+                          onClick={() => pick(st.id)}
+                        >
+                          <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              aria-label={fill(t.students.selectOne, { name: st.name })}
+                              checked={selected.includes(st.id)}
+                              onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
+                            />
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
+                              <span>
+                                <span className="flex items-center gap-1 font-semibold text-[var(--foreground)]">
+                                  {st.name}
+                                  {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
+                                </span>
+                                <span className="text-xs text-slate-400">{seeContact ? st.phone : t.common.noPhone}</span>
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-slate-600">{courses.find((c) => c.id === st.courseId)?.name ?? "—"}</td>
+                          <td className={cn("px-3 py-3 text-right tabular-nums", remainTone(st.remainingSessions))}>{st.remainingSessions}</td>
+                          {seeMoney ? <td className="px-3 py-3 text-right tabular-nums">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
+                          <td className="px-3 py-3 text-slate-600">{levelLabel(st.level)}</td>
+                          <td className="px-3 py-3">
+                            <span className="flex flex-wrap gap-1">
+                              {badges.slice(0, 2).map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
+                <p className="text-xs text-slate-500">{fill(t.students.pageOf, { page: pageSafe + 1, pages: pageCount })}</p>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</Button>
+                  <Button type="button" variant="outline" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      ) : (
-        <div className="mt-4 max-h-[min(70dvh,760px)] overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-          <table className="w-full min-w-[980px] text-sm">
-            <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-slate-50 text-left">
-              <tr>
-                <th className="w-10 px-3 py-3">
-                  <input
-                    type="checkbox"
-                    aria-label={t.students.selectAll}
-                    checked={allChecked}
-                    onChange={(e) => setSelected(e.target.checked ? rows.map((st) => st.id) : [])}
-                  />
-                </th>
-                {columns.filter((c) => c.show).map((c) => (
-                  <th key={c.key} className={cn("px-3 py-3", c.key === "remain" || c.key === "debt" ? "text-right" : "")}>
-                    <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort(c.key)}>
-                      {c.label}{sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                    </button>
-                  </th>
-                ))}
-                <th className="px-3 py-3 font-semibold text-slate-600">{t.students.status}</th>
-                <th className="w-36 px-3 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((st) => {
-                const badges = studentBadges(st, holds, seeMoney, lang);
-                return (
-                  <tr
-                    key={st.id}
-                    className="group cursor-pointer border-t border-slate-100 hover:bg-[var(--brand-50)]"
-                    onClick={() => setOpenId(st.id)}
-                  >
-                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        aria-label={fill(t.students.selectOne, { name: st.name })}
-                        checked={selected.includes(st.id)}
-                        onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex items-center gap-2 text-left">
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
-                        <span>
-                          <span className="flex items-center gap-1 font-semibold text-slate-900">
-                            {st.name}
-                            {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
-                          </span>
-                          <span className="text-xs text-slate-400">{seeContact ? st.phone : t.common.noPhone}</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === st.branchId)?.name}</td>
-                    <td className="px-3 py-3 text-slate-600">{levelLabel(st.level)}</td>
-                    <td className="px-3 py-3 text-slate-600">{courses.find((c) => c.id === st.courseId)?.name}</td>
-                    <td className={cn("px-3 py-3 text-right tabular-nums", remainTone(st.remainingSessions))}>{st.remainingSessions}</td>
-                    {seeMoney ? <td className="px-3 py-3 text-right tabular-nums text-slate-700">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
-                    <td className="px-3 py-3 text-slate-600">{parentText(st, seeContact)}</td>
-                    <td className="px-3 py-3">
-                      <span className="flex flex-wrap gap-1">
-                        {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-2 opacity-0 transition group-hover:opacity-100">
-                        <button type="button" className="text-xs font-semibold text-[var(--brand-600)]" onClick={() => setOpenId(st.id)}>
-                          {t.students.view}
-                        </button>
-                        {seeMoney ? (
-                          <Link href={`/collect-fees?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
-                            {t.students.collectQuick}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+
+        <div className="hidden min-h-0 lg:block">
+          {openId ? (
+            <StudentDrawer key={openId} studentId={openId} onClose={closePanel} variant="panel" />
+          ) : (
+            <div className="flex h-full min-h-[28rem] items-center justify-center rounded-[10px] border border-dashed border-[var(--border)] bg-[var(--card)] px-6 text-center text-sm text-slate-500">
+              {t.students.pickHint}
+            </div>
+          )}
         </div>
-      )}
-      {openId ? <StudentDrawer key={openId} studentId={openId} onClose={closeDrawer} /> : null}
+      </div>
+
+      {openId ? (
+        <div className="lg:hidden">
+          <StudentDrawer key={`m-${openId}`} studentId={openId} onClose={closePanel} variant="drawer" />
+        </div>
+      ) : null}
     </div>
   );
 }

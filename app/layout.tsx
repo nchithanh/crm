@@ -5,8 +5,8 @@ import "./globals.css";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const metadata: Metadata = {
-  title: "Dolphin CRM",
-  description: "CRM vận hành trung tâm — Dolphin Software",
+  title: "Dolphin Edu CRM",
+  description: "CRM vận hành trung tâm giáo dục — Dolphin Software",
   icons: {
     icon: [
       { url: `${basePath}/favicon.ico`, sizes: "32x32", type: "image/png" },
@@ -26,7 +26,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" data-vertical="nhay">
+    <html lang="vi" data-vertical="nhay" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{var t=localStorage.getItem("crm-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();',
+          }}
+        />
+      </head>
       <body>
         <AuthGate>{children}</AuthGate>
       </body>

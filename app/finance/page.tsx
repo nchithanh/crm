@@ -85,9 +85,9 @@ export default function FinanceOverviewPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} href="/finance/ledger" />
-        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} valueClass="text-emerald-700" href="/finance/ledger" />
-        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} valueClass="text-sky-700" href="/finance/ledger" />
+        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} href="/collections" />
+        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} valueClass="text-emerald-700" href="/collections" />
+        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} valueClass="text-sky-700" href="/collections" />
         <KpiCard label={t.finance.openDebt} value={formatVnd(view.aging.total)} href="/receivables" />
         <KpiCard label={t.finance.overdueDebt} value={formatVnd(view.overdue)} valueClass="text-rose-600" href="/receivables" />
         <KpiCard label={t.finance.dueSoon} value={formatVnd(view.soon)} valueClass="text-amber-700" href="/receivables" />

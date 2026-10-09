@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell";
+import { BootSplash } from "@/components/boot-splash";
 import { I18nProvider } from "@/lib/i18n";
 import { reopenDb } from "@/lib/db";
 import { ensureSeed } from "@/lib/seed";
@@ -47,7 +48,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       return;
     }
     if (user && (path === "/login" || path === "/choose-vertical")) {
-      router.replace("/");
+      router.replace("/overview");
     }
   }, [hydrated, user, path, router, vertical]);
 
@@ -70,9 +71,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   if (!hydrated || vertical === undefined || !ready) {
     return (
       <I18nProvider>
-        <div className="flex min-h-dvh items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-        </div>
+        <BootSplash />
       </I18nProvider>
     );
   }
