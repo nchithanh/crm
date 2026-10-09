@@ -61,17 +61,17 @@ const groups = [
   {
     title: "enrollGroup" as const,
     items: [
-      { href: "/enroll", key: "midEnroll" as const, icon: ClipboardCheck },
+      { href: "/mid-course-enroll", key: "midEnroll" as const, icon: ClipboardCheck },
       { href: "/promotion", key: "promotion" as const, icon: Tags },
-      { href: "/leads", key: "care" as const, icon: HeartHandshake },
+      { href: "/follow-up", key: "care" as const, icon: HeartHandshake },
     ],
   },
   {
     title: "finance" as const,
     items: [
       { href: "/finance", key: "financeOverview" as const, icon: LayoutDashboard },
-      { href: "/finance/collect", key: "collect" as const, icon: Wallet },
-      { href: "/finance/debts", key: "debts" as const, icon: Receipt },
+      { href: "/collect-fees", key: "collect" as const, icon: Wallet },
+      { href: "/receivables", key: "debts" as const, icon: Receipt },
       { href: "/finance/revenue", key: "revenue" as const, icon: LineChart },
       { href: "/finance/ledger", key: "ledger" as const, icon: ArrowLeftRight },
     ],
@@ -80,10 +80,10 @@ const groups = [
     title: "ops" as const,
     items: [
       { href: "/attendance", key: "attend" as const, icon: Receipt },
-      { href: "/diem-danh-qr", key: "attendQr" as const, icon: QrCode },
+      { href: "/qr-attendance", key: "attendQr" as const, icon: QrCode },
       { href: "/holds", key: "holds" as const, icon: PauseCircle },
       { href: "/tasks", key: "tasks" as const, icon: ListTodo },
-      { href: "/dat-phong", key: "bookings" as const, icon: DoorOpen },
+      { href: "/room-bookings", key: "bookings" as const, icon: DoorOpen },
     ],
   },
 ];
@@ -110,8 +110,8 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
   return [
     { href: "/", key: "overview", icon: LayoutDashboard },
     { href: "/schedule", key: "schedule", icon: CalendarDays },
-    { href: "/finance/collect", key: "feesShort", icon: Wallet },
-    { href: "/enroll", key: "enrollShort", icon: Plus },
+    { href: "/collect-fees", key: "feesShort", icon: Wallet },
+    { href: "/mid-course-enroll", key: "enrollShort", icon: Plus },
     { href: "/attendance", key: "attendShort", icon: Receipt },
   ];
 }
@@ -158,11 +158,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const ctas = (extra: string) => (
     <>
-      <Link href={`/diem-danh${branchQuery}`} className={cn(ctaPrimary, extra)}>
+      <Link href={`/attendance${branchQuery}`} className={cn(ctaPrimary, extra)}>
         <Receipt size={16} /> {t.header.attend}
       </Link>
       {canEnroll ? (
-        <Link href={`/enroll${branchQuery}`} className={cn(ctaOutline, extra)}>
+        <Link href={`/mid-course-enroll${branchQuery}`} className={cn(ctaOutline, extra)}>
           <Plus size={16} /> {t.header.enroll}
         </Link>
       ) : null}
@@ -187,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onClick={onNavigate}
         className={cn(
           "relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium leading-snug",
-          on ? "bg-slate-100 text-slate-900" : "text-slate-700 hover:bg-slate-50",
+          on ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "text-slate-700 hover:bg-slate-50",
         )}
       >
         {on ? (
@@ -359,7 +359,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={cn(
                   "flex min-h-14 flex-col items-center justify-center gap-1 rounded-[10px] text-[14px] font-medium",
-                  on ? "text-[var(--brand-600)]" : "text-slate-700",
+                  on ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "text-slate-700",
                 )}
               >
                 <Icon size={20} />

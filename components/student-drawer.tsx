@@ -80,7 +80,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
       ...enrollments.map((e) => ({
         id: e.id,
         day: e.day,
-        text: `${t.drawer.enrollMore} · ${packages.find((p) => p.id === e.planId)?.name ?? ""} · ${classes.find((c) => c.id === e.courseId)?.name ?? ""} · ${e.sessions}`,
+        text: `${t.drawer.enrollMore} · ${packages.find((p) => p.id === e.planId)?.name ?? ""} · ${courses.find((c) => c.id === e.courseId)?.name ?? ""} · ${e.sessions}`,
       })),
       ...attendance.map((a) => ({
         id: a.id,
@@ -93,7 +93,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
       ...holds.map((h) => ({ id: h.id, day: h.fromDay, text: fill(t.drawer.holdLine, { status: holdStatusLabel(h.status, lang), reason: h.reason }) })),
     ];
     return rows.sort((a, b) => b.day.localeCompare(a.day));
-  }, [student, enrollments, attendance, payments, holds, packages, classes, seeMoney, lang, t]);
+  }, [student, enrollments, attendance, payments, holds, packages, courses, classes, seeMoney, lang, t]);
 
   if (student === undefined) {
     return (
@@ -105,7 +105,6 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
   if (!student) return null;
 
   const course = courses.find((c) => c.id === student.courseId);
-  const klass = classes.find((c) => c.id === student.courseId);
   const pack = packages.find((p) => p.id === student.subscriptionId);
   const branch = branches.find((b) => b.id === student.branchId);
   const age = ageYears(student.birthDay);
@@ -193,11 +192,11 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {seeMoney ? (
-              <Link href={`/finance/collect?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
                 {t.drawer.collect}
               </Link>
             ) : null}
-            <Link href="/enroll" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+            <Link href="/mid-course-enroll" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
               {t.drawer.enrollMore}
             </Link>
             <Button type="button" variant="ghost" onClick={onClose}>{t.drawer.close}</Button>
@@ -264,17 +263,17 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
             <section className="space-y-3 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.courses}</h2> : null}
               <article className="rounded-[12px] border border-[#E2E8F0] p-3">
-                <p className="font-semibold text-slate-900">{course?.name ?? klass?.name ?? t.drawer.noCourse}</p>
-                <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {klass?.name} · {branch?.name}</p>
+                <p className="font-semibold text-slate-900">{course?.name ?? t.drawer.noCourse}</p>
+                <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {branch?.name}</p>
                 <p className="mt-2">
                   {t.drawer.package} {pack?.name ?? "—"} ·{" "}
                   <b className={student.remainingSessions <= 3 ? "text-rose-600" : student.remainingSessions <= 5 ? "text-amber-600" : ""}>
                     {fill(t.drawer.sessionsLeft, { n: student.remainingSessions })}
                   </b>
                 </p>
-                {klass ? (
+                {course ? (
                   <p className="mt-1 text-xs text-slate-400">
-                    {fill(t.drawer.capacity, { n: rosterInClass, cap: klass.capacity })}
+                    {fill(t.drawer.capacity, { n: rosterInClass, cap: course.capacity ?? 12 })}
                   </p>
                 ) : null}
               </article>
@@ -283,20 +282,20 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                   {[...enrollments].sort((a, b) => b.day.localeCompare(a.day)).map((e) => (
                     <li key={e.id} className="rounded-[12px] border border-slate-100 px-3 py-2 text-slate-600">
                       <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.planId)?.name ?? "—"}</span>
-                      {" · "}{classes.find((c) => c.id === e.courseId)?.name}
+                      {" · "}{courses.find((c) => c.id === e.courseId)?.name}
                       {" · "}{e.sessions} · {e.day}
                     </li>
                   ))}
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
+                <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
               </div>
               <div className="rounded-[12px] border border-[#E2E8F0] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.changeClass}</p>
                 <select className={`${inputClass} mt-2`} value={classId} onChange={(e) => setClassId(e.target.value)}>
                   <option value="">{t.drawer.pickClass}</option>
-                  {classes.filter((c) => c.id !== student.courseId).map((c) => (
+                  {classes.filter((c) => c.courseId !== student.courseId && c.status !== "cancelled").map((c) => (
                     <option key={c.id} value={c.id}>{c.name} · {branches.find((b) => b.id === c.branchId)?.name}</option>
                   ))}
                 </select>
@@ -352,7 +351,7 @@ export function StudentDrawer({ studentId, onClose }: { studentId: string; onClo
                 <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href={`/finance/collect?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
               <div className="overflow-auto rounded-[12px] border border-[#E2E8F0]">
                 <table className="w-full min-w-[320px] text-sm">
                   <thead className="bg-slate-50 text-left text-xs text-slate-500">

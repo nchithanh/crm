@@ -88,10 +88,17 @@ export function TeacherDrawer({
   const teachingClasses = classes.filter((c) => c.teacherId === teacherId);
   const needCover = useMemo(() => {
     const days = new Set(absences.map((a) => a.day));
+    const paused = (teacher?.teacherStatus ?? "active") === "paused";
     return sessions
-      .filter((s) => days.has(s.day) && s.status !== "cancelled" && s.day >= localDayKey())
+      .filter((s) => s.status !== "cancelled" && s.day >= localDayKey() && (days.has(s.day) || paused))
       .sort((a, b) => a.day.localeCompare(b.day));
-  }, [sessions, absences]);
+  }, [sessions, absences, teacher?.teacherStatus]);
+
+  useEffect(() => {
+    if ((teacher?.teacherStatus ?? "active") === "paused" || needCover.length > 0) {
+      setShowBackup(true);
+    }
+  }, [teacher?.teacherStatus, needCover.length]);
 
   if (teacher === undefined) {
     return (

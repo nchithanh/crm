@@ -3,5 +3,5 @@
 import { RouteRedirect } from "@/components/route-redirect";
 
 export default function LegacyRedirect() {
-  return <RouteRedirect to="/enroll" />;
+  return <RouteRedirect to="/mid-course-enroll" />;
 }

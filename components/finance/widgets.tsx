@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Area,
@@ -55,6 +56,7 @@ export function KpiCard({
   spark,
   valueClass,
   vsPrev,
+  href,
 }: {
   label: string;
   value: string;
@@ -62,10 +64,11 @@ export function KpiCard({
   spark?: number[];
   valueClass?: string;
   vsPrev?: string;
+  href?: string;
 }) {
   const up = (delta ?? 0) >= 0;
-  return (
-    <Card className="min-w-[160px] flex-1 p-4">
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm text-slate-500">{label}</p>
         {spark ? <Sparkline points={spark} up={up} /> : null}
@@ -76,6 +79,18 @@ export function KpiCard({
           {formatPct(delta)} {vsPrev || ""}
         </p>
       ) : null}
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className="min-w-[160px] flex-1 rounded-[10px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-[var(--brand-100)]">
+        {body}
+      </Link>
+    );
+  }
+  return (
+    <Card className="min-w-[160px] flex-1 p-4">
+      {body}
     </Card>
   );
 }

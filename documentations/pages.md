@@ -1,6 +1,6 @@
 # Routes
 
-Slug **EN** (canonical). Path VI redirect → EN (dev: `next.config`; Pages: client `RouteRedirect`).
+Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; Pages: client `RouteRedirect`).
 
 | Path | Ghi chú |
 | --- | --- |
@@ -9,22 +9,22 @@ Slug **EN** (canonical). Path VI redirect → EN (dev: `next.config`; Pages: cli
 | `/` | Tổng quan |
 | `/schedule` | Lịch = **Classes** (buổi). Kéo thả / điểm danh / đổi GV·phòng / hủy buổi |
 | `/students` · `/students/[id]` | Học viên · detail (Course, Sub, Classes) |
-| `/courses` · `/courses/[id]` | Khóa · hub: **Overview** (gom hết) + Classes / Students / Teachers / Subscriptions; sĩ số hiện tại + tối đa |
-| `/classes` · `/classes/[id]` | Buổi học · roster + điểm danh HV/GV |
+| `/courses` · `/courses/[id]` | Khóa · tạo qua drawer + preview sinh buổi; hub Overview + Classes / Students / Teachers / Subscriptions |
+| `/classes` · `/classes/[id]` | Buổi học · filter (khóa/GV/phòng/status/ngày) + session drawer (roster / điểm danh / đổi GV·phòng / hủy / conflict) |
 | `/teachers` · `/teachers/[id]` | Giáo viên · courses + upcoming classes |
-| `/rooms` | Phòng — tab **Lịch phòng** (tuần/ngày/tháng: trống vs lớp vs thuê ngoài) + **Danh sách** CRUD |
-| `/subscriptions` | Plan mẫu + list Subscription (valid = start/end + buổi còn). Gate điểm danh |
-| `/enroll` | Ghi danh → Sub + installment + roster (chi tiết `context/flows.md`) |
+| `/rooms` | Phòng — tab **Lịch phòng** + **Danh sách** CRUD |
+| `/subscriptions` | Plan mẫu + list Subscription. Gate điểm danh |
+| `/mid-course-enroll` | Ghi danh giữa khóa → Sub + installment + roster |
 | `/promotion` | Promotion mẫu |
-| `/leads` | Pipeline lead |
-| `/finance` | Tài chính — tổng quan (KPI, chart thu, tuổi nợ, watch list) |
-| `/finance/collect` | Thu học phí (POS-style: method grid, QR/CK share·Zalo, confirm, phiếu in). Mobile tab giữa = Học phí |
-| `/finance/debts` | Công nợ HV — aging / bảng / lịch sử thanh toán |
-| `/finance/revenue` | Doanh thu theo kỳ · method · khóa · chi nhánh |
-| `/finance/ledger` | Lịch sử thu (mọi phiếu) |
-| `/holds` | Bảo lưu (nhóm Ops) |
-| `/attendance` · `/diem-danh-qr` | Điểm danh tay · QR giả lập |
+| `/follow-up` | Pipeline lead / chăm sóc |
+| `/finance` | Tài chính — tổng quan |
+| `/collect-fees` | Thu học phí (POS). Mobile tab giữa = Học phí |
+| `/receivables` | Công nợ HV |
+| `/finance/revenue` | Doanh thu |
+| `/finance/ledger` | Lịch sử thu |
+| `/holds` | Bảo lưu (Ops) |
+| `/attendance` · `/qr-attendance` | Điểm danh tay · QR giả lập |
 | `/tasks` | Tác vụ |
-| `/dat-phong` · `/ai` | Đặt phòng · Dolphin AI |
+| `/room-bookings` · `/ai` | Đặt phòng · Dolphin AI |
 
-Redirect: `/fees` `/thu-hoc-phi` → `/finance/collect`; `/revenue` `/doanh-thu` → `/finance/revenue`; `/cong-no` → `/finance/debts`; `/goi-buoi` `/goi` `/plans` → `/subscriptions`; VI khác → EN như trước.
+Redirect legacy → canonical: `/enroll` → `/mid-course-enroll`; `/leads` → `/follow-up`; `/finance/collect` `/fees` `/thu-hoc-phi` → `/collect-fees`; `/finance/debts` `/cong-no` → `/receivables`; `/diem-danh-qr` → `/qr-attendance`; `/dat-phong` → `/room-bookings`; VI khác → EN như trước.

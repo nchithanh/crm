@@ -36,13 +36,11 @@ const TEACHER_PATHS = [
   "/courses",
   "/classes",
   "/attendance",
+  "/qr-attendance",
   "/tasks",
-  // legacy VI during transition
-  "/schedule",
-  "/students",
-  "/courses",
-  "/classes",
+  // legacy during transition
   "/diem-danh",
+  "/diem-danh-qr",
   "/tac-vu",
 ] as const;
 

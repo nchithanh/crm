@@ -176,7 +176,7 @@ export function RoomCalendar({
 
       <p className="text-xs text-slate-400">
         {t.roomsCal.hint}{" "}
-        <Link href="/dat-phong" className="font-semibold text-[var(--brand-600)]">{t.nav.bookings}</Link>
+        <Link href="/room-bookings" className="font-semibold text-[var(--brand-600)]">{t.nav.bookings}</Link>
       </p>
     </div>
   );

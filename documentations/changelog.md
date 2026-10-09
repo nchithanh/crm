@@ -2,6 +2,8 @@
 
 ## 2026-10-09
 
+- Phase C+D UX: Overview KPI/đường dẫn `/attendance` `/receivables` + sĩ số buổi qua `classStudents`; điểm danh roster theo buổi + bulk/undo/summary (giữ); Teacher backup tự mở khi tạm nghỉ; Holds i18n + rule check; Enroll rule banner + chỗ trống; Finance KPI clickable; Follow-up filter i18n + cold badge.
+- Phase A+B UX: terminology Khóa/Buổi; nav active soft orange; Students cột Course (`courses.find`); slug EN mới `/mid-course-enroll` `/follow-up` `/collect-fees` `/receivables` `/qr-attendance` `/room-bookings` (+ redirect legacy); Course create drawer + preview `sessionDates`; Classes filter đầy đủ + session drawer (roster/điểm danh/đổi GV·phòng/hủy/conflict).
 - Phòng: tab **Lịch phòng** (tuần / ngày / tháng) — trống vs lớp vs thuê ngoài từ Class + bookings; danh sách CRUD giữ nguyên.
 - Pages export: `generateStaticParams` trên mọi `/[id]` (seed ids + class `{courseId}-cN`) — fix CI `output: export`.
 - Mobile bottom: bỏ Support; owner/lễ tân **Học phí** ở giữa → `/finance/collect`; giáo viên 4 tab (không Support).

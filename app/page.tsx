@@ -121,6 +121,7 @@ export default function DashboardPage() {
   const attendance = useLiveQuery(() => db.attendance.toArray());
   const holds = useLiveQuery(() => db.holds.toArray());
   const leads = useLiveQuery(() => db.leads.toArray());
+  const classStudents = useLiveQuery(() => db.classStudents.toArray());
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
@@ -128,11 +129,11 @@ export default function DashboardPage() {
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
 
   const ready = Boolean(
-    branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && audits,
+    branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && classStudents && audits,
   );
 
   const model = useMemo(() => {
-    if (!branches || !students || !sessions || !courses || !classes || !rooms || !users || !payments || !receivables || !attendance || !holds || !leads || !audits) {
+    if (!branches || !students || !sessions || !courses || !classes || !rooms || !users || !payments || !receivables || !attendance || !holds || !leads || !classStudents || !audits) {
       return null;
     }
     const today = localDayKey();
@@ -146,10 +147,13 @@ export default function DashboardPage() {
     const studentDelta = joined(month) - joined(monthShift(month, -1));
 
     const todaySessions = branchSessions.filter((s) => s.day === today && s.status !== "cancelled");
-    const todayStudentCount = todaySessions.reduce(
-      (sum, s) => sum + branchStudents.filter((st) => st.classId === s.classId).length,
-      0,
-    );
+    const seatedOf = (classId: string) => {
+      const fromRoster = classStudents.filter((cs) => cs.classId === classId).length;
+      if (fromRoster > 0) return fromRoster;
+      const courseId = sessions.find((s) => s.id === classId)?.courseId;
+      return courseId ? branchStudents.filter((st) => st.courseId === courseId).length : 0;
+    };
+    const todayStudentCount = todaySessions.reduce((sum, s) => sum + seatedOf(s.id), 0);
 
     const rangeOf = (key: Period, shift: 0 | 1) => {
       if (key === "today") return { start: addDays(today, shift === 0 ? 0 : -1), end: addDays(today, shift === 0 ? 0 : -1) };
@@ -203,12 +207,14 @@ export default function DashboardPage() {
     const pendingHolds = holds.filter((h) => h.status === "pending" && inBranch(students.find((s) => s.id === h.studentId)?.branchId ?? ""));
     const fullClasses = classes.filter((c) => {
       if (!inBranch(c.branchId)) return false;
-      const n = students.filter((s) => s.classId === c.id).length;
-      return c.capacity > 0 && n >= c.capacity;
+      return c.capacity > 0 && seatedOf(c.id) >= c.capacity;
     });
     const needBackup = branchSessions.filter((s) => {
-      const course = courses.find((c) => c.id === s.courseId);
-      return s.day >= today && s.status !== "cancelled" && s.status !== "completed" && (!s.teacherId || (course && s.note.toLowerCase().includes("nghỉ") && s.teacherId === course.teacherId));
+      if (s.day < today || s.status === "cancelled" || s.status === "completed") return false;
+      const teacher = users.find((u) => u.id === s.teacherId);
+      if (!s.teacherId) return true;
+      if (teacher?.teacherStatus === "paused") return true;
+      return s.note.toLowerCase().includes("nghỉ");
     });
     const oldDebtStudents = new Set(
       receivables
@@ -280,20 +286,21 @@ export default function DashboardPage() {
       fullClasses.length ? { id: "full", label: t.dash.urgentFull, count: fullClasses.length, href: "/classes" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const watch = [
-      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/finance/debts${q}` } : null,
+      showMoney && oldDebtStudents.size ? { id: "debt", label: t.dash.watchDebt, count: oldDebtStudents.size, href: `/receivables${q}` } : null,
       ending3.length ? { id: "end", label: t.dash.watchEnd, count: ending3.length, href: `/courses${q}` } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     const info = [
-      freshLeads.length ? { id: "lead", label: t.dash.infoLead, count: freshLeads.length, href: "/leads?stage=new" } : null,
+      freshLeads.length ? { id: "lead", label: t.dash.infoLead, count: freshLeads.length, href: "/follow-up?stage=new" } : null,
     ].filter((x): x is NonNullable<typeof x> => Boolean(x));
     return {
       today,
       q,
       active: active.length,
       studentDelta,
-      todayClassCount: new Set(todaySessions.map((s) => s.classId)).size,
+      todayClassCount: todaySessions.length,
       todayStudentCount,
       todaySessions,
+      seatedOf,
       revenue,
       revenuePrev,
       revenueTrend,
@@ -317,7 +324,7 @@ export default function DashboardPage() {
       ranking,
       activity,
     };
-  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, audits, branchId, period, chartSpan, showMoney, t]);
+  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, classStudents, audits, branchId, period, chartSpan, showMoney, t]);
 
   const q = branchId === "all" ? "" : `?branch=${branchId}`;
 
@@ -375,7 +382,7 @@ export default function DashboardPage() {
       label: t.dash.debtOpen,
       value: showMoney ? formatVnd(model.debtTotal) : "—",
       hint: showMoney ? fill(t.dash.debtHint, { n: model.debtStudents, share: model.debtShare }) : t.common.hiddenTeacher,
-      href: showMoney ? `/finance/collect${q}` : "",
+      href: showMoney ? `/receivables${q}` : "",
       icon: AlertTriangle,
       warn: showMoney && model.debtTotal > 0,
     },
@@ -384,7 +391,7 @@ export default function DashboardPage() {
       label: t.dash.attendRate,
       value: `${model.rate}%`,
       hint: fill(t.dash.attendHint, { arrow: model.rate - model.prevRate >= 0 ? "↑" : "↓", n: Math.abs(model.rate - model.prevRate) }),
-      href: `/diem-danh${q}`,
+      href: `/attendance${q}`,
       icon: Check,
     },
     {
@@ -404,10 +411,10 @@ export default function DashboardPage() {
         <h1 className="crm-page-title">{t.dash.title}</h1>
         <p className="mt-1 text-sm text-slate-500">{settings?.name || "Edu Dance"} · {t.common.sample}</p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link href={`/diem-danh${q}`} className={ctaPrimary}>
+          <Link href={`/attendance${q}`} className={ctaPrimary}>
             <Check size={16} /> {t.dash.quickAttend}
           </Link>
-          <Link href={`/enroll${q}`} className={ctaOutline}>
+          <Link href={`/mid-course-enroll${q}`} className={ctaOutline}>
             <Plus size={16} /> {t.dash.enrollStudent}
           </Link>
           {showMoney ? (
@@ -502,7 +509,7 @@ export default function DashboardPage() {
               const conv = next && step.count > 0 ? Math.round((next.count / step.count) * 100) : null;
               return (
                 <li key={step.id}>
-                  <Link href={`/leads?stage=${step.id}`} className="block rounded-[12px] px-1 py-1 hover:bg-slate-50">
+                  <Link href={`/follow-up?stage=${step.id}`} className="block rounded-[12px] px-1 py-1 hover:bg-slate-50">
                     <div className="flex items-center justify-between text-sm">
                       <span>{step.label}</span>
                       <span className="font-semibold tabular-nums">{step.count}</span>
@@ -534,8 +541,8 @@ export default function DashboardPage() {
                 const course = courses?.find((c) => c.id === s.courseId);
                 const teacher = users?.find((u) => u.id === s.teacherId);
                 const room = rooms?.find((r) => r.id === s.roomId);
-                const seated = students?.filter((st) => st.classId === s.classId).length ?? 0;
-                const cap = classes?.find((c) => c.id === s.classId)?.capacity ?? 15;
+                const seated = model.seatedOf(s.id);
+                const cap = s.capacity || 12;
                 const ratio = cap === 0 ? 0 : seated / cap;
                 const bar = ratio >= 0.95 ? "bg-rose-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-[var(--brand-500)]";
                 const phase = phaseLabel(s.start);
@@ -555,7 +562,7 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <Link href={`/diem-danh?branch=${s.branchId}&class=${s.classId}`} className={ctaOutline}>
+                      <Link href={`/attendance?class=${s.id}`} className={ctaOutline}>
                         {t.dash.attend}
                       </Link>
                     </div>

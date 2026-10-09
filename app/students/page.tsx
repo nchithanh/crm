@@ -58,14 +58,14 @@ export default function StudentsPage() {
   const seeContact = canSeeContact(role);
   const seeMoney = canSeeMoney(role);
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
-  const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
+  const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const holds = useLiveQuery(() => db.holds.toArray(), []) ?? [];
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const { branchId } = useStudioBranch();
   const [level, setLevel] = useState<Level | "all">("all");
-  const [classId, setClassId] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("all");
   const [debt, setDebt] = useState<"all" | "yes">("all");
   const [low, setLow] = useState<"all" | "yes">("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -85,7 +85,7 @@ export default function StudentsPage() {
       const pending = holds.some((h) => h.studentId === st.id && h.status === "pending");
       if (branchId !== "all" && st.branchId !== branchId) return false;
       if (level !== "all" && st.level !== level) return false;
-      if (classId !== "all" && st.courseId !== classId) return false;
+      if (courseFilter !== "all" && st.courseId !== courseFilter) return false;
       if (status === "studying" && !(st.status === "active" && !approved)) return false;
       if (status === "hold" && !(approved || pending)) return false;
       if (status === "paused" && st.status !== "paused") return false;
@@ -99,7 +99,7 @@ export default function StudentsPage() {
     const value = (st: Student) => {
       if (sortKey === "branch") return branches.find((b) => b.id === st.branchId)?.name ?? "";
       if (sortKey === "level") return levelLabel(st.level);
-      if (sortKey === "class") return classes.find((c) => c.id === st.courseId)?.name ?? "";
+      if (sortKey === "class") return courses.find((c) => c.id === st.courseId)?.name ?? "";
       if (sortKey === "remain") return st.remainingSessions;
       if (sortKey === "debt") return st.debt;
       if (sortKey === "parent") return parentText(st, seeContact);
@@ -112,7 +112,7 @@ export default function StudentsPage() {
       if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
       return String(va).localeCompare(String(vb), "vi") * dir;
     });
-  }, [students, holds, q, status, classId, branchId, level, debt, low, seeContact, sortKey, sortDir, branches, classes]);
+  }, [students, holds, q, status, courseFilter, branchId, level, debt, low, seeContact, sortKey, sortDir, branches, courses]);
 
   const allChecked = rows.length > 0 && rows.every((st) => selected.includes(st.id));
   const picked = rows.filter((st) => selected.includes(st.id));
@@ -145,7 +145,7 @@ export default function StudentsPage() {
     { key: "name", label: t.nav.students, show: true },
     { key: "branch", label: t.common.branch, show: true },
     { key: "level", label: t.common.level, show: true },
-    { key: "class", label: t.common.class, show: true },
+    { key: "class", label: t.common.course, show: true },
     { key: "remain", label: t.students.remain, show: true },
     { key: "debt", label: t.students.badgeDebt, show: seeMoney },
     { key: "parent", label: t.students.parent, show: true },
@@ -159,7 +159,7 @@ export default function StudentsPage() {
           <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
         </div>
         {seeMoney || seeContact ? (
-          <Link href="/enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
             {t.students.emptyCta}
           </Link>
         ) : null}
@@ -180,9 +180,9 @@ export default function StudentsPage() {
           <option value="paused">{t.students.paused}</option>
           <option value="trial">{t.status.trial}</option>
         </select>
-        <select className={inputClass} value={classId} onChange={(e) => setClassId(e.target.value)}>
-          <option value="all">{t.common.class}</option>
-          {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        <select className={inputClass} value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}>
+          <option value="all">{t.common.course}</option>
+          {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select className={inputClass} value={debt} onChange={(e) => setDebt(e.target.value as "all" | "yes")} disabled={!seeMoney}>
           <option value="all">{t.students.debt}</option>
@@ -205,9 +205,9 @@ export default function StudentsPage() {
               picked,
               seeContact,
               seeMoney,
-              (id) => classes.find((c) => c.id === id)?.name ?? "",
+              (id) => courses.find((c) => c.id === id)?.name ?? "",
               (id) => branches.find((b) => b.id === id)?.name ?? "",
-              [t.common.student, t.students.phone, t.students.parent, t.common.branch, t.common.level, t.common.class, t.students.remain, t.students.debt],
+              [t.common.student, t.students.phone, t.students.parent, t.common.branch, t.common.level, t.common.course, t.students.remain, t.students.debt],
             )}
           >
             {t.students.export}
@@ -225,7 +225,7 @@ export default function StudentsPage() {
       {rows.length === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-[12px] border border-dashed border-[#E2E8F0] bg-white px-6 py-14 text-center">
           <p className="text-sm text-slate-500">{t.students.empty}</p>
-          <Link href="/enroll" className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+          <Link href="/mid-course-enroll" className="mt-4 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
             {t.students.emptyCta}
           </Link>
         </div>
@@ -284,7 +284,7 @@ export default function StudentsPage() {
                     </td>
                     <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === st.branchId)?.name}</td>
                     <td className="px-3 py-3 text-slate-600">{levelLabel(st.level)}</td>
-                    <td className="px-3 py-3 text-slate-600">{classes.find((c) => c.id === st.courseId)?.name}</td>
+                    <td className="px-3 py-3 text-slate-600">{courses.find((c) => c.id === st.courseId)?.name}</td>
                     <td className={cn("px-3 py-3 text-right tabular-nums", remainTone(st.remainingSessions))}>{st.remainingSessions}</td>
                     {seeMoney ? <td className="px-3 py-3 text-right tabular-nums text-slate-700">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
                     <td className="px-3 py-3 text-slate-600">{parentText(st, seeContact)}</td>
@@ -299,7 +299,7 @@ export default function StudentsPage() {
                           {t.students.view}
                         </button>
                         {seeMoney ? (
-                          <Link href={`/finance/collect?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
+                          <Link href={`/collect-fees?student=${st.id}`} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
                             {t.students.collectQuick}
                           </Link>
                         ) : null}

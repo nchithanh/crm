@@ -697,6 +697,7 @@ export async function createCourse(input: {
   sessionCount?: number;
   capacity?: number;
   assistantIds?: string[];
+  startDay?: string;
 }) {
   const name = input.name.trim();
   if (!name || !input.teacherId || !input.branchId) return "fields";
@@ -707,7 +708,7 @@ export async function createCourse(input: {
     const room = await db.rooms.get(roomId);
     if (!room || room.branchId !== input.branchId) return "room";
   }
-  const startDay = localDayKey();
+  const startDay = input.startDay?.trim() || localDayKey();
   const count = input.sessionCount ?? 8;
   const days = sessionDates(startDay, input.weekdays, count);
   const courseId = uid("k");

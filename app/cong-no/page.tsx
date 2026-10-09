@@ -2,6 +2,6 @@
 
 import { RouteRedirect } from "@/components/route-redirect";
 
-export default function CongNoRedirectPage() {
-  return <RouteRedirect to="/finance/debts" />;
+export default function LegacyRedirect() {
+  return <RouteRedirect to="/receivables" />;
 }

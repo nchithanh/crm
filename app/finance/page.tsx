@@ -75,22 +75,22 @@ export default function FinanceOverviewPage() {
             onFrom={range.setFrom}
             onTo={range.setTo}
           />
-          <Link href="/finance/collect" className={ctaPrimary}>
+          <Link href="/collect-fees" className={ctaPrimary}>
             {t.finance.collectCta}
           </Link>
-          <Link href="/finance/debts" className={ctaOutline}>
+          <Link href="/receivables" className={ctaOutline}>
             {t.finance.debtsCta}
           </Link>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} />
-        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} valueClass="text-emerald-700" />
-        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} valueClass="text-sky-700" />
-        <KpiCard label={t.finance.openDebt} value={formatVnd(view.aging.total)} />
-        <KpiCard label={t.finance.overdueDebt} value={formatVnd(view.overdue)} valueClass="text-rose-600" />
-        <KpiCard label={t.finance.dueSoon} value={formatVnd(view.soon)} valueClass="text-amber-700" />
+        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} href="/finance/ledger" />
+        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} valueClass="text-emerald-700" href="/finance/ledger" />
+        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} valueClass="text-sky-700" href="/finance/ledger" />
+        <KpiCard label={t.finance.openDebt} value={formatVnd(view.aging.total)} href="/receivables" />
+        <KpiCard label={t.finance.overdueDebt} value={formatVnd(view.overdue)} valueClass="text-rose-600" href="/receivables" />
+        <KpiCard label={t.finance.dueSoon} value={formatVnd(view.soon)} valueClass="text-amber-700" href="/receivables" />
       </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -143,7 +143,7 @@ export default function FinanceOverviewPage() {
                     </span>
                   </span>
                   <span className="font-bold tabular-nums">{formatVnd(debtRemaining(row))}</span>
-                  <Link href={`/finance/collect?student=${row.studentId}`} className="text-sm font-semibold text-[var(--brand-600)]">
+                  <Link href={`/collect-fees?student=${row.studentId}`} className="text-sm font-semibold text-[var(--brand-600)]">
                     {st === "overdue" ? t.finance.remind : t.finance.pay}
                   </Link>
                 </li>

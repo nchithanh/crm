@@ -86,7 +86,7 @@ export default function CourseDetailPage() {
           <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
             {t.nav.schedule}
           </Link>
-          <Link href="/enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
+          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
             {t.nav.midEnroll}
           </Link>
         </div>

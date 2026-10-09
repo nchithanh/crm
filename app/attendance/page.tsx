@@ -51,6 +51,7 @@ export default function AttendancePage() {
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const holds = useLiveQuery(() => db.holds.toArray(), []) ?? [];
   const attendance = useLiveQuery(() => db.attendance.toArray(), []) ?? [];
+  const classStudents = useLiveQuery(() => db.classStudents.toArray(), []) ?? [];
   const today = localDayKey();
   const { classId: classFromQuery } = usePageQuery();
   const { branchId } = useStudioBranch();
@@ -69,19 +70,24 @@ export default function AttendancePage() {
     if (!classFromQuery || queryApplied.current) return;
     if (sessions.length === 0 && classes.length === 0) return;
     queryApplied.current = true;
-    const session = sessions.find((s) => (s.id === classFromQuery || s.courseId === classFromQuery) && s.day === today);
-    setPick(session?.id ?? daySessions[0]?.id ?? "");
+    const session = sessions.find((s) => s.id === classFromQuery)
+      ?? sessions.find((s) => s.courseId === classFromQuery && s.day === today)
+      ?? daySessions[0];
+    setPick(session?.id ?? "");
   }, [classFromQuery, sessions, classes.length, today, daySessions]);
 
-  const selectedSession = daySessions.find((s) => s.id === pick) ?? daySessions[0];
+  const selectedSession = daySessions.find((s) => s.id === pick) ?? sessions.find((s) => s.id === pick) ?? daySessions[0];
   const currentClassId = selectedSession?.id ?? "";
   const session = selectedSession;
   const klass = classes.find((c) => c.id === currentClassId);
   const cancelled = session?.status === "cancelled";
-  const roster = useMemo(
-    () => students.filter((s) => s.courseId === (klass?.courseId ?? "")),
-    [students, klass?.courseId],
-  );
+  const roster = useMemo(() => {
+    const ids = classStudents.filter((cs) => cs.classId === currentClassId).map((cs) => cs.studentId);
+    if (ids.length > 0) {
+      return students.filter((s) => ids.includes(s.id));
+    }
+    return students.filter((s) => s.courseId === (klass?.courseId ?? ""));
+  }, [students, classStudents, currentClassId, klass?.courseId]);
 
   function frozen(studentId: string) {
     return holds.some((h) => h.studentId === studentId && h.status === "approved" && h.fromDay <= today && h.toDay >= today);
