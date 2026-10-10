@@ -15,8 +15,8 @@ import {
   type BusyBlock,
 } from "@/lib/room-availability";
 import { useI18n } from "@/lib/i18n";
-import { cn, localDayKey, weekdayShort } from "@/lib/utils";
-import type { Room, RoomBooking, StudioClass } from "@/types";
+import { cn, localDayKey, roomWithBranch, weekdayShort } from "@/lib/utils";
+import type { Branch, Room, RoomBooking, StudioClass } from "@/types";
 
 type Mode = "week" | "day" | "month";
 
@@ -24,12 +24,14 @@ export function RoomCalendar({
   rooms,
   classes,
   bookings,
+  branches,
   branchId,
   initialRoomId,
 }: {
   rooms: Room[];
   classes: StudioClass[];
   bookings: RoomBooking[];
+  branches: Branch[];
   branchId: string;
   initialRoomId?: string;
 }) {
@@ -38,7 +40,7 @@ export function RoomCalendar({
     () => rooms.filter((r) => branchId === "all" || r.branchId === branchId),
     [rooms, branchId],
   );
-  const [roomId, setRoomId] = useState(initialRoomId || scopedRooms[0]?.id || "");
+  const [roomId, setRoomId] = useState(initialRoomId || "all");
   const [mode, setMode] = useState<Mode>("week");
   const [focusDay, setFocusDay] = useState(localDayKey());
   const [monthCursor, setMonthCursor] = useState(() => {
@@ -49,13 +51,20 @@ export function RoomCalendar({
   useEffect(() => {
     if (initialRoomId && scopedRooms.some((r) => r.id === initialRoomId)) {
       setRoomId(initialRoomId);
-    } else if (!scopedRooms.some((r) => r.id === roomId) && scopedRooms[0]) {
-      setRoomId(scopedRooms[0].id);
+      return;
     }
+    if (roomId !== "all" && !scopedRooms.some((r) => r.id === roomId)) setRoomId("all");
   }, [initialRoomId, scopedRooms, roomId]);
 
-  const room = scopedRooms.find((r) => r.id === roomId) ?? scopedRooms[0];
-  const activeRoomId = room?.id ?? "";
+  const viewingAll = roomId === "all";
+  const room = scopedRooms.find((r) => r.id === roomId);
+  const activeRoomId = viewingAll ? "all" : (room?.id ?? "all");
+  const labelOf = (id: string) => {
+    const found = rooms.find((r) => r.id === id);
+    if (!found) return id;
+    return roomWithBranch(found.name, branches.find((b) => b.id === found.branchId)?.name);
+  };
+  const heading = viewingAll ? t.roomsCal.all : (room ? labelOf(room.id) : t.roomsCal.all);
 
   const blocks = useMemo(() => {
     const all = allBusyBlocks(classes, bookings);
@@ -83,8 +92,9 @@ export function RoomCalendar({
           onChange={(e) => setRoomId(e.target.value)}
           aria-label={t.common.room}
         >
+          <option value="all">{t.roomsCal.all}</option>
           {scopedRooms.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
+            <option key={r.id} value={r.id}>{labelOf(r.id)}</option>
           ))}
         </select>
         <div className="flex gap-1">
@@ -156,20 +166,24 @@ export function RoomCalendar({
         <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-sky-100 ring-1 ring-sky-400" />{t.roomsCal.busyBooking}</span>
       </div>
 
-      {mode === "week" && room ? (
-        <WeekGrid room={room} week={week} blocks={blocks} lang={lang} t={t} onPickDay={(d) => { setFocusDay(d); setMode("day"); }} />
+      {mode === "week" ? (
+        <WeekGrid roomId={activeRoomId} week={week} blocks={blocks} lang={lang} t={t} showRoom={viewingAll} labelOf={labelOf} onPickDay={(d) => { setFocusDay(d); setMode("day"); }} />
       ) : null}
-      {mode === "day" && room ? (
-        <DayTimeline room={room} day={focusDay} blocks={blocks} t={t} />
+      {mode === "day" ? (
+        <DayTimeline roomId={activeRoomId} heading={heading} day={focusDay} blocks={blocks} t={t} showRoom={viewingAll} labelOf={labelOf} />
       ) : null}
-      {mode === "month" && room ? (
+      {mode === "month" ? (
         <MonthHeat
-          room={room}
+          roomId={activeRoomId}
+          heading={heading}
+          rooms={scopedRooms}
           year={monthCursor.y}
           month={monthCursor.m}
           blocks={blocks}
           lang={lang}
           t={t}
+          showRoom={viewingAll}
+          labelOf={labelOf}
           onPickDay={(d) => { setFocusDay(d); setMode("day"); }}
         />
       ) : null}
@@ -183,18 +197,22 @@ export function RoomCalendar({
 }
 
 function WeekGrid({
-  room,
+  roomId,
   week,
   blocks,
   lang,
   t,
+  showRoom,
+  labelOf,
   onPickDay,
 }: {
-  room: Room;
+  roomId: string;
   week: string[];
   blocks: BusyBlock[];
   lang: "vi" | "en";
   t: ReturnType<typeof useI18n>["t"];
+  showRoom: boolean;
+  labelOf: (id: string) => string;
   onPickDay: (day: string) => void;
 }) {
   return (
@@ -221,7 +239,7 @@ function WeekGrid({
           <div key={hour} className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b border-slate-50 text-xs">
             <div className="p-2 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</div>
             {week.map((day) => {
-              const hits = blocksInHour(blocks, room.id, day, hour);
+              const hits = blocksInHour(blocks, roomId, day, hour);
               const kind = hits.some((h) => h.kind === "class")
                 ? "class"
                 : hits.some((h) => h.kind === "booking")
@@ -231,7 +249,7 @@ function WeekGrid({
                 <button
                   key={`${day}-${hour}`}
                   type="button"
-                  title={hits.map((h) => `${h.start}–${h.end} ${h.title}`).join("\n") || t.roomsCal.free}
+                  title={hits.map((h) => `${showRoom ? `${labelOf(h.roomId)} · ` : ""}${h.start}–${h.end} ${h.title}`).join("\n") || t.roomsCal.free}
                   onClick={() => onPickDay(day)}
                   className={cn(
                     "min-h-10 border-l border-slate-50 px-1 py-1 text-left",
@@ -241,7 +259,10 @@ function WeekGrid({
                   )}
                 >
                   {hits[0] ? (
-                    <span className="line-clamp-2 font-medium text-slate-800">{hits[0].title}</span>
+                    <span className="line-clamp-2 font-medium text-slate-800">
+                      {showRoom ? `${labelOf(hits[0].roomId)} · ` : ""}{hits[0].title}
+                      {hits.length > 1 ? ` +${hits.length - 1}` : ""}
+                    </span>
                   ) : null}
                 </button>
               );
@@ -254,26 +275,32 @@ function WeekGrid({
 }
 
 function DayTimeline({
-  room,
+  roomId,
+  heading,
   day,
   blocks,
   t,
+  showRoom,
+  labelOf,
 }: {
-  room: Room;
+  roomId: string;
+  heading: string;
   day: string;
   blocks: BusyBlock[];
   t: ReturnType<typeof useI18n>["t"];
+  showRoom: boolean;
+  labelOf: (id: string) => string;
 }) {
-  const rows = blocksForRoomDay(blocks, room.id, day);
+  const rows = blocksForRoomDay(blocks, roomId, day);
   return (
     <Card className="p-4">
-      <h2 className="crm-section-title">{room.name} · {day}</h2>
+      <h2 className="crm-section-title">{heading} · {day}</h2>
       <p className="mt-1 text-sm text-slate-500">
         {rows.length === 0 ? t.roomsCal.dayFree : t.roomsCal.dayBusy.replace("{n}", String(rows.length))}
       </p>
       <ul className="mt-4 space-y-2">
         {HOUR_ROWS.map((hour) => {
-          const hits = blocksInHour(blocks, room.id, day, hour);
+          const hits = blocksInHour(blocks, roomId, day, hour);
           return (
             <li key={hour} className="flex gap-3 text-sm">
               <span className="w-14 shrink-0 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</span>
@@ -290,7 +317,7 @@ function DayTimeline({
                       )}
                     >
                       <span className="font-semibold">{h.start}–{h.end}</span>
-                      <span className="mx-2">·</span>
+                      {showRoom ? <span className="mx-2">· {labelOf(h.roomId)}</span> : <span className="mx-2">·</span>}
                       <span>{h.title}</span>
                       <span className="ml-2 text-xs font-semibold uppercase opacity-70">
                         {h.kind === "class" ? t.roomsCal.busyClass : t.roomsCal.busyBooking}
@@ -313,20 +340,28 @@ function DayTimeline({
 }
 
 function MonthHeat({
-  room,
+  roomId,
+  heading,
+  rooms,
   year,
   month,
   blocks,
   lang,
   t,
+  showRoom,
+  labelOf,
   onPickDay,
 }: {
-  room: Room;
+  roomId: string;
+  heading: string;
+  rooms: Room[];
   year: number;
   month: number;
   blocks: BusyBlock[];
   lang: "vi" | "en";
   t: ReturnType<typeof useI18n>["t"];
+  showRoom: boolean;
+  labelOf: (id: string) => string;
   onPickDay: (day: string) => void;
 }) {
   const cells = monthCells(year, month);
@@ -340,15 +375,20 @@ function MonthHeat({
 
   return (
     <Card className="p-4">
-      <h2 className="crm-section-title capitalize">{room.name} · {title}</h2>
+      <h2 className="crm-section-title capitalize">{heading} · {title}</h2>
       <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-500">
         {headers.map((h) => <div key={h} className="py-1">{h}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, i) => {
           if (!day) return <div key={`e-${i}`} className="min-h-16 rounded-[10px] bg-slate-50/50" />;
-          const occ = dayOccupancy(blocks, room.id, day);
+          const occ = roomId === "all"
+            ? (rooms.length === 0 ? 0 : rooms.reduce((sum, r) => sum + dayOccupancy(blocks, r.id, day), 0) / rooms.length)
+            : dayOccupancy(blocks, roomId, day);
           const pct = Math.round(occ * 100);
+          const roomNames = showRoom
+            ? [...new Set(blocks.filter((b) => b.day === day).map((b) => labelOf(b.roomId)))]
+            : [];
           const tone =
             occ === 0
               ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
@@ -368,6 +408,11 @@ function MonthHeat({
               <span className="mt-1 block text-[10px] font-semibold">
                 {occ === 0 ? t.roomsCal.free : `${pct}%`}
               </span>
+              {roomNames[0] ? (
+                <span className="mt-0.5 line-clamp-2 block text-[10px] font-medium">
+                  {roomNames[0]}{roomNames.length > 1 ? ` +${roomNames.length - 1}` : ""}
+                </span>
+              ) : null}
             </button>
           );
         })}

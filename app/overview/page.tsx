@@ -122,6 +122,7 @@ export default function DashboardPage() {
   const holds = useLiveQuery(() => db.holds.toArray());
   const leads = useLiveQuery(() => db.leads.toArray());
   const classStudents = useLiveQuery(() => db.classStudents.toArray());
+  const tasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
@@ -544,6 +545,59 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <section className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="crm-section-title">{t.dash.workToday}</h2>
+          {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">{t.dash.noWork}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {tasks
+                .filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId))
+                .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]))
+                .map((tk) => (
+                  <li key={tk.id}>
+                    <Link href="/tasks" className="flex items-center justify-between gap-2 rounded-[10px] px-2 py-2 hover:bg-slate-50">
+                      <span className="text-sm">{tk.title}</span>
+                      <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold ${tk.priority === "high" ? "bg-rose-50 text-rose-700" : tk.priority === "medium" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                        {tk.priority === "high" ? t.dash.priHigh : tk.priority === "medium" ? t.dash.priMed : t.dash.priLow}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </section>
+        <section className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="crm-section-title">{t.dash.freeSlots}</h2>
+          {(() => {
+            const branchRooms = (rooms ?? []).filter((r) => branchId === "all" || r.branchId === branchId);
+            const byStart = new Map<string, Set<string>>();
+            for (const s of model.todaySessions) {
+              if (!s.roomId) continue;
+              const set = byStart.get(s.start) ?? new Set<string>();
+              set.add(s.roomId);
+              byStart.set(s.start, set);
+            }
+            const lines = [...byStart.entries()]
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([start, used]) => ({ start, names: branchRooms.filter((r) => !used.has(r.id)).map((r) => r.name) }))
+              .filter((line) => line.names.length > 0);
+            if (lines.length === 0) return <p className="mt-3 text-sm text-slate-500">{t.dash.noFree}</p>;
+            return (
+              <ul className="mt-3 space-y-2 text-sm">
+                {lines.map((line) => (
+                  <li key={line.start} className="flex justify-between gap-3">
+                    <span className="font-semibold tabular-nums">{line.start}</span>
+                    <span className="text-right text-slate-600">{line.names.join(", ")}</span>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+        </section>
+      </div>
 
       <div className="grid gap-3 lg:grid-cols-5">
         <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">

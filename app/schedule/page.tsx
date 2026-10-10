@@ -11,7 +11,7 @@ import { sessionStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { conflictLabel, formatMinutes, GRID_END, GRID_START, minutesOf } from "@/lib/schedule";
 import { useI18n } from "@/lib/i18n";
-import { localDayKey, weekdayLabel, weekdayShort } from "@/lib/utils";
+import { localDayKey, roomWithBranch, weekdayLabel, weekdayShort } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { ClassSession, SessionStatus } from "@/types";
@@ -270,7 +270,7 @@ export default function SchedulePage() {
       <div className="mt-3 flex flex-wrap gap-2">
         <select className={inputClassInline} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="all">{t.common.room}</option>
-          {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
         </select>
         <select className={inputClassInline} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
           <option value="all">{t.common.teacher}</option>
@@ -433,7 +433,7 @@ export default function SchedulePage() {
               </label>
               <label className="block text-sm"><span className="text-slate-500">{t.common.room}</span>
                 <select className={`${inputClass} mt-1`} value={draft.roomId} onChange={(e) => setDraft((d) => ({ ...d, roomId: e.target.value }))}>
-                  {rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  {rooms.map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
                 </select>
               </label>
               <Button onClick={() => void createSession()}>{t.schedule.save}</Button>
@@ -471,7 +471,7 @@ export default function SchedulePage() {
                 <label className="block text-sm">
                   <span className="text-slate-500">{t.schedule.changeRoom}</span>
                   <select className={`${inputClass} mt-1`} value={open.roomId} onChange={(e) => user && void updateSession({ sessionId: open.id, actorId: user.id, roomId: e.target.value }).then(setNotice)}>
-                    {rooms.filter((r) => r.branchId === open.branchId).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    {rooms.filter((r) => r.branchId === open.branchId).map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
                   </select>
                 </label>
                 {user?.role === "owner" ? (

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { X } from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { canSeeContact, canSeeMoney } from "@/lib/access";
-import { addStudentNote, moveStudentClass, requestHold } from "@/lib/actions";
+import { canApproveHold, canSeeContact, canSeeMoney } from "@/lib/access";
+import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
@@ -14,10 +14,10 @@ import { attendLabel, holdStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { debtRemaining } from "@/lib/metrics";
 import { studentBadges } from "@/lib/student-badges";
-import { ageYears, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel } from "@/lib/utils";
+import { ageYears, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
-const tabIds = ["overview", "info", "courses", "attendance", "money", "hold", "activity"] as const;
+const tabIds = ["overview", "courses", "attendance", "money", "hold", "notes"] as const;
 type TabId = (typeof tabIds)[number];
 
 export function StudentDrawer({
@@ -31,7 +31,8 @@ export function StudentDrawer({
   variant?: "drawer" | "panel";
 }) {
   const { lang, t } = useI18n();
-  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const seeContact = canSeeContact(role);
   const seeMoney = canSeeMoney(role);
@@ -58,6 +59,8 @@ export function StudentDrawer({
   const [holdReason, setHoldReason] = useState("");
   const [holdMsg, setHoldMsg] = useState("");
   const [holdBusy, setHoldBusy] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     if (variant === "panel") return;
@@ -73,7 +76,15 @@ export function StudentDrawer({
   }, [studentId]);
 
   const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
-  const show = (id: TabId) => tab === "overview" || tab === id;
+  const show = (id: TabId) => tab === id;
+  const tabLabel: Record<TabId, string> = {
+    overview: t.drawer.tabOverview,
+    courses: t.drawer.tabCourses,
+    attendance: t.drawer.tabAttendance,
+    money: t.drawer.tabPayments,
+    hold: t.drawer.tabHolds,
+    notes: t.drawer.tabNotes,
+  };
   const marks = useMemo(() => {
     const rows = attendClass === "all" ? attendance : attendance.filter((a) => a.classId === attendClass);
     return [...rows].sort((a, b) => b.day.localeCompare(a.day)).slice(0, 20);
@@ -124,11 +135,17 @@ export function StudentDrawer({
   const course = courses.find((c) => c.id === student.courseId);
   const pack = packages.find((p) => p.id === student.subscriptionId);
   const branch = branches.find((b) => b.id === student.branchId);
+  const teacher = users.find((u) => u.id === course?.teacherId);
   const age = ageYears(student.birthDay);
   const kid = isMinor(student.birthDay);
   const badges = studentBadges(student, holds, seeMoney, lang);
   const currentHold = holds.find((h) => h.status === "approved" || h.status === "pending");
   const canRequestHold = !currentHold && student.status !== "paused";
+  const manager = canApproveHold(role);
+  const today = localDayKey();
+  const nextSession = classes
+    .filter((c) => c.courseId === student.courseId && c.day >= today && c.status !== "cancelled")
+    .sort((a, b) => a.day.localeCompare(b.day) || a.start.localeCompare(b.start))[0];
   const rosterInClass = student.courseId
     ? allStudents.filter((s) => s.courseId === student.courseId && s.status !== "paused").length
     : 0;
@@ -211,7 +228,7 @@ export function StudentDrawer({
               </div>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {seeMoney ? (
               <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
                 {t.drawer.collect}
@@ -220,9 +237,33 @@ export function StudentDrawer({
             <Link href="/mid-course-enroll" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
               {t.drawer.enrollMore}
             </Link>
-            <Button type="button" variant="ghost" onClick={onClose}>{t.drawer.close}</Button>
+            <div className="relative">
+              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] hover:bg-slate-50" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+                <MoreHorizontal size={16} />
+              </button>
+              {menu ? (
+                <div className="absolute right-0 z-20 mt-1 w-52 rounded-[10px] border border-[var(--border)] bg-white py-1 text-sm shadow-md">
+                  {seeContact && kid && student.parentPhone ? (
+                    <a className="block px-3 py-2 hover:bg-slate-50" href={zaloHref(student.parentPhone) || "#"} target="_blank" rel="noreferrer">{t.drawer.messageParent}</a>
+                  ) : null}
+                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => { setTab("hold"); setMenu(false); }}>{t.drawer.requestHold}</button>
+                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => { void setStudentsFlag([student.id], !student.flagged); setMenu(false); }}>{t.drawer.toggleFlag}</button>
+                  <Link className="block px-3 py-2 hover:bg-slate-50" href={`/students/${student.id}`}>{t.drawer.fullProfile}</Link>
+                </div>
+              ) : null}
+            </div>
           </div>
-          <div className="mt-4 flex gap-1 overflow-x-auto" role="tablist">
+          <div
+            className="mt-4 flex gap-1 overflow-x-auto"
+            role="tablist"
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              e.preventDefault();
+              const i = visibleTabs.indexOf(tab);
+              const next = e.key === "ArrowRight" ? visibleTabs[i + 1] : visibleTabs[i - 1];
+              if (next) setTab(next);
+            }}
+          >
             {visibleTabs.map((id) => (
               <button
                 key={id}
@@ -230,53 +271,98 @@ export function StudentDrawer({
                 role="tab"
                 aria-selected={tab === id}
                 onClick={() => setTab(id)}
-                className={tab === id ? "shrink-0 border-b-2 border-[var(--brand-500)] px-2.5 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 border-b-2 border-transparent px-2.5 py-2 text-sm text-slate-500"}
+                className={tab === id ? "shrink-0 whitespace-nowrap border-b-2 border-[var(--brand-500)] px-3 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm text-slate-500"}
               >
-                {t.drawer[id]}
+                {tabLabel[id]}
               </button>
             ))}
           </div>
         </header>
 
-        <div className={`min-h-0 flex-1 overflow-y-auto px-5 py-4${tab === "overview" ? " space-y-8" : ""}`}>
-          {show("info") ? (
-            <section className="space-y-4 text-sm">
-              {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.info}</h2> : null}
-              <dl className="grid grid-cols-2 gap-3">
-                <div><dt className="text-slate-500">{t.drawer.fullName}</dt><dd className="font-semibold">{student.name}</dd></div>
-                <div>
-                  <dt className="text-slate-500">{t.students.phone}</dt>
-                  <dd className="font-semibold">{seeContact ? student.phone || "—" : "—"}</dd>
-                </div>
-                <div><dt className="text-slate-500">{t.drawer.email}</dt><dd className="font-semibold">{seeContact ? student.email || "—" : "—"}</dd></div>
-                <div><dt className="text-slate-500">{t.drawer.birthDay}</dt><dd className="font-semibold">{student.birthDay || "—"}{age !== null ? ` · ${age}` : ""}</dd></div>
-                <div><dt className="text-slate-500">{t.drawer.branch}</dt><dd className="font-semibold">{branch?.name ?? "—"}</dd></div>
-                <div><dt className="text-slate-500">{t.drawer.joined}</dt><dd className="font-semibold">{student.joinedDay}</dd></div>
-              </dl>
-              {(kid || student.parentName) ? (
-                <section className="rounded-[12px] bg-slate-50 p-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.parent}</h3>
-                  {kid ? <p className="mt-0.5 text-xs text-slate-400">{t.drawer.parentRequired}</p> : null}
-                  <p className="mt-1 font-semibold">{student.parentName || "—"}</p>
-                  <p className="text-slate-500">{seeContact ? student.parentPhone || "—" : "—"}</p>
-                </section>
-              ) : null}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {tab === "overview" ? (
+            <div className="space-y-4 text-sm">
+              <section className="rounded-[10px] border border-[var(--border)] p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.health}</h3>
+                <dl className="mt-2 grid grid-cols-2 gap-3">
+                  <div>
+                    <dt className="text-slate-500">{t.students.remain}</dt>
+                    <dd className={student.remainingSessions <= 3 ? "text-lg font-bold text-rose-600" : "text-lg font-bold tabular-nums"}>{fill(t.drawer.sessionsLeft, { n: student.remainingSessions })}</dd>
+                    <p className="text-xs text-slate-400">{pack?.name ?? "—"}</p>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">{t.drawer.attendRate}</dt>
+                    <dd className="text-lg font-bold tabular-nums">{rate}%</dd>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: `${rate}%` }} />
+                    </div>
+                  </div>
+                  {seeMoney ? (
+                    <div>
+                      <dt className="text-slate-500">{t.drawer.outstanding}</dt>
+                      <dd className="text-lg font-bold tabular-nums">{formatVnd(outstanding || student.debt)}</dd>
+                    </div>
+                  ) : null}
+                  <div>
+                    <dt className="text-slate-500">{t.drawer.nextSession}</dt>
+                    <dd className="font-semibold">{nextSession ? `${nextSession.day} · ${nextSession.start}` : t.drawer.noNext}</dd>
+                    {nextSession ? <p className="text-xs text-slate-400">{course?.name}</p> : null}
+                  </div>
+                </dl>
+                {student.remainingSessions <= 3 ? (
+                  <Link href="/mid-course-enroll" className="mt-3 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">{t.drawer.renew}</Link>
+                ) : null}
+              </section>
+              <section className="rounded-[10px] border border-[var(--border)] p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.enrollment}</h3>
+                <p className="mt-2 font-semibold">{course?.name ?? t.drawer.noCourse}</p>
+                <p className="text-slate-500">{levelLabel(student.level)} · {teacher?.name ?? "—"} · {branch?.name ?? "—"}</p>
+                <p className="mt-1 text-slate-500">{t.drawer.package} {pack?.name ?? "—"}</p>
+              </section>
+              <section className="rounded-[10px] bg-slate-50 p-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.contact}</h3>
+                <p className="mt-1 font-semibold">{seeContact ? student.phone || "—" : t.drawer.phoneHidden}</p>
+                <p className="text-slate-500">{seeContact ? student.email || "—" : "—"}</p>
+                {(kid || student.parentName) ? (
+                  <div className="mt-2 border-t border-slate-200 pt-2">
+                    <p className="text-xs text-slate-400">{t.drawer.parent}{kid ? ` · ${t.drawer.parentRequired}` : ""}</p>
+                    <p className="font-semibold">{student.parentName || "—"}</p>
+                    <p className="text-slate-500">{seeContact ? student.parentPhone || "—" : "—"}</p>
+                  </div>
+                ) : null}
+              </section>
               <section>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.notes}</h3>
-                <ul className="mt-2 space-y-2">
-                  {student.notes.length === 0 ? <li className="text-slate-500">{t.drawer.notesEmpty}</li> : null}
-                  {student.notes.map((n, i) => (
-                    <li key={i} className="rounded-[12px] border border-[#E2E8F0] px-3 py-2">
-                      <p>{n.text}</p>
-                      <p className="mt-1 text-xs text-slate-400">{relativeDayLabel(n.day, lang)} · {n.day}</p>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.recent}</h3>
+                <ul className="mt-2 space-y-3">
+                  {activity.slice(0, 5).length === 0 ? <li className="text-slate-500">{t.drawer.noActivity}</li> : null}
+                  {activity.slice(0, 5).map((a) => (
+                    <li key={a.id} className="relative border-l border-slate-200 pl-3">
+                      <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
+                      <p>{a.text}</p>
+                      <p className="text-xs text-slate-400">{relativeDayLabel(a.day, lang)}</p>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-3 flex gap-2">
-                  <input className={inputClass} placeholder={t.drawer.notePlaceholder} value={note} onChange={(e) => setNote(e.target.value)} />
-                  <Button type="button" onClick={() => void saveNote()} disabled={!note.trim()}>{t.common.save}</Button>
-                </div>
               </section>
+            </div>
+          ) : null}
+
+          {tab === "notes" ? (
+            <section className="space-y-3 text-sm">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.notes}</h3>
+              <ul className="space-y-2">
+                {student.notes.length === 0 ? <li className="text-slate-500">{t.drawer.notesEmpty}</li> : null}
+                {student.notes.map((n, i) => (
+                  <li key={i} className="rounded-[10px] border border-[var(--border)] px-3 py-2">
+                    <p>{n.text}</p>
+                    <p className="mt-1 text-xs text-slate-400">{relativeDayLabel(n.day, lang)} · {n.day}</p>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2">
+                <input className={inputClass} placeholder={t.drawer.notePlaceholder} value={note} onChange={(e) => setNote(e.target.value)} />
+                <Button type="button" onClick={() => void saveNote()} disabled={!note.trim()}>{t.common.save}</Button>
+              </div>
             </section>
           ) : null}
 
@@ -404,6 +490,7 @@ export function StudentDrawer({
 
           {show("hold") ? (
             <section className="space-y-3 text-sm">
+              <p className="rounded-[10px] bg-slate-50 px-3 py-2 text-xs text-slate-600">{t.hold.lead}</p>
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.hold}</h2> : null}
               {currentHold ? (
                 <article className="rounded-[12px] border border-[#E2E8F0] p-3">
@@ -416,6 +503,15 @@ export function StudentDrawer({
                       {t.drawer.approver}: {users.find((u) => u.id === currentHold.approverId)?.name ?? currentHold.approverId}
                       {currentHold.decidedDay ? ` · ${currentHold.decidedDay}` : ""}
                     </p>
+                  ) : null}
+                  {manager && currentHold.status === "pending" && user ? (
+                    <div className="mt-3 space-y-2">
+                      <input className={inputClass} placeholder={t.hold.rejectReason} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+                      <div className="flex gap-2">
+                        <Button type="button" onClick={() => void decideHold(currentHold.id, "approved", user.role, user.id).then((err) => setHoldMsg(err || t.hold.approve))}>{t.hold.approve}</Button>
+                        <Button type="button" variant="outline" onClick={() => void decideHold(currentHold.id, "rejected", user.role, user.id, rejectReason).then((err) => setHoldMsg(err || t.hold.reject))}>{t.hold.reject}</Button>
+                      </div>
+                    </div>
                   ) : null}
                 </article>
               ) : (
@@ -446,22 +542,6 @@ export function StudentDrawer({
                     {h.approverId ? (
                       <p className="text-xs text-slate-400">{t.drawer.approver}: {users.find((u) => u.id === h.approverId)?.name ?? h.approverId}</p>
                     ) : null}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {show("activity") ? (
-            <section>
-              {tab === "overview" ? <h2 className="crm-section-title mb-3">{t.drawer.activity}</h2> : null}
-              <ul className="space-y-3 text-sm">
-                {activity.length === 0 ? <li className="text-slate-500">{t.drawer.noActivity}</li> : null}
-                {activity.map((a) => (
-                  <li key={a.id} className="relative border-l border-slate-200 pl-3">
-                    <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
-                    <p>{a.text}</p>
-                    <p className="text-xs text-slate-400">{relativeDayLabel(a.day, lang)} · {a.day}</p>
                   </li>
                 ))}
               </ul>

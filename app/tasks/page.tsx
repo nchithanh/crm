@@ -5,6 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
 import { canManageTasks } from "@/lib/access";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
+import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { taskPriorities, taskPriorityLabel, taskStatusLabel, taskStatuses } from "@/lib/labels";
@@ -14,6 +15,19 @@ import { useStudioBranch } from "@/stores/branch-store";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type Mode = "list" | "board";
+
+function addDays(base: string, delta: number) {
+  const d = new Date(`${base}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  return localDayKey(d);
+}
+
+function dueTone(status: TaskStatus, dueDay: string, today: string, soonDay: string) {
+  if (status === "done") return "text-slate-400";
+  if (dueDay < today) return "font-semibold text-rose-600";
+  if (dueDay <= soonDay) return "font-semibold text-amber-600";
+  return "text-slate-600";
+}
 
 function priorityTone(priority: TaskPriority): "danger" | "warn" | "neutral" {
   if (priority === "high") return "danger";
@@ -32,6 +46,7 @@ export default function TasksPage() {
   const { branchId: studioBranch } = useStudioBranch();
   const staff = users.filter((u) => u.role === "owner" || u.role === "reception" || u.role === "teacher");
   const today = localDayKey();
+  const soonDay = addDays(today, 2);
   const statuses = taskStatuses(lang);
   const priorities = taskPriorities(lang);
 
@@ -53,8 +68,6 @@ export default function TasksPage() {
   const visible = useMemo(() => {
     return tasks
       .filter((task) => {
-        if (!canEdit && me?.id && task.assigneeId && task.assigneeId !== me.id) return false;
-        if (!canEdit && me?.id && !task.assigneeId) return false;
         if (assigneeFilter === "mine" && me?.id && task.assigneeId !== me.id) return false;
         if (assigneeFilter !== "all" && assigneeFilter !== "mine" && task.assigneeId !== assigneeFilter) return false;
         if (statusFilter !== "all" && task.status !== statusFilter) return false;
@@ -69,7 +82,26 @@ export default function TasksPage() {
         if (a.dueDay !== b.dueDay) return a.dueDay.localeCompare(b.dueDay);
         return a.title.localeCompare(b.title);
       });
-  }, [tasks, canEdit, me?.id, assigneeFilter, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
+  }, [tasks, me?.id, assigneeFilter, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
+
+  const parentProgress = useMemo(() => {
+    const source = tasks.filter((task) => {
+      if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
+      if (assigneeFilter === "mine" && me?.id && task.assigneeId !== me.id) return false;
+      if (assigneeFilter !== "all" && assigneeFilter !== "mine" && task.assigneeId !== assigneeFilter) return false;
+      return Boolean(task.parentId);
+    });
+    return parents
+      .map((parent) => {
+        const rows = source.filter((task) => task.parentId === parent.id);
+        const done = rows.filter((task) => task.status === "done").length;
+        const openRows = rows.filter((task) => task.status !== "done");
+        const pool = openRows.length ? openRows : rows;
+        const earliest = pool.map((task) => task.dueDay).sort()[0] ?? "";
+        return { id: parent.id, name: parent.name, total: rows.length, done, earliest };
+      })
+      .filter((group) => (parentFilter === "all" ? group.total > 0 : group.id === parentFilter));
+  }, [tasks, parents, studioBranch, assigneeFilter, me?.id, parentFilter]);
 
   const open = tasks.find((task) => task.id === openId) ?? null;
 
@@ -118,7 +150,7 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-4 flex items-end gap-2 overflow-x-auto pb-1">
         <select className={`${inputClass} max-w-[11rem] shrink-0`} aria-label={t.task.parent} value={parentFilter} onChange={(e) => setParentFilter(e.target.value)}>
           <option value="all">{t.task.allParents}</option>
           <option value="none">{t.task.noParent}</option>
@@ -126,13 +158,16 @@ export default function TasksPage() {
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
-        <select className={`${inputClass} max-w-[10rem] shrink-0`} aria-label={t.task.assignee} value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}>
-          <option value="all">{t.task.allStaff}</option>
-          <option value="mine">{t.task.mine}</option>
-          {staff.map((u) => (
-            <option key={u.id} value={u.id}>{u.name}</option>
-          ))}
-        </select>
+        <label className="block min-w-[14rem] max-w-[18rem] shrink-0">
+          <span className="mb-1 block text-xs font-semibold text-slate-500">{t.task.assignee}</span>
+          <select className={`${inputClass} w-full`} aria-label={t.task.assignee} value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}>
+            <option value="all">{t.task.allStaff}</option>
+            <option value="mine">{t.task.mine}</option>
+            {staff.map((u) => (
+              <option key={u.id} value={u.id}>{u.name} · {t.role[u.role]}</option>
+            ))}
+          </select>
+        </label>
         <select className={`${inputClass} max-w-[9rem] shrink-0`} aria-label={t.task.status} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "all")}>
           <option value="all">{t.task.status}</option>
           {statuses.map((s) => (
@@ -157,6 +192,34 @@ export default function TasksPage() {
         </button>
       </div>
 
+      {parentFilter !== "none" && parentProgress.length > 0 ? (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {parentProgress.map((group) => {
+            const pct = group.total === 0 ? 0 : Math.round((group.done / group.total) * 100);
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => setParentFilter(group.id)}
+                className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-800">{group.name}</p>
+                  <p className="text-xs tabular-nums text-slate-500">{fill(t.task.progressCount, { done: group.done, total: group.total })}</p>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {t.task.progress} · {pct}%
+                  {group.earliest ? ` · ${fill(t.task.earliestDue, { day: group.earliest })}` : ""}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       {visible.length === 0 ? (
         <p className="mt-6 text-sm text-slate-500">{t.task.empty}</p>
       ) : mode === "list" ? (
@@ -172,6 +235,7 @@ export default function TasksPage() {
             <tbody>
               {visible.map((task) => {
                 const overdue = task.status !== "done" && task.dueDay < today;
+                const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                 const group = parentName(task.parentId);
                 return (
                   <tr key={task.id} className="border-t border-slate-100 hover:bg-slate-50">
@@ -195,13 +259,25 @@ export default function TasksPage() {
                     <td className="px-3 py-3">
                       {group ? <Badge tone="neutral">{group}</Badge> : <span className="text-slate-400">—</span>}
                     </td>
-                    <td className="px-3 py-3 text-slate-600">{staffName(task.assigneeId)}</td>
+                    <td className="px-3 py-3">
+                      <span className="inline-flex items-center gap-2 text-slate-600">
+                        {(() => {
+                          const person = users.find((u) => u.id === task.assigneeId);
+                          return person ? (
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: person.avatarColor }}>{initials(person.name)}</span>
+                          ) : (
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500">—</span>
+                          );
+                        })()}
+                        {staffName(task.assigneeId)}
+                      </span>
+                    </td>
                     <td className="px-3 py-3">
                       <Badge tone={priorityTone(task.priority)}>{taskPriorityLabel(task.priority, lang)}</Badge>
                     </td>
-                    <td className={cn("px-3 py-3 tabular-nums", overdue ? "font-semibold text-rose-600" : "text-slate-600")}>
-                      {task.dueDay}
-                      {overdue ? ` · ${t.pages.overdue}` : ""}
+                    <td className={cn("px-3 py-3 tabular-nums", dueTone(task.status, task.dueDay, today, soonDay))}>
+                      {t.task.due}: {task.dueDay}
+                      {overdue ? ` · ${t.pages.overdue}` : soon ? ` · ${t.task.dueSoon}` : ""}
                     </td>
                     <td className="px-3 py-3 text-slate-500">{branchName(task.branchId)}</td>
                   </tr>
@@ -232,6 +308,7 @@ export default function TasksPage() {
                 <ul className="space-y-2">
                   {rows.map((task) => {
                     const overdue = task.status !== "done" && task.dueDay < today;
+                    const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                     const assignee = users.find((u) => u.id === task.assigneeId);
                     const movable = canEdit || task.assigneeId === me?.id;
                     const group = parentName(task.parentId);
@@ -253,8 +330,8 @@ export default function TasksPage() {
                           <p className="text-sm font-semibold text-slate-900">{task.title}</p>
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             <Badge tone={priorityTone(task.priority)}>{taskPriorityLabel(task.priority, lang)}</Badge>
-                            <span className={cn("text-xs tabular-nums", overdue ? "font-semibold text-rose-600" : "text-slate-400")}>
-                              {task.dueDay}
+                            <span className={cn("text-xs tabular-nums", dueTone(task.status, task.dueDay, today, soonDay))}>
+                              {t.task.due}: {task.dueDay}{overdue ? ` · ${t.pages.overdue}` : soon ? ` · ${t.task.dueSoon}` : ""}
                             </span>
                           </div>
                           <div className="mt-2 flex items-center gap-2">

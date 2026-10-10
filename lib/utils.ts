@@ -52,6 +52,10 @@ export function isMinor(birthDay: string) {
   return age !== null && age < 18;
 }
 
+export function roomWithBranch(roomName: string, branchName?: string) {
+  return branchName ? `[${branchName}] ${roomName}` : roomName;
+}
+
 export function zaloHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return digits ? `https://zalo.me/${digits}` : "";

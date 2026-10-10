@@ -51,8 +51,8 @@ export function allBusyBlocks(classes: StudioClass[], bookings: RoomBooking[]) {
 
 export function blocksForRoomDay(blocks: BusyBlock[], roomId: string, day: string) {
   return blocks
-    .filter((b) => b.roomId === roomId && b.day === day)
-    .sort((a, b) => minutesOf(a.start) - minutesOf(b.start));
+    .filter((b) => (roomId === "all" || b.roomId === roomId) && b.day === day)
+    .sort((a, b) => minutesOf(a.start) - minutesOf(b.start) || a.roomId.localeCompare(b.roomId));
 }
 
 /** True if any busy block overlaps [hour, hour+1). */

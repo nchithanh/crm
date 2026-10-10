@@ -8,7 +8,7 @@ import { Badge, inputClass } from "@/components/ui";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
-import { localDayKey } from "@/lib/utils";
+import { localDayKey, roomWithBranch } from "@/lib/utils";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { ClassStatus } from "@/types";
 
@@ -18,6 +18,7 @@ export default function ClassesPage() {
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
+  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const classStudents = useLiveQuery(() => db.classStudents.toArray(), []) ?? [];
   const { branchId } = useStudioBranch();
   const [q, setQ] = useState("");
@@ -75,7 +76,7 @@ export default function ClassesPage() {
         <select className={inputClass} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="all">{t.nav.rooms}</option>
           {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
+            <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>
           ))}
         </select>
         <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value as ClassStatus | "all")}>

@@ -10,7 +10,7 @@ import { cancelSession, setAttendance, updateSession } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { conflictLabel } from "@/lib/schedule";
-import { initials } from "@/lib/utils";
+import { initials, roomWithBranch } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { AttendStatus } from "@/types";
 
@@ -22,6 +22,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
   const course = useLiveQuery(() => (klass ? db.courses.get(klass.courseId) : undefined), [klass?.courseId]);
   const teachers = useLiveQuery(() => db.users.where("role").equals("teacher").toArray(), []) ?? [];
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
+  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const allClasses = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const roster = useLiveQuery(() => db.classStudents.where("classId").equals(classId).toArray(), [classId]) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
@@ -151,7 +152,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
               <Field label={t.common.room}>
                 <select className={inputClass} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
                   <option value="">—</option>
-                  {branchRooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  {branchRooms.map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
                 </select>
               </Field>
               <Button type="button" variant="outline" disabled={busy || Boolean(conflict)} onClick={() => void saveMeta()}>

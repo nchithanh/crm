@@ -1,8 +1,14 @@
 # Changelog
 
+## 2026-10-10
+
+- Phòng: select lịch có **Tất cả**; option ghi `[chi nhánh] tên phòng` (lịch phòng, lịch, buổi học).
+- Tác vụ: giáo viên xem mọi việc (chỉ sửa việc của mình); lọc **Người phụ trách** (mọi người / của tôi / từng nhân sự kèm vai trò); avatar trên bảng; tiến độ nhóm (Done/tổng, hạn sớm nhất); hạn đỏ nếu quá hạn, vàng nếu trong 2 ngày.
+- Học viên: KPI bấm lọc (Tổng / Mới / Đang học / Cần chăm sóc / Còn nợ), preset buổi còn, thêm lọc, bulk nhắn + giao follow-up, bảng GV / % điểm danh / số dư / menu ⋮, panel tab không cắt chữ (Tổng quan · Khóa · Điểm danh · Thanh toán · Bảo lưu · Ghi chú). Giáo viên không thấy SĐT và học phí.
+- Tổng quan: việc đến hạn hôm nay theo ưu tiên + phòng trống theo khung giờ.
+
 ## 2026-10-09
 
-- E2–E4: Students KPI strip + list/right panel (`StudentDrawer` `variant=panel|drawer`) + pagination; Overview ops strip (buổi hôm nay / học phí chờ / thấp điểm danh / GV / phòng trống); slug canonical `/overview` `/revenue` `/collections` `/dolphin-ai` (+ redirect legacy); boot splash logo brand thay spinner.
 - E1 Shell Edu craft: Ctrl+K command palette · breadcrumb · Ask Dolphin · Light/Dark · gray pill nav + orange accent bar · wordmark **Dolphin Edu CRM** · header densify (search / theme / VI·EN / bell / avatar). CTA vẫn cam POS.
 - Phase C+D UX: Overview KPI/đường dẫn `/attendance` `/receivables` + sĩ số buổi qua `classStudents`; điểm danh roster theo buổi + bulk/undo/summary (giữ); Teacher backup tự mở khi tạm nghỉ; Holds i18n + rule check; Enroll rule banner + chỗ trống; Finance KPI clickable; Follow-up filter i18n + cold badge.
 - Phase A+B UX: terminology Khóa/Buổi; nav active soft orange; Students cột Course (`courses.find`); slug EN mới `/mid-course-enroll` `/follow-up` `/collect-fees` `/receivables` `/qr-attendance` `/room-bookings` (+ redirect legacy); Course create drawer + preview `sessionDates`; Classes filter đầy đủ + session drawer (roster/điểm danh/đổi GV·phòng/hủy/conflict).

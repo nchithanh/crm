@@ -9,7 +9,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/` | Redirect → `/overview` |
 | `/overview` | Tổng quan — KPI + ops strip + chart |
 | `/schedule` | Lịch = **Classes** (buổi). Kéo thả / điểm danh / đổi GV·phòng / hủy buổi |
-| `/students` · `/students/[id]` | Học viên · list KPI + right panel (desktop) / drawer (mobile) |
+| `/students` · `/students/[id]` | Học viên · KPI lọc được + bảng vận hành + panel phải (tab Tổng quan / Khóa / Điểm danh / Thanh toán / Bảo lưu / Ghi chú) |
 | `/courses` · `/courses/[id]` | Khóa · tạo qua drawer + preview sinh buổi; hub Overview + Classes / Students / Teachers / Subscriptions |
 | `/classes` · `/classes/[id]` | Buổi học · filter (khóa/GV/phòng/status/ngày) + session drawer (roster / điểm danh / đổi GV·phòng / hủy / conflict) |
 | `/teachers` · `/teachers/[id]` | Giáo viên · courses + upcoming classes |

@@ -72,6 +72,7 @@ export default function RoomsPage() {
           rooms={rooms}
           classes={classes}
           bookings={bookings}
+          branches={branches}
           branchId={branchId}
           initialRoomId={focusRoomId}
         />
