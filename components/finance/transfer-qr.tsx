@@ -93,7 +93,7 @@ export function TransferQr({
   };
 
   return (
-    <div className="mt-3 flex flex-col items-center rounded-[14px] border border-slate-200 p-4">
+    <div className="mt-3 flex flex-col items-center rounded-[5px] border border-slate-200 p-4">
       {dataUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -101,10 +101,10 @@ export function TransferQr({
           alt={`${t.money.transferTitle} ${formatVnd(amount)}`}
           width={220}
           height={220}
-          className="rounded-[14px]"
+          className="rounded-[5px]"
         />
       ) : (
-        <div className="h-[220px] w-[220px] animate-pulse rounded-[14px] bg-slate-100" />
+        <div className="h-[220px] w-[220px] animate-pulse rounded-[5px] bg-slate-100" />
       )}
       <p className="mt-3 text-sm text-slate-500">{t.money.transferAmount}</p>
       <p className="text-xl font-bold tabular-nums">{formatVnd(amount)}</p>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { ArrowLeftRight, Banknote, Wallet } from "lucide-react";
 import { Card, ctaOutline, ctaPrimary } from "@/components/ui";
 import {
   AgingCard,
@@ -84,13 +85,11 @@ export default function FinanceOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} href="/collections" />
-        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} valueClass="text-emerald-700" href="/collections" />
-        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} valueClass="text-sky-700" href="/collections" />
-        <KpiCard label={t.finance.openDebt} value={formatVnd(view.aging.total)} href="/receivables" />
-        <KpiCard label={t.finance.overdueDebt} value={formatVnd(view.overdue)} valueClass="text-rose-600" href="/receivables" />
-        <KpiCard label={t.finance.dueSoon} value={formatVnd(view.soon)} valueClass="text-amber-700" href="/receivables" />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <KpiCard label={t.finance.collected} value={formatVnd(view.snap.collected)} delta={view.snap.delta} spark={view.spark} vsPrev={t.finance.vsPrev} href="/collections" icon={Wallet} tone="bg-violet-100 text-violet-600" />
+        <KpiCard label={t.finance.cash} value={formatVnd(view.snap.cash)} href="/collections" icon={Banknote} tone="bg-amber-100 text-amber-700" />
+        <KpiCard label={t.finance.transfer} value={formatVnd(view.snap.transfer)} href="/collections" icon={ArrowLeftRight} tone="bg-sky-100 text-sky-600" />
+        <KpiCard label={t.finance.openDebt} value={formatVnd(view.aging.total)} href="/receivables" icon={Wallet} tone="bg-rose-100 text-rose-600" />
       </div>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -102,7 +101,7 @@ export default function FinanceOverviewPage() {
                 <button
                   key={n}
                   type="button"
-                  className={`h-9 rounded-full px-3 text-sm font-semibold ${days === n ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600"}`}
+                  className={`h-9 rounded-[5px] px-3 text-sm font-semibold ${days === n ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600"}`}
                   onClick={() => setDays(n)}
                 >
                   {n === 7 ? t.finance.days7 : n === 30 ? t.finance.days30 : t.finance.days90}
@@ -114,7 +113,7 @@ export default function FinanceOverviewPage() {
             <div
               className="h-28 w-28 shrink-0 rounded-full"
               style={{
-                background: `conic-gradient(#111111 0 ${(view.snap.collected ? view.snap.cash / Math.max(view.snap.collected, 1) : 0) * 360}deg, #6EE7B7 0 360deg)`,
+                background: `conic-gradient(var(--brand-500) 0 ${(view.snap.collected ? view.snap.cash / Math.max(view.snap.collected, 1) : 0) * 360}deg, var(--brand-300) 0 360deg)`,
               }}
               aria-hidden
             />
@@ -148,7 +147,7 @@ export default function FinanceOverviewPage() {
               const st = debtUiStatus(row);
               const student = students.find((s) => s.id === row.studentId);
               return (
-                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-100 px-3 py-2 text-sm">
+                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-slate-100 px-3 py-2 text-sm">
                   <span>
                     <span className="block font-semibold">{student?.name ?? row.studentId}</span>
                     <span className={st === "overdue" ? "text-rose-600" : "text-amber-700"}>

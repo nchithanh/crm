@@ -42,7 +42,7 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8">
-      <div className="rounded-[18px] border border-[var(--border)] bg-white px-5 py-8 shadow-[var(--shadow-card)] sm:px-8">
+      <div className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-5 py-8 sm:px-8">
         <div className="flex flex-col items-center text-center">
           <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-50)]">
             <BrandMark className="h-10 w-10" />
@@ -100,7 +100,7 @@ export default function LoginPage() {
                     setPin(a.pin);
                     setError("");
                   }}
-                  className="flex h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[var(--border)] bg-white px-3.5 text-left transition hover:border-[var(--brand-500)] hover:bg-[var(--brand-50)]"
+                  className="flex h-11 w-full items-center justify-between gap-3 rounded-[5px] border border-[var(--border)] bg-white px-3.5 text-left transition hover:border-[var(--brand-500)] hover:bg-[var(--brand-50)]"
                 >
                   <span className="truncate text-sm font-medium text-slate-800">
                     {roleLabel(a.role, lang)}
@@ -138,7 +138,7 @@ export default function LoginPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="download-guide-title"
-            className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-[12px] bg-white shadow-xl sm:mx-4 sm:rounded-[18px]"
+            className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-[5px] bg-[var(--card)] sm:mx-4 sm:rounded-[5px]"
           >
             <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
               <h2 id="download-guide-title" className="text-sm font-bold text-slate-900">
@@ -146,7 +146,7 @@ export default function LoginPage() {
               </h2>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] text-slate-500 hover:bg-slate-100"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] text-slate-500 hover:bg-slate-100"
                 aria-label={t.common.close}
                 onClick={() => setGuideOpen(false)}
               >
@@ -157,7 +157,7 @@ export default function LoginPage() {
               <img
                 src={guideSrc}
                 alt={t.login.downloadGuideAlt}
-                className="h-auto w-full rounded-[14px]"
+                className="h-auto w-full rounded-[5px]"
               />
             </div>
           </div>

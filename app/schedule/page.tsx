@@ -266,20 +266,20 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <select className={inputClassInline} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <select className={cn(inputClassInline, "w-full min-w-0 sm:w-auto sm:min-w-[9rem]")} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="all">{t.common.room}</option>
           {rooms.filter((r) => branchId === "all" || r.branchId === branchId).map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
         </select>
-        <select className={inputClassInline} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
+        <select className={cn(inputClassInline, "w-full min-w-0 sm:w-auto sm:min-w-[9rem]")} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
           <option value="all">{t.common.teacher}</option>
-          {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          {teachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
         </select>
-        <select className={inputClassInline} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+        <select className={cn(inputClassInline, "w-full min-w-0 sm:w-auto sm:min-w-[9rem]")} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
           <option value="all">{t.common.course}</option>
           {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select className={inputClassInline} value={status} onChange={(e) => setStatus(e.target.value as SessionStatus | "all")}>
+        <select className={cn(inputClassInline, "w-full min-w-0 sm:w-auto sm:min-w-[9rem]")} value={status} onChange={(e) => setStatus(e.target.value as SessionStatus | "all")}>
           <option value="all">{t.common.status}</option>
           <option value="upcoming">{t.status.upcoming}</option>
           <option value="ongoing">{t.status.ongoing}</option>
@@ -289,19 +289,27 @@ export default function SchedulePage() {
       </div>
 
       {mode === "week" ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button variant="ghost" onClick={() => setWeekOffset((n) => n - 1)}>{t.schedule.prevWeek}</Button>
-          <Button variant="ghost" onClick={() => setWeekOffset((n) => n + 1)}>{t.schedule.nextWeek}</Button>
-          {(["room", "teacher", "branch"] as const).map((key) => (
-            <Button key={key} variant={group === key ? "primary" : "outline"} onClick={() => setGroup((g) => (g === key ? "day" : key))}>
-              {key === "room" ? t.schedule.byRoom : key === "teacher" ? t.schedule.byTeacher : t.schedule.byBranch}
-            </Button>
-          ))}
-          {group !== "day" ? weekDays.map((day) => (
-            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[14px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[14px] border border-[var(--border)] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
-              {weekdayShort(new Date(`${day}T12:00:00`).getDay(), lang)} {day.slice(8)}
-            </button>
-          )) : null}
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <Button className="w-full sm:w-auto" variant="ghost" onClick={() => setWeekOffset((n) => n - 1)}>{t.schedule.prevWeek}</Button>
+            <Button className="w-full sm:w-auto" variant="ghost" onClick={() => setWeekOffset((n) => n + 1)}>{t.schedule.nextWeek}</Button>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:flex">
+            {(["room", "teacher", "branch"] as const).map((key) => (
+              <Button key={key} className="w-full whitespace-nowrap px-2 text-xs sm:w-auto sm:px-5 sm:text-sm" variant={group === key ? "primary" : "outline"} onClick={() => setGroup((g) => (g === key ? "day" : key))}>
+                {key === "room" ? t.schedule.byRoom : key === "teacher" ? t.schedule.byTeacher : t.schedule.byBranch}
+              </Button>
+            ))}
+          </div>
+          {group !== "day" ? (
+            <div className="crm-x-scroll flex gap-2 sm:contents">
+              {weekDays.map((day) => (
+                <button key={day} type="button" className={cn("h-10 shrink-0 rounded-[5px] px-3 text-sm", day === focusDay ? "bg-[var(--brand-500)] font-semibold text-white" : "border border-[var(--border)] bg-white")} onClick={() => setFocusDay(day)}>
+                  {weekdayShort(new Date(`${day}T12:00:00`).getDay(), lang)} {day.slice(8)}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="mt-3 flex items-center gap-2">
@@ -311,10 +319,10 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {notice ? <p className="mt-3 rounded-[18px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p> : null}
+      {notice ? <p className="mt-3 rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p> : null}
 
       {mode === "week" ? (
-        <div className="mt-4 overflow-auto rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+        <div className="mt-4 overflow-auto rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
           <div className="min-w-[720px]">
             <div className="grid border-b border-slate-100 bg-slate-50 text-xs font-semibold" style={{ gridTemplateColumns: group === "day" ? "56px repeat(7, minmax(0, 1fr))" : `56px repeat(${Math.max(columns.length, 1)}, minmax(148px, 1fr))` }}>
               <div className="p-2 text-slate-400">{t.roomsCal.hour}</div>
@@ -383,16 +391,16 @@ export default function SchedulePage() {
         <div className="mt-4 grid grid-cols-7 gap-1">
           {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
             <p key={d} className="px-1 text-center text-xs font-semibold text-slate-400">{d}</p>
-          ))}
-          {monthCells.map((day, i) => (
-            <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[18px] border p-1 ${day === today ? "border-[var(--brand-500)]" : "border-slate-100"}`}>
+ ))}
+ {monthCells.map((day, i) => (
+ <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[5px] border p-1 ${day === today ? "border-[var(--brand-500)]" : "border-slate-100"}`}>
               {day ? (
                 <button type="button" className="text-xs text-slate-500" onClick={() => { setFocusDay(day); setMode("week"); const target = new Date(`${day}T12:00:00`); const current = new Date(`${mondayOf(0)}T12:00:00`); setWeekOffset(Math.floor((target.getTime() - current.getTime()) / (7 * 86400000))); }}>
                   {Number(day.slice(8))}
                 </button>
               ) : null}
               {day ? filtered.filter((s) => s.day === day).map((s) => (
-                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[12px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => { setOpenId(s.id); setReason(""); }}>
+                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[5px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => { setOpenId(s.id); setReason(""); }}>
                   {s.start} {courses.find((c) => c.id === s.courseId)?.name}
                 </button>
               )) : null}

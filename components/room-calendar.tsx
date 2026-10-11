@@ -305,14 +305,14 @@ function DayTimeline({
             <li key={hour} className="flex gap-3 text-sm">
               <span className="w-14 shrink-0 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</span>
               {hits.length === 0 ? (
-                <span className="flex-1 rounded-[14px] bg-emerald-50 px-3 py-2 text-emerald-800">{t.roomsCal.free}</span>
+                <span className="flex-1 rounded-[5px] bg-emerald-50 px-3 py-2 text-emerald-800">{t.roomsCal.free}</span>
               ) : (
                 <div className="flex flex-1 flex-col gap-1">
                   {hits.map((h) => (
                     <div
                       key={h.id}
                       className={cn(
-                        "rounded-[14px] px-3 py-2",
+                        "rounded-[5px] px-3 py-2",
                         h.kind === "class" ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "bg-sky-50 text-sky-900",
                       )}
                     >
@@ -381,7 +381,7 @@ function MonthHeat({
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, i) => {
-          if (!day) return <div key={`e-${i}`} className="min-h-16 rounded-[14px] bg-slate-50/50" />;
+          if (!day) return <div key={`e-${i}`} className="min-h-16 rounded-[5px] bg-slate-50/50" />;
           const occ = roomId === "all"
             ? (rooms.length === 0 ? 0 : rooms.reduce((sum, r) => sum + dayOccupancy(blocks, r.id, day), 0) / rooms.length)
             : dayOccupancy(blocks, roomId, day);
@@ -402,7 +402,7 @@ function MonthHeat({
               key={day}
               type="button"
               onClick={() => onPickDay(day)}
-              className={cn("min-h-16 rounded-[14px] p-2 text-left ring-1", tone)}
+              className={cn("min-h-16 rounded-[5px] p-2 text-left ring-1", tone)}
             >
               <span className="block text-sm font-bold">{Number(day.slice(8))}</span>
               <span className="mt-1 block text-[10px] font-semibold">

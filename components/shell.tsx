@@ -148,7 +148,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
+  const leads = useLiveQuery(() => db.leads.toArray(), []) ?? [];
+  const roster = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const studio = settings?.name || "Edu Dance";
+  const openLeads = leads.filter((lead) => lead.stage !== "won" && lead.stage !== "lost").length;
+  const owing = roster.filter((student) => student.debt > 0 && (branchId === "all" || student.branchId === branchId)).length;
+  const navBadges: Partial<Record<string, number>> = {
+    "/follow-up": openLeads,
+    "/collect-fees": owing,
+  };
   const { lang, t, setLang } = useI18n();
 
   useEffect(() => {
@@ -222,19 +230,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         href={item.href}
         onClick={onNavigate}
         className={cn(
-          "relative flex min-h-11 items-center gap-3 rounded-[14px] px-3 py-2.5 text-[14px] font-medium leading-snug",
+          "relative flex min-h-11 items-center gap-3 rounded-[5px] px-3 py-2.5 text-[14px] font-medium leading-snug",
           on
             ? "bg-[var(--brand-50)] text-[var(--brand-600)]"
             : "text-[var(--foreground)]/80 hover:bg-[var(--brand-50)]/70",
         )}
       >
         <Icon size={18} strokeWidth={on ? 2.25 : 1.75} />
-        <span className="flex-1">{t.nav[item.key]}</span>
+        <span className="min-w-0 flex-1 truncate">{t.nav[item.key]}</span>
+        {(navBadges[item.href] ?? 0) > 0 ? (
+          <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-[5px] bg-[var(--brand-500)] px-1.5 text-[11px] font-semibold text-white tabular-nums">
+            {navBadges[item.href]}
+          </span>
+        ) : null}
       </Link>
     );
   };
 
-  const groupLabelClass = "mb-1 px-3 text-[11px] font-bold tracking-wide text-slate-400 uppercase";
+  const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[var(--foreground)]";
 
   function NavPanel({ showBrand }: { showBrand: boolean }) {
     const close = () => setOpen(false);
@@ -252,7 +265,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-3 pb-3">
           <p className={groupLabelClass}>{t.common.branch}</p>
           <select
-            className="h-11 w-full rounded-[18px] border border-[var(--border)] bg-[var(--card)] px-3 text-base font-normal text-[var(--foreground)]"
+            className="h-11 w-full rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-3 text-base font-normal text-[var(--foreground)]"
             aria-label={t.common.branch}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
@@ -263,14 +276,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </select>
         </div>
-        <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-4">
+        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
           <div className="space-y-0.5">
             {top
               .filter((item) => canSeeNavHref(user?.role, item.href))
               .map((item) => renderNavLink(item, close))}
           </div>
           {visibleGroups.map((group) => (
-            <div key={group.title}>
+            <div key={group.title} className="border-t border-[var(--border)] pt-3">
               <p className={groupLabelClass}>{t.nav[group.title]}</p>
               <div className="space-y-0.5">
                 {group.items.map((item) => renderNavLink(item, close))}
@@ -308,7 +321,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {open ? (
         <>
           <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[var(--card)] shadow-2xl lg:hidden">
+          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[var(--card)] lg:hidden">
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-2">
                 <BrandMark className="h-8 w-8" />
@@ -325,7 +338,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </>
       ) : null}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="z-30 flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--card)]/95 px-3 py-2.5 backdrop-blur sm:px-5">
+        <header className={cn("z-30 flex shrink-0 flex-wrap items-center gap-2 px-3 py-2.5 sm:px-5", path === "/overview" ? "bg-white" : "bg-[var(--background)]")}>
           <button
             type="button"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] lg:hidden"
@@ -342,12 +355,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-transparent bg-[var(--brand-50)] px-4 text-left text-sm text-[var(--muted)] hover:bg-[var(--brand-100)] lg:max-w-md"
+            className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-[5px] border border-transparent bg-[var(--search)] px-4 text-left text-sm text-[var(--muted)] hover:bg-[var(--brand-50)] lg:max-w-md"
             aria-label={t.shell.search}
           >
             <Search size={16} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate">{t.shell.search}</span>
-            <kbd className="hidden shrink-0 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">
+            <kbd className="hidden shrink-0 rounded-[5px] border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">
               {t.shell.searchHint}
             </kbd>
           </button>
@@ -355,7 +368,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               href="/dolphin-ai"
-              className="hidden h-10 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)] md:inline-flex"
+              className="hidden h-10 items-center gap-1.5 rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)] xl:inline-flex"
             >
               <Sparkles size={16} className="text-[var(--brand-600)]" />
               {t.shell.askDolphin}
@@ -371,7 +384,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div
               role="group"
               aria-label={t.common.language}
-              className="inline-flex h-9 shrink-0 items-center rounded-full border border-[var(--border)] p-0.5 text-xs font-bold"
+              className="inline-flex h-9 shrink-0 items-center rounded-[5px] border border-[var(--border)] p-0.5 text-xs font-bold"
             >
               {(["vi", "en"] as const).map((code) => (
                 <button
@@ -380,7 +393,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   aria-pressed={lang === code}
                   onClick={() => setLang(code)}
                   className={cn(
-                    "min-h-8 rounded-full px-2.5",
+                    "min-h-8 rounded-[5px] px-2.5",
                     lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500 hover:bg-slate-100",
                   )}
                 >
@@ -420,12 +433,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-24 sm:px-5 lg:pb-6">
+        <main className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-24 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
           <AppBreadcrumb />
           {children}
         </main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(26,26,46,0.04)] lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] lg:hidden">
         <div className="grid grid-cols-5 gap-0.5">
           {mobile.map((item) => {
             const Icon = item.icon;
@@ -436,7 +449,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] px-1 text-[11px] font-semibold leading-tight",
+                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-semibold leading-tight",
                   on ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
                 )}
               >
@@ -449,7 +462,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             type="button"
             onClick={() => setOpen(true)}
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] px-1 text-[11px] font-semibold leading-tight",
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-semibold leading-tight",
               open ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
             )}
           >
@@ -464,7 +477,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         rel="noreferrer"
         aria-label={t.nav.support}
         title={t.nav.support}
-        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] shadow-lg hover:bg-slate-50 lg:inline-flex"
+        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] hover:bg-slate-50 lg:inline-flex"
       >
         <SupportIcon className="h-6 w-6" />
       </a>

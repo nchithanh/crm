@@ -57,7 +57,7 @@ export default function RoomsPage() {
             role="tab"
             aria-selected={tab === id}
             className={cn(
-              "inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold",
+              "inline-flex h-10 items-center rounded-[5px] px-4 text-sm font-semibold",
               tab === id ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
             )}
             onClick={() => setTab(id)}
@@ -145,7 +145,7 @@ function RoomForm({
   }
 
   return (
-    <div className="mt-4 grid gap-3 rounded-[14px] border border-slate-200 bg-white p-4">
+    <div className="mt-4 grid gap-3 rounded-[5px] border border-slate-200 bg-white p-4">
       <Field label={t.common.room}><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} /></Field>
       {room ? null : (
         <Field label={t.common.branch}>

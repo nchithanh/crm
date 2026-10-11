@@ -2,6 +2,17 @@
 
 ## 2026-10-12
 
+- Tab hồ sơ học viên, giáo viên và khóa: chữ đen, hàng có gạch dưới, tab đang chọn gạch màu brand. Icon Gọi / Zalo / Thu phí / Thêm nền trắng có viền.
+- Lịch mobile: select lọc thành lưới 2 cột; Tuần trước/sau một hàng, Theo phòng/giáo viên/chi nhánh một hàng. Nút ngày khi đang nhóm thì kéo ngang riêng.
+- Thẻ số `--panel` là `#f7f7f8a1`. Thanh cuộn dày 4px, màu brand pha 35%.
+- Ô tìm nền `#F7F7F8`. Khối danh sách, biểu đồ và form nền trắng. Chỉ thẻ số overview nền xám trắng. Mỗi hàng overview 4 thẻ: Tổng quan bỏ Phòng trống; Học viên bỏ thẻ Đang bảo lưu (chip lọc còn); Tài chính bỏ Quá hạn và Sắp đến hạn.
+- Nền app trắng. Thẻ, nút, ô nhập và chip bo 5px. Bỏ box-shadow; khối nội dung dùng nền xám `#F5F5F5` (`--panel`). Avatar, icon tròn, thanh tiến độ và FAB giữ hình tròn.
+- Học viên: thêm thẻ Mới (30 ngày) và Đang bảo lưu. Bấm thẻ lọc danh sách. Desktop năm thẻ một hàng.
+- Chrome theo lĩnh vực: nhảy cam, Anh xanh dương, nhạc tím, bơi xanh nước. Nút, tab đang chọn, link và FAB dùng `--brand-*`. Icon KPI và avatar học viên giữ màu riêng.
+- Học viên, hồ sơ (tab Tổng quan), tài chính và Vận hành hôm nay dùng cùng thẻ KPI: hai cột, icon tròn nhiều màu, số lớn.
+- Tổng quan: mobile hai KPI một hàng; icon tím / xanh / đỏ / vàng; nền trang trắng, ô tìm xám, tím chỉ ở banner Ask Dolphin và nút đang chọn.
+- Skin PeopleHub: nền lavender, nút pill và active tím `#6D4AFF`. Login, tổng quan (KPI icon tròn), danh sách học viên (chip tím) và hồ sơ học viên theo mock. Avatar học viên giữ màu dữ liệu.
+- Học viên: danh sách trống tách “chưa có học viên” (lời dẫn + ghi danh) và “lọc không khớp” (Xóa lọc). Sidebar: nhãn nhóm đậm hơn; badge số lead đang mở (Chăm sóc) và học viên còn nợ theo chi nhánh (Thu học phí).
 - Khóa: desktop thêm giáo viên, chi nhánh, phòng, sĩ số, số buổi, level, trạng thái. Buổi học: cột Học viên có thanh tiến độ (đen / vàng từ 80% / đỏ từ 95%). Giáo viên: buổi trong tuần, số học viên đang dạy, bộ môn; SĐT chỉ với quản lý và lễ tân.
 
 ## 2026-10-11

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -57,6 +58,8 @@ export function KpiCard({
   valueClass,
   vsPrev,
   href,
+  icon: Icon,
+  tone = "bg-violet-100 text-violet-600",
 }: {
   label: string;
   value: string;
@@ -65,33 +68,41 @@ export function KpiCard({
   valueClass?: string;
   vsPrev?: string;
   href?: string;
+  icon?: LucideIcon;
+  tone?: string;
 }) {
   const up = (delta ?? 0) >= 0;
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-slate-500">{label}</p>
-        {spark ? <Sparkline points={spark} up={up} /> : null}
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        {Icon ? (
+          <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone}`}>
+            <Icon size={16} />
+          </span>
+        ) : spark ? <Sparkline points={spark} up={up} /> : null}
       </div>
-      <p className={cn("mt-1 text-xl font-bold tracking-tight tabular-nums", valueClass)}>{value}</p>
+      <p className={cn("mt-1 text-xl font-extrabold leading-tight tabular-nums", valueClass)}>{value}</p>
       {delta != null ? (
-        <p className={cn("mt-1 text-xs font-semibold", up ? "text-emerald-600" : "text-rose-600")}>
+        <p className={cn("mt-1 text-xs font-semibold", up ? "text-green-600" : "text-rose-600")}>
           {formatPct(delta)} {vsPrev || ""}
         </p>
       ) : null}
+      {spark && Icon ? <div className="mt-2"><Sparkline points={spark} up={up} /></div> : null}
     </>
   );
+  const className = "block rounded-[5px] border border-[var(--border)] bg-[var(--panel)] p-3 transition hover:-translate-y-px hover:border-[var(--brand-100)]";
   if (href) {
     return (
-      <Link href={href} className="min-w-[160px] flex-1 rounded-[14px] border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-px hover:border-[var(--brand-100)]">
+      <Link href={href} className={className}>
         {body}
       </Link>
     );
   }
   return (
-    <Card className="min-w-[160px] flex-1 p-4">
+    <div className={className}>
       {body}
-    </Card>
+    </div>
   );
 }
 
@@ -116,7 +127,7 @@ export function DateRangeFilter({
       <label className="text-sm">
         <span className="sr-only">{t.finance.range}</span>
         <select
-          className="h-10 min-w-[9rem] rounded-[14px] border border-[var(--border)] bg-white px-3 text-sm"
+          className="h-10 min-w-[9rem] rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm"
           value={value}
           onChange={(e) => onChange(e.target.value as RangeKey)}
         >
@@ -132,14 +143,14 @@ export function DateRangeFilter({
           <input
             type="date"
             aria-label={t.finance.fromDay}
-            className="h-10 rounded-[14px] border border-[var(--border)] px-2 text-sm"
+            className="h-10 rounded-[5px] border border-[var(--border)] px-2 text-sm"
             value={from}
             onChange={(e) => onFrom(e.target.value)}
           />
           <input
             type="date"
             aria-label={t.finance.toDay}
-            className="h-10 rounded-[14px] border border-[var(--border)] px-2 text-sm"
+            className="h-10 rounded-[5px] border border-[var(--border)] px-2 text-sm"
             value={to}
             onChange={(e) => onTo(e.target.value)}
           />
@@ -158,7 +169,7 @@ export function useRangeState(initial: RangeKey = "month") {
 
 export function EmptyBlock({ text }: { text: string }) {
   return (
-    <p className="rounded-[14px] border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
+    <p className="rounded-[5px] border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
       {text}
     </p>
   );
@@ -182,7 +193,7 @@ export function FinanceTabs({
           role="tab"
           aria-selected={value === o.id}
           className={cn(
-            "inline-flex h-10 shrink-0 items-center rounded-full px-3 text-sm font-semibold",
+            "inline-flex h-10 shrink-0 items-center rounded-[5px] px-3 text-sm font-semibold",
             value === o.id
               ? "bg-[var(--brand-500)] text-white"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200",

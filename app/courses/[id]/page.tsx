@@ -83,10 +83,10 @@ export default function CourseDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-[14px] border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+          <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-[5px] border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
             {t.nav.schedule}
           </Link>
-          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[14px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
+          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
             {t.nav.midEnroll}
           </Link>
         </div>
@@ -101,8 +101,8 @@ export default function CourseDetailPage() {
             aria-selected={tab === idTab}
             onClick={() => setTab(idTab)}
             className={cn(
-              "shrink-0 border-b-2 px-3 py-2.5 text-sm",
-              tab === idTab ? "border-[var(--brand-500)] font-semibold text-[var(--brand-700)]" : "border-transparent text-slate-500",
+              "shrink-0 -mb-px border-b-2 px-3 py-2.5 text-sm text-[var(--foreground)]",
+              tab === idTab ? "border-[var(--brand-500)] font-semibold" : "border-transparent",
             )}
           >
             {tabLabel[idTab]}
@@ -124,7 +124,7 @@ export default function CourseDetailPage() {
                 ] as const
               ).map((card) => {
                 const className =
-                  "rounded-[18px] border border-[var(--border)] bg-white p-4 text-left shadow-[var(--shadow-card)]";
+                  "rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4 text-left";
                 if (card.go) {
                   return (
                     <button key={card.label} type="button" onClick={() => setTab(card.go)} className={`${className} hover:border-[var(--brand-300)]`}>
@@ -141,7 +141,7 @@ export default function CourseDetailPage() {
                 );
               })}
             </div>
-            <div className="rounded-[18px] border border-[var(--border)] bg-white p-4 text-sm text-slate-600">
+            <div className="rounded-[5px] border border-[var(--border)] bg-white p-4 text-sm text-slate-600">
               <p>{course.description || "—"}</p>
               <p className="mt-2 text-slate-400">
                 {course.startDay} → {course.endDay} · {course.sessionCount} buổi · {t.catalog.capacityCurrent} {students.length} · {t.catalog.capacityMax} {course.capacity ?? 12}
@@ -153,7 +153,7 @@ export default function CourseDetailPage() {
         {show("classes") ? (
           <section>
             {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.classes}</h2> : null}
-            <div className="overflow-auto rounded-[18px] border border-[var(--border)] bg-white">
+            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>
@@ -197,7 +197,7 @@ export default function CourseDetailPage() {
         {show("students") ? (
           <section>
             {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.students}</h2> : null}
-            <div className="overflow-auto rounded-[18px] border border-[var(--border)] bg-white">
+            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>
@@ -234,7 +234,7 @@ export default function CourseDetailPage() {
                 if (!u) return null;
                 return (
                   <li key={ct.id}>
-                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-[5px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: u.avatarColor }}>{initials(u.name)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold text-slate-900">{u.name}</span>
@@ -252,7 +252,7 @@ export default function CourseDetailPage() {
         {show("subscriptions") ? (
           <section>
             {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.subscriptions}</h2> : null}
-            <div className="overflow-auto rounded-[18px] border border-[var(--border)] bg-white">
+            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>

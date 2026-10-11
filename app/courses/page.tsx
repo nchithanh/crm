@@ -59,7 +59,7 @@ export default function CoursesPage() {
         />
       ) : null}
 
-      <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+      <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
         <li className="hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem]">
           <span>{t.common.course}</span>
           <span>{t.common.teacher}</span>

@@ -108,7 +108,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-[-8px_0_24px_rgba(15,23,42,0.12)]">
+      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-[var(--card)]">
         <header className="shrink-0 border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -121,7 +121,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
               <p className="mt-0.5 text-sm text-slate-500">{klass.start}–{klass.end}</p>
               <div className="mt-2"><Badge tone={statusTone}>{klass.status}</Badge></div>
             </div>
-            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
               <X size={18} />
             </button>
           </div>
@@ -129,7 +129,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
             <Link href={`/classes/${klass.id}`} className="text-sm font-semibold text-[var(--brand-600)] hover:underline">
               {t.common.next} →
             </Link>
-            <Link href={`/attendance?class=${klass.id}`} className="inline-flex h-9 items-center rounded-[14px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
+            <Link href={`/attendance?class=${klass.id}`} className="inline-flex h-9 items-center rounded-[5px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
               {t.nav.attendShort}
             </Link>
           </div>
@@ -137,7 +137,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4 text-sm">
           {conflict ? (
-            <p className="rounded-[14px] border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">{conflict}</p>
+            <p className="rounded-[5px] border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">{conflict}</p>
           ) : null}
           {msg ? <p className="text-rose-700">{msg}</p> : null}
 
@@ -171,7 +171,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
                 if (!s) return null;
                 const markRow = attendance.find((a) => a.subject === "student" && a.personId === s.id);
                 return (
-                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-[var(--border)] px-3 py-2">
+                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-[var(--border)] px-3 py-2">
                     <Link href={`/students/${s.id}`} className="flex items-center gap-2 font-semibold text-[var(--brand-600)] hover:underline">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
                       {s.name}
@@ -193,7 +193,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
           </section>
 
           {canEdit && klass.status !== "cancelled" ? (
-            <section className="space-y-2 rounded-[14px] border border-rose-100 bg-rose-50/50 p-3">
+            <section className="space-y-2 rounded-[5px] border border-rose-100 bg-rose-50/50 p-3">
               <h3 className="text-xs font-semibold tracking-wide text-rose-700 uppercase">{t.status.cancelled}</h3>
               <input className={inputClass} placeholder={t.schedule.cancelReason} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
               <Button type="button" variant="outline" disabled={busy} className="border-rose-300 text-rose-700" onClick={() => void doCancel()}>

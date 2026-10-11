@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronRight, Plus, Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
 import { StudentDrawer } from "@/components/student-drawer";
-import { Badge, Button, inputClass } from "@/components/ui";
+import { Badge, Button, ctaPrimary, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
 import { createTask } from "@/lib/actions";
 import { fill } from "@/lib/copy";
@@ -297,19 +297,6 @@ export default function StudentsPage() {
     );
   }
 
-  const kpiCards: { id: KpiFilter; label: string; value: number; hint?: string }[] = [
-    { id: "all", label: t.students.kpiTotal, value: kpis.total },
-    {
-      id: "new",
-      label: t.students.kpiNew,
-      value: kpis.neu,
-      hint: `${kpis.neu - kpis.prevNeu >= 0 ? "↑" : "↓"} ${Math.abs(kpis.neu - kpis.prevNeu)}`,
-    },
-    { id: "active", label: t.students.kpiActive, value: kpis.active },
-    { id: "follow", label: t.students.kpiFollow, value: kpis.follow },
-    ...(seeMoney ? [{ id: "unpaid" as const, label: t.students.kpiUnpaid, value: kpis.unpaid }] : []),
-  ];
-
   function courseLabel(st: Student) {
     const ids = [st.courseId, ...(subsByStudent.get(st.id) ?? []).map((sub) => sub.courseId)];
     const names = [...new Set(ids.filter(Boolean))]
@@ -319,7 +306,7 @@ export default function StudentsPage() {
   }
 
   const canEnroll = role === "owner" || role === "reception";
-  const chip = holdOnly ? "hold" : remain === "le3" ? "low" : kpi === "unpaid" ? "unpaid" : kpi === "active" ? "active" : "all";
+  const chip = holdOnly ? "hold" : remain === "le3" ? "low" : kpi === "unpaid" ? "unpaid" : kpi === "active" ? "active" : kpi === "all" ? "all" : "none";
   const chips: { id: "all" | "active" | "unpaid" | "low" | "hold"; label: string }[] = [
     { id: "all", label: t.students.kpiTotal },
     { id: "active", label: t.students.kpiActive },
@@ -327,7 +314,19 @@ export default function StudentsPage() {
     { id: "low", label: t.students.remainLe3 },
     { id: "hold", label: t.students.onHoldOnly },
   ];
-  const homeKpis = kpiCards.filter((k) => k.id === "all" || k.id === "active" || (seeMoney ? k.id === "unpaid" : k.id === "follow")).slice(0, 3);
+  const homeKpis: { id: KpiFilter | "hold"; label: string; value: number; hint?: string }[] = [
+    { id: "all", label: t.students.kpiTotal, value: kpis.total },
+    { id: "active", label: t.students.kpiActive, value: kpis.active },
+    seeMoney
+      ? { id: "unpaid", label: t.students.kpiUnpaid, value: kpis.unpaid }
+      : { id: "follow", label: t.students.kpiFollow, value: kpis.follow },
+    {
+      id: "new",
+      label: t.students.kpiNew,
+      value: kpis.neu,
+      hint: `${kpis.neu - kpis.prevNeu >= 0 ? "↑" : "↓"} ${Math.abs(kpis.neu - kpis.prevNeu)}`,
+    },
+  ];
 
   function setChip(id: "all" | "active" | "unpaid" | "low" | "hold") {
     setHoldOnly(id === "hold");
@@ -356,7 +355,7 @@ export default function StudentsPage() {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">
-      <label className="flex h-12 items-center gap-2 rounded-full bg-[var(--brand-50)] px-4 text-sm text-[var(--muted)]">
+      <label className="flex h-12 items-center gap-2 rounded-[5px] bg-[var(--search)] px-4 text-sm text-[var(--muted)]">
         <Search size={18} />
         <input
           className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
@@ -366,21 +365,31 @@ export default function StudentsPage() {
         />
       </label>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {homeKpis.map((k) => {
-          const on = kpi === k.id;
+          const on = k.id === "hold" ? holdOnly : kpi === k.id && !holdOnly;
+          const tone = k.id === "unpaid" || k.id === "follow" ? "bg-rose-100 text-rose-600" : k.id === "active" ? "bg-sky-100 text-sky-600" : k.id === "new" ? "bg-green-100 text-green-700" : k.id === "hold" ? "bg-amber-100 text-amber-700" : "bg-violet-100 text-violet-600";
+          const Icon = k.id === "unpaid" || k.id === "follow" ? Wallet : k.id === "active" ? UserRound : k.id === "new" ? UserPlus : Users;
           return (
             <button
               key={k.id}
               type="button"
-              onClick={() => { setChip("all"); setKpi(k.id); }}
+              onClick={() => { if (k.id === "hold") setChip("hold"); else { setChip("all"); setKpi(k.id); } }}
               className={cn(
-                "rounded-[18px] border bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]",
+                "rounded-[5px] border bg-[var(--panel)] p-3 text-left",
                 on ? "border-[var(--brand-300)]" : "border-[var(--border)]",
               )}
             >
-              <p className="text-xs font-medium text-[var(--muted)]">{k.label}</p>
-              <p className="crm-kpi mt-1 text-[var(--foreground)]">{k.value}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-medium text-slate-500">{k.label}</p>
+                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tone}`}>
+                  <Icon size={16} />
+                </span>
+              </div>
+              <p className="mt-1 text-xl font-extrabold tabular-nums leading-tight text-[var(--foreground)]">{k.value}</p>
+              {k.hint ? (
+                <p className={`mt-1 text-xs tabular-nums ${k.hint.startsWith("↑") ? "text-green-600" : k.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{k.hint}</p>
+              ) : null}
             </button>
           );
         })}
@@ -393,18 +402,18 @@ export default function StudentsPage() {
             type="button"
             onClick={() => setChip(item.id)}
             className={cn(
-              "h-9 shrink-0 rounded-full px-4 text-sm font-semibold",
-              chip === item.id ? "bg-[var(--brand-50)] text-[var(--brand-600)]" : "border border-[var(--border)] bg-white text-[var(--muted)]",
+              "h-9 shrink-0 rounded-[5px] px-4 text-sm font-semibold",
+              chip === item.id ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-[var(--muted)]",
             )}
           >
             {item.label}
           </button>
         ))}
-        <button type="button" className="h-9 shrink-0 rounded-full border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]" onClick={() => setMore((v) => !v)}>{t.students.more}</button>
+        <button type="button" className="h-9 shrink-0 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]" onClick={() => setMore((v) => !v)}>{t.students.more}</button>
       </div>
 
       {more ? (
-        <div className="grid gap-2 rounded-[18px] border border-[var(--border)] bg-white p-4 md:grid-cols-3">
+        <div className="grid gap-2 rounded-[5px] border border-[var(--border)] bg-white p-4 md:grid-cols-3">
           {branchId === "all" ? (
             <select className={inputClass} value={branchPick} onChange={(e) => setBranchPick(e.target.value)}>
               <option value="all">{t.common.branch}</option>
@@ -448,7 +457,7 @@ export default function StudentsPage() {
       ) : null}
 
       {picked.length > 0 ? (
-        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 shadow-[var(--shadow-card)] lg:right-20 lg:bottom-6 lg:left-[276px]">
+        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:right-20 lg:bottom-6 lg:left-[276px]">
           <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={() => openZalo(picked)}>{t.students.message}</Button> : null}
           <Button type="button" variant="outline" onClick={() => void assignFollow(picked)}>{t.students.assignFollow}</Button>
@@ -458,11 +467,23 @@ export default function StudentsPage() {
         </div>
       ) : null}
 
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+      <div className="flex min-h-0 flex-col overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
-              <p className="text-sm text-slate-500">{t.students.empty}</p>
-              <Button type="button" className="mt-4" variant="outline" onClick={clearFilters}>{t.students.clearFilters}</Button>
+              {branchStudents.length === 0 ? (
+                <>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{t.students.emptyNone}</p>
+                  <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">{t.students.emptyNoneLead}</p>
+                  {canEnroll ? (
+                    <Link href="/mid-course-enroll" className={cn(ctaPrimary, "mt-4")}>{t.students.emptyCta}</Link>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-500">{t.students.empty}</p>
+                  <Button type="button" className="mt-4" variant="outline" onClick={clearFilters}>{t.students.clearFilters}</Button>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -491,7 +512,7 @@ export default function StudentsPage() {
                     return (
                       <li key={st.id}>
                         <div
-                          className={cn("flex cursor-pointer items-center gap-2 px-3 py-3 lg:grid lg:gap-x-3", listCols, on && "bg-black/5")}
+                          className={cn("flex cursor-pointer items-center gap-2 px-3 py-3 lg:grid lg:gap-x-3", listCols, on && "bg-[var(--brand-50)]")}
                           onClick={() => pick(st.id)}
                         >
                           <input
@@ -511,7 +532,7 @@ export default function StudentsPage() {
                           </span>
                           <span className="hidden text-sm leading-snug lg:line-clamp-2">{label.names}</span>
                           <span className="hidden min-w-0 items-center gap-2 lg:flex">
-                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: teacher?.avatarColor ?? "#111111" }}>{teacher ? initials(teacher.name) : "—"}</span>
+                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: teacher?.avatarColor ?? "var(--brand-500)" }}>{teacher ? initials(teacher.name) : "—"}</span>
                             <span className="truncate text-sm">{teacher?.name ?? "—"}</span>
                           </span>
                           <span className="hidden tabular-nums text-sm font-semibold lg:block">{rate === null ? "—" : `${rate}%`}</span>
@@ -525,7 +546,7 @@ export default function StudentsPage() {
                           <span className="hidden lg:block">{pill ? <Badge tone={pill.tone}>{pill.label}</Badge> : "—"}</span>
                           <button
                             type="button"
-                            className="hidden h-8 items-center rounded-full border border-[var(--border)] bg-white px-3 text-xs font-semibold lg:inline-flex"
+                            className="hidden h-8 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold lg:inline-flex"
                             onClick={(e) => { e.stopPropagation(); pick(st.id); }}
                           >
                             {t.drawer.fullProfile}
@@ -556,7 +577,7 @@ export default function StudentsPage() {
         <Link
           href="/mid-course-enroll"
           aria-label={t.students.emptyCta}
-          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] lg:hidden"
+          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white lg:hidden"
         >
           <Plus size={24} />
         </Link>

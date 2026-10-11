@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: "#F97316",
   width: "device-width",
   initialScale: 1,
 };
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html:
-              '(function(){try{var t=localStorage.getItem("crm-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();',
+              '(function(){try{var t=localStorage.getItem("crm-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");var v=localStorage.getItem("dolphin-crm-vertical");if(v==="nhay"||v==="anh"||v==="nhac"||v==="boi")document.documentElement.setAttribute("data-vertical",v);}catch(e){}})();',
           }}
         />
       </head>
