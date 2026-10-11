@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-11
+
+- Bố cục PeopleHub (không chỉ đổi màu): Học viên là hàng avatar + chip + FAB, hồ sơ có header icon; Tổng quan là lời chào + tìm + 3 KPI + buổi sắp tới; Điểm danh chọn buổi bằng thẻ; Khóa / giáo viên / bảo lưu là danh sách thẻ.
+- Skin: primary tím `#7C3AED`, nền `#F8F7FC`, thẻ bo 18px, badge pill. Mobile bottom: Tổng quan · Học viên · Điểm danh · Tài chính (giáo viên: Tác vụ) · Thêm. Quy tắc: `context/design-language.md`.
+
 ## 2026-10-10
 
 - Phòng: select lịch có **Tất cả**; option ghi `[chi nhánh] tên phòng` (lịch phòng, lịch, buổi học).

@@ -139,7 +139,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center bg-slate-900/40 p-4 pt-[12vh]">
       <button type="button" className="absolute inset-0" aria-label={t.common.close} onClick={onClose} />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--card)] shadow-2xl">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-[14px] border border-[var(--border)] bg-[var(--card)] shadow-2xl">
         <div className="flex items-center gap-2 border-b border-[var(--border)] px-3">
           <Search size={18} className="shrink-0 text-slate-400" />
           <input
@@ -151,8 +151,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             onKeyDown={onKeyDown}
             aria-label={t.shell.search}
           />
-          <kbd className="hidden rounded-[6px] border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">ESC</kbd>
-          <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-slate-500 hover:bg-slate-100 sm:hidden" onClick={onClose} aria-label={t.common.close}>
+          <kbd className="hidden rounded-full border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">ESC</kbd>
+          <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-[12px] text-slate-500 hover:bg-slate-100 sm:hidden" onClick={onClose} aria-label={t.common.close}>
             <X size={16} />
           </button>
         </div>

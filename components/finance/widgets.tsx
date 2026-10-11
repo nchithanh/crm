@@ -83,7 +83,7 @@ export function KpiCard({
   );
   if (href) {
     return (
-      <Link href={href} className="min-w-[160px] flex-1 rounded-[10px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-[var(--brand-100)]">
+      <Link href={href} className="min-w-[160px] flex-1 rounded-[14px] border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] transition hover:-translate-y-px hover:border-[var(--brand-100)]">
         {body}
       </Link>
     );
@@ -116,7 +116,7 @@ export function DateRangeFilter({
       <label className="text-sm">
         <span className="sr-only">{t.finance.range}</span>
         <select
-          className="h-10 min-w-[9rem] rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"
+          className="h-10 min-w-[9rem] rounded-[14px] border border-[var(--border)] bg-white px-3 text-sm"
           value={value}
           onChange={(e) => onChange(e.target.value as RangeKey)}
         >
@@ -132,14 +132,14 @@ export function DateRangeFilter({
           <input
             type="date"
             aria-label={t.finance.fromDay}
-            className="h-10 rounded-[10px] border border-[#E2E8F0] px-2 text-sm"
+            className="h-10 rounded-[14px] border border-[var(--border)] px-2 text-sm"
             value={from}
             onChange={(e) => onFrom(e.target.value)}
           />
           <input
             type="date"
             aria-label={t.finance.toDay}
-            className="h-10 rounded-[10px] border border-[#E2E8F0] px-2 text-sm"
+            className="h-10 rounded-[14px] border border-[var(--border)] px-2 text-sm"
             value={to}
             onChange={(e) => onTo(e.target.value)}
           />
@@ -158,7 +158,7 @@ export function useRangeState(initial: RangeKey = "month") {
 
 export function EmptyBlock({ text }: { text: string }) {
   return (
-    <p className="rounded-[10px] border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
+    <p className="rounded-[14px] border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
       {text}
     </p>
   );

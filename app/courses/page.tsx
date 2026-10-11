@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { ChevronRight } from "lucide-react";
 import { CourseCreateDrawer } from "@/components/course-create-drawer";
 import { Badge, Button } from "@/components/ui";
 import { canManageCatalog } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
+import { initials } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
@@ -57,49 +59,28 @@ export default function CoursesPage() {
         />
       ) : null}
 
-      <div className="mt-4 overflow-auto rounded-[10px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-        <table className="w-full min-w-[880px] text-sm">
-          <thead className="bg-slate-50 text-left">
-            <tr>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.nav.courses}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.common.branch}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.nav.classes}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.catalog.capacityCurrent}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.catalog.capacityMax}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.nav.teachers}</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">Main</th>
-              <th className="px-3 py-3 font-semibold text-slate-600">{t.common.status}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ course, classCount, studentCount, teacherCount, main }) => (
-              <tr key={course.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
-                <td className="px-3 py-3">
-                  <Link href={`/courses/${course.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">
-                    {course.name}
-                  </Link>
-                  <p className="text-xs text-slate-400">{course.style} · {levelLabel(course.level)} · {course.slot}</p>
-                </td>
-                <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === course.branchId)?.name}</td>
-                <td className="px-3 py-3">
-                  <Link href={`/courses/${course.id}`} className="tabular-nums font-semibold text-slate-800 hover:underline">{classCount}</Link>
-                </td>
-                <td className="px-3 py-3 tabular-nums">{studentCount}</td>
-                <td className="px-3 py-3 tabular-nums">{course.capacity ?? 12}</td>
-                <td className="px-3 py-3 tabular-nums">{teacherCount}</td>
-                <td className="px-3 py-3">
-                  {main ? (
-                    <Link href={`/teachers/${main.id}`} className="text-[var(--brand-600)] hover:underline">{main.name}</Link>
-                  ) : "—"}
-                </td>
-                <td className="px-3 py-3">
+      <ul className="mt-4 space-y-3">
+        {rows.map(({ course, classCount, studentCount, main }) => (
+          <li key={course.id}>
+            <Link href={`/courses/${course.id}`} className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 shadow-[var(--shadow-card)]">
+              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: main?.avatarColor ?? "#7C3AED" }}>
+                {initials(main?.name ?? course.name)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-base font-semibold text-[var(--foreground)]">{course.name}</span>
+                <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">
+                  {branches.find((b) => b.id === course.branchId)?.name} · {studentCount}/{course.capacity ?? 12} · {classCount} {t.nav.classes}
+                </span>
+                <span className="mt-2 flex flex-wrap gap-1">
+                  <Badge tone="info">{levelLabel(course.level)}</Badge>
                   <Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-[var(--muted)]" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

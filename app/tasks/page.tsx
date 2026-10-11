@@ -184,8 +184,8 @@ export default function TasksPage() {
           type="button"
           onClick={() => setOverdueOnly((v) => !v)}
           className={cn(
-            "h-10 shrink-0 rounded-[10px] border px-3 text-sm font-semibold",
-            overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[#E2E8F0] text-slate-600",
+            "h-10 shrink-0 rounded-[14px] border px-3 text-sm font-semibold",
+            overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-600",
           )}
         >
           {t.task.overdueOnly}
@@ -201,7 +201,7 @@ export default function TasksPage() {
                 key={group.id}
                 type="button"
                 onClick={() => setParentFilter(group.id)}
-                className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+                className="rounded-[14px] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-800">{group.name}</p>
@@ -241,7 +241,7 @@ export default function TasksPage() {
                   <tr key={task.id} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-3 py-3">
                       <select
-                        className="h-9 rounded-[8px] border border-[#E2E8F0] bg-white px-2 text-sm"
+                        className="h-9 rounded-[12px] border border-[var(--border)] bg-white px-2 text-sm"
                         value={task.status}
                         disabled={!canEdit && task.assigneeId !== me?.id}
                         onChange={(e) => void moveTaskStatus(task.id, e.target.value as TaskStatus)}
@@ -293,7 +293,7 @@ export default function TasksPage() {
             return (
               <section
                 key={col.id}
-                className="w-[272px] shrink-0 rounded-[12px] border border-[#E2E8F0] bg-slate-50 p-2"
+                className="w-[272px] shrink-0 rounded-[18px] border border-[var(--border)] bg-slate-50 p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -303,7 +303,7 @@ export default function TasksPage() {
               >
                 <div className="flex items-center justify-between px-2 py-2">
                   <h2 className="text-sm font-bold text-slate-700">{col.label}</h2>
-                  <span className="rounded-[6px] bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
                 </div>
                 <ul className="space-y-2">
                   {rows.map((task) => {
@@ -322,7 +322,7 @@ export default function TasksPage() {
                             e.dataTransfer.effectAllowed = "move";
                           }}
                           onClick={() => { setOpenId(task.id); setCreating(false); }}
-                          className="w-full rounded-[12px] border border-[#E2E8F0] bg-white p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
+                          className="w-full rounded-[18px] border border-[var(--border)] bg-white p-3 text-left shadow-[var(--shadow-card)]"
                         >
                           {group ? (
                             <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--brand-600)]">{group}</p>
@@ -468,12 +468,12 @@ function TaskDrawer({
         {task && (callHref || zalo) ? (
           <div className="mt-3 flex gap-2">
             {callHref ? (
-              <a href={callHref} className={cn("crm-outline inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white text-sm font-semibold text-[var(--brand-500)]")}>
+              <a href={callHref} className={cn("crm-outline inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-[var(--brand-500)] bg-white text-sm font-semibold text-[var(--brand-500)]")}>
                 {t.task.call}
               </a>
             ) : null}
             {zalo ? (
-              <a href={zalo} target="_blank" rel="noreferrer" className={cn("inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand-500)] text-sm font-semibold text-white")}>
+              <a href={zalo} target="_blank" rel="noreferrer" className={cn("inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[14px] bg-[var(--brand-500)] text-sm font-semibold text-white")}>
                 {t.task.zalo}
               </a>
             ) : null}
@@ -494,7 +494,7 @@ function TaskDrawer({
           </Field>
           {canEdit ? (
             addingParent ? (
-              <div className="grid gap-2 rounded-[12px] border border-[#E2E8F0] bg-slate-50 p-3">
+              <div className="grid gap-2 rounded-[18px] border border-[var(--border)] bg-slate-50 p-3">
                 <Field label={t.task.parentName}>
                   <input className={inputClass} value={newParentName} onChange={(e) => setNewParentName(e.target.value)} />
                 </Field>
@@ -556,14 +556,14 @@ function TaskDrawer({
         </div>
 
         {task ? (
-          <section className="mt-8 border-t border-[#E2E8F0] pt-4">
+          <section className="mt-8 border-t border-[var(--border)] pt-4">
             <h3 className="text-sm font-bold text-slate-800">{t.task.comments}</h3>
             <ul className="mt-3 space-y-3">
               {comments.length === 0 ? (
                 <li className="text-sm text-slate-400">{t.task.noComments}</li>
               ) : (
                 comments.map((c) => (
-                  <li key={c.id} className="rounded-[12px] border border-[#E2E8F0] bg-slate-50 px-3 py-2">
+                  <li key={c.id} className="rounded-[18px] border border-[var(--border)] bg-slate-50 px-3 py-2">
                     <p className="text-xs text-slate-400">{c.day} · {staffName(c.actorId)}</p>
                     <p className="mt-1 text-sm text-slate-700">{c.text}</p>
                   </li>

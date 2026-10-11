@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Ellipsis,
   Menu,
   Moon,
   Package,
@@ -101,7 +102,7 @@ const ZALO_FOUNDER = "https://zalo.me/0779937633";
 
 type MobileItem = {
   href: string;
-  key: "overview" | "schedule" | "attendShort" | "enrollShort" | "tasks" | "feesShort";
+  key: "overview" | "students" | "attendShort" | "finance" | "tasks";
   icon: typeof LayoutDashboard;
 };
 
@@ -109,23 +110,25 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
   if (role === "teacher") {
     return [
       { href: "/overview", key: "overview", icon: LayoutDashboard },
-      { href: "/schedule", key: "schedule", icon: CalendarDays },
-      { href: "/attendance", key: "attendShort", icon: Receipt },
+      { href: "/students", key: "students", icon: Users },
+      { href: "/attendance", key: "attendShort", icon: ClipboardCheck },
       { href: "/tasks", key: "tasks", icon: ListTodo },
     ];
   }
   return [
     { href: "/overview", key: "overview", icon: LayoutDashboard },
-    { href: "/schedule", key: "schedule", icon: CalendarDays },
-    { href: "/collect-fees", key: "feesShort", icon: Wallet },
-    { href: "/mid-course-enroll", key: "enrollShort", icon: Plus },
-    { href: "/attendance", key: "attendShort", icon: Receipt },
+    { href: "/students", key: "students", icon: Users },
+    { href: "/attendance", key: "attendShort", icon: ClipboardCheck },
+    { href: "/finance", key: "finance", icon: Wallet },
   ];
 }
 
 function active(href: string, path: string) {
   if (href === "/overview") return path === "/overview" || path === "/";
-  if (href === "/finance") return path === href;
+  if (href === "/finance") {
+    return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections");
+  }
+  if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/") || path.startsWith("/qr-attendance");
   return path === href || path.startsWith(`${href}/`);
 }
 
@@ -219,16 +222,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         href={item.href}
         onClick={onNavigate}
         className={cn(
-          "relative flex min-h-11 items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium leading-snug",
+          "relative flex min-h-11 items-center gap-3 rounded-[14px] px-3 py-2.5 text-[14px] font-medium leading-snug",
           on
-            ? "bg-[var(--nav-active)] text-[var(--nav-active-text)]"
-            : "text-[var(--foreground)]/80 hover:bg-[var(--nav-active)]/60",
+            ? "bg-[var(--brand-50)] text-[var(--brand-600)]"
+            : "text-[var(--foreground)]/80 hover:bg-[var(--brand-50)]/70",
         )}
       >
-        {on ? (
-          <span className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-[var(--brand-500)]" />
-        ) : null}
-        <Icon size={18} className={on ? "text-[var(--brand-600)]" : undefined} />
+        <Icon size={18} strokeWidth={on ? 2.25 : 1.75} />
         <span className="flex-1">{t.nav[item.key]}</span>
       </Link>
     );
@@ -252,7 +252,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-3 pb-3">
           <p className={groupLabelClass}>{t.common.branch}</p>
           <select
-            className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 text-base font-normal text-[var(--foreground)]"
+            className="h-11 w-full rounded-[18px] border border-[var(--border)] bg-[var(--card)] px-3 text-base font-normal text-[var(--foreground)]"
             aria-label={t.common.branch}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
@@ -314,7 +314,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <BrandMark className="h-8 w-8" />
                 <p className="font-bold text-[var(--brand-600)]">{t.shell.product}</p>
               </div>
-              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label={t.common.close}>
+              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)]" onClick={() => setOpen(false)} aria-label={t.common.close}>
                 <X size={18} />
               </button>
             </div>
@@ -328,7 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="z-30 flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--border)] bg-[var(--card)]/95 px-3 py-2.5 backdrop-blur sm:px-5">
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border)] lg:hidden"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] lg:hidden"
             onClick={() => setOpen(true)}
             aria-label={t.common.menu}
           >
@@ -342,12 +342,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--background)] px-3 text-left text-sm text-slate-500 hover:border-slate-300 lg:max-w-md"
+            className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-transparent bg-[var(--brand-50)] px-4 text-left text-sm text-[var(--muted)] hover:bg-[var(--brand-100)] lg:max-w-md"
             aria-label={t.shell.search}
           >
             <Search size={16} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate">{t.shell.search}</span>
-            <kbd className="hidden shrink-0 rounded-[6px] border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">
+            <kbd className="hidden shrink-0 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">
               {t.shell.searchHint}
             </kbd>
           </button>
@@ -355,14 +355,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <Link
               href="/dolphin-ai"
-              className="hidden h-10 items-center gap-1.5 rounded-[10px] border border-[var(--border)] px-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 md:inline-flex"
+              className="hidden h-10 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)] md:inline-flex"
             >
               <Sparkles size={16} className="text-[var(--brand-600)]" />
               {t.shell.askDolphin}
             </Link>
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)]"
               aria-label={theme === "light" ? t.shell.themeDark : t.shell.themeLight}
               onClick={toggleTheme}
             >
@@ -390,7 +390,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <button
               type="button"
-              className="relative hidden h-10 w-10 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100 sm:inline-flex"
+              className="relative hidden h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)] sm:inline-flex"
               aria-label={t.shell.notifications}
             >
               <Bell size={18} />
@@ -409,7 +409,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : null}
             <button
               type="button"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)]"
               aria-label={t.common.logout}
               onClick={() => {
                 logout();
@@ -425,35 +425,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-2 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className={cn("grid gap-1", mobile.length === 4 ? "grid-cols-4" : "grid-cols-5")}>
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(26,26,46,0.04)] lg:hidden">
+        <div className="grid grid-cols-5 gap-0.5">
           {mobile.map((item) => {
             const Icon = item.icon;
             const on = active(item.href, path);
-            const label =
-              item.key === "tasks"
-                ? t.nav.tasks
-                : item.key === "attendShort"
-                  ? t.nav.attendShort
-                  : item.key === "enrollShort"
-                    ? t.nav.enrollShort
-                    : item.key === "feesShort"
-                      ? t.nav.feesShort
-                      : t.nav[item.key];
+            const label = item.key === "attendShort" ? t.nav.attendShort : t.nav[item.key];
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 rounded-[10px] text-[14px] font-medium",
-                  on ? "bg-[var(--nav-active)] text-[var(--nav-active-text)]" : "text-slate-700",
+                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] px-1 text-[11px] font-semibold leading-tight",
+                  on ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
                 )}
               >
-                <Icon size={20} className={on ? "text-[var(--brand-600)]" : undefined} />
+                <Icon size={20} strokeWidth={on ? 2.25 : 1.75} />
                 {label}
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className={cn(
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[14px] px-1 text-[11px] font-semibold leading-tight",
+              open ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
+            )}
+          >
+            <Ellipsis size={20} strokeWidth={open ? 2.25 : 1.75} />
+            {t.nav.more}
+          </button>
         </div>
       </nav>
       <a

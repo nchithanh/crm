@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { TeacherDrawer } from "@/components/teacher-drawer";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canManageCatalog } from "@/lib/access";
@@ -147,82 +147,42 @@ export default function TeachersPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center rounded-[12px] border border-dashed border-[#E2E8F0] bg-white px-6 py-14 text-center">
+        <div className="mt-6 flex flex-col items-center rounded-[18px] border border-dashed border-[var(--border)] bg-white px-6 py-14 text-center">
           <p className="text-sm text-slate-500">{t.teachers.empty}</p>
           {canEdit ? (
             <Button type="button" className="mt-4" onClick={openCreate}>{t.teachers.add}</Button>
           ) : null}
         </div>
       ) : (
-        <div className="mt-4 max-h-[min(70dvh,760px)] overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-          <table className="w-full min-w-[920px] text-sm">
-            <thead className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-slate-50 text-left">
-              <tr>
-                {([
-                  ["name", t.teachers.title],
-                  ["branch", t.common.branch],
-                  ["classes", t.teachers.classes],
-                  ["week", t.teachers.perWeek],
-                  ["status", t.common.status],
-                ] as const).map(([key, label]) => (
-                  <th key={key} className="px-3 py-3">
-                    <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort(key)}>
-                      {label}{sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                    </button>
-                  </th>
-                ))}
-                <th className="px-3 py-3 font-semibold text-slate-600">{t.teachers.skills}</th>
-                <th className="w-36 px-3 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ teacher, classCount, weekCount }) => {
-                const st = teacher.teacherStatus ?? "active";
-                return (
-                  <tr
-                    key={teacher.id}
-                    className="group cursor-pointer border-t border-slate-100 hover:bg-[var(--brand-50)]"
-                    onClick={() => setOpenId(teacher.id)}
-                  >
-                    <td className="px-3 py-3">
-                      <Link href={`/teachers/${teacher.id}`} className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: teacher.avatarColor }}>
-                          {initials(teacher.name)}
-                        </span>
-                        <span>
-                          <span className="block font-semibold text-[var(--brand-600)] hover:underline">{teacher.name}</span>
-                          <span className="text-xs text-slate-400">{teacher.phone}</span>
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === teacher.branchId)?.name ?? "—"}</td>
-                    <td className="px-3 py-3 tabular-nums text-slate-700">{classCount}</td>
-                    <td className={cn("px-3 py-3 tabular-nums", weekCount > 10 ? "font-semibold text-rose-600" : "text-slate-700")}>{weekCount}</td>
-                    <td className="px-3 py-3"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></td>
-                    <td className="px-3 py-3">
-                      <span className="flex flex-wrap gap-1">
-                        {(teacher.styles ?? []).slice(0, 3).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
-                        {(teacher.levels ?? []).map((l) => <Badge key={l}>{levelLabel(l)}</Badge>)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-end gap-2 opacity-0 transition group-hover:opacity-100">
-                        {canEdit ? (
-                          <button type="button" className="text-xs font-semibold text-[var(--brand-600)]" onClick={() => openEdit(teacher.id)}>
-                            {t.catalog.edit}
-                          </button>
-                        ) : null}
-                        <Link href="/schedule" className="text-xs font-semibold text-slate-500 hover:text-slate-800">
-                          {t.teachers.viewSchedule}
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ul className="mt-4 space-y-3">
+          {rows.map(({ teacher, classCount, weekCount }) => {
+            const st = teacher.teacherStatus ?? "active";
+            return (
+              <li key={teacher.id}>
+                <button
+                  type="button"
+                  onClick={() => setOpenId(teacher.id)}
+                  className="flex w-full items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]"
+                >
+                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: teacher.avatarColor }}>
+                    {initials(teacher.name)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-base font-semibold text-[var(--foreground)]">{teacher.name}</span>
+                    <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">
+                      {branches.find((b) => b.id === teacher.branchId)?.name ?? "—"} · {classCount} · {weekCount}
+                    </span>
+                    <span className="mt-2 flex flex-wrap gap-1">
+                      <Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge>
+                      {(teacher.styles ?? []).slice(0, 2).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="shrink-0 text-[var(--muted)]" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       {openId ? (
@@ -330,9 +290,9 @@ function TeacherFormDrawer({
     <div className="fixed inset-0 z-[60] flex justify-end">
       <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
       <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
+        <header className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">{teacher ? t.teachers.edit : t.teachers.add}</h2>
-          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
             <X size={18} />
           </button>
         </header>
@@ -360,8 +320,8 @@ function TeacherFormDrawer({
                   type="button"
                   onClick={() => toggleStyle(s)}
                   className={cn(
-                    "rounded-[8px] border px-2.5 py-1.5 text-sm font-medium",
-                    styles.includes(s) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[#E2E8F0] text-slate-600",
+                    "rounded-[12px] border px-2.5 py-1.5 text-sm font-medium",
+                    styles.includes(s) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[var(--border)] text-slate-600",
                   )}
                 >
                   {s}
@@ -379,8 +339,8 @@ function TeacherFormDrawer({
                   type="button"
                   onClick={() => toggleLevel(l)}
                   className={cn(
-                    "rounded-[8px] border px-2.5 py-1.5 text-sm font-medium",
-                    levels.includes(l) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[#E2E8F0] text-slate-600",
+                    "rounded-[12px] border px-2.5 py-1.5 text-sm font-medium",
+                    levels.includes(l) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[var(--border)] text-slate-600",
                   )}
                 >
                   {levelLabel(l)}
@@ -401,7 +361,7 @@ function TeacherFormDrawer({
           </Field>
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
         </div>
-        <footer className="flex gap-2 border-t border-[#E2E8F0] px-5 py-4">
+        <footer className="flex gap-2 border-t border-[var(--border)] px-5 py-4">
           <Button type="button" variant="outline" onClick={onClose}>{t.common.cancel}</Button>
           <Button type="button" disabled={busy} onClick={() => void save()}>{t.common.save}</Button>
         </footer>

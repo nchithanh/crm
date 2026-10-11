@@ -58,7 +58,7 @@ export default function TeacherDetailPage() {
         <ul className="mt-2 space-y-2">
           {linkedCourses.map(({ ct, course }) => (
             <li key={ct.id}>
-              <Link href={`/courses/${course!.id}`} className="flex items-center justify-between rounded-[12px] border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+              <Link href={`/courses/${course!.id}`} className="flex items-center justify-between rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
                 <span className="font-semibold text-slate-900">{course!.name}</span>
                 <Badge tone={ct.role === "main" ? "ok" : "info"}>{ct.role}</Badge>
               </Link>
@@ -72,7 +72,7 @@ export default function TeacherDetailPage() {
         <ul className="mt-2 space-y-2">
           {upcoming.map((c) => (
             <li key={c.id}>
-              <Link href={`/classes/${c.id}`} className="block rounded-[12px] border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+              <Link href={`/classes/${c.id}`} className="block rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
                 <span className="font-semibold text-slate-900">{c.name}</span>
                 <span className="mt-0.5 block text-sm text-slate-500">{c.day} · {c.start}–{c.end}</span>
               </Link>

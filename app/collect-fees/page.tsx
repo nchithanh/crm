@@ -195,7 +195,7 @@ export default function FinanceCollectPage() {
             <ul className="mt-2">
               {matches.map((s) => (
                 <li key={s.id}>
-                  <button type="button" className="flex min-h-12 w-full items-center justify-between rounded-[10px] px-2 text-left hover:bg-slate-50" onClick={() => { const first = rows.find((r) => r.studentId === s.id && debtRemaining(r) > 0); setStudentId(s.id); setQ(s.name); setReceivableId(first?.id ?? ""); setAmount(first ? String(debtRemaining(first)) : ""); }}>
+                  <button type="button" className="flex min-h-12 w-full items-center justify-between rounded-[14px] px-2 text-left hover:bg-slate-50" onClick={() => { const first = rows.find((r) => r.studentId === s.id && debtRemaining(r) > 0); setStudentId(s.id); setQ(s.name); setReceivableId(first?.id ?? ""); setAmount(first ? String(debtRemaining(first)) : ""); }}>
                     <span className="font-semibold">{s.name}</span>
                     <span className="text-sm tabular-nums">{formatVnd(s.debt)}</span>
                   </button>
@@ -205,7 +205,7 @@ export default function FinanceCollectPage() {
           ) : null}
           {student ? (
             <div className="mt-4 space-y-3">
-              <div className="flex flex-wrap items-end justify-between gap-3 rounded-[10px] border border-slate-100 bg-slate-50/80 px-3 py-2">
+              <div className="flex flex-wrap items-end justify-between gap-3 rounded-[14px] border border-slate-100 bg-slate-50/80 px-3 py-2">
                 <div>
                   <p className="text-lg font-bold">{student.name}</p>
                   <p className="text-sm text-slate-500">{pack?.name ?? t.pages.noPackage} · {course?.name ?? t.pages.noCourse} · {branches.find((b) => b.id === student.branchId)?.name}</p>
@@ -224,7 +224,7 @@ export default function FinanceCollectPage() {
               </label>
 
               {target ? (
-                <div className="rounded-[10px] border border-slate-200 p-3">
+                <div className="rounded-[14px] border border-slate-200 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold">{target.title}</p>
@@ -260,7 +260,7 @@ export default function FinanceCollectPage() {
                     type="button"
                     onClick={() => setUiMethod(id)}
                     className={cn(
-                      "rounded-[8px] border px-1 py-2.5 text-[11px] font-semibold",
+                      "rounded-[12px] border px-1 py-2.5 text-[11px] font-semibold",
                       uiMethod === id
                         ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                         : "border-slate-200 text-slate-700",
@@ -281,7 +281,7 @@ export default function FinanceCollectPage() {
               ) : null}
 
               {uiMethod === "debt" ? (
-                <p className="rounded-[10px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
+                <p className="rounded-[14px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
               ) : null}
 
               <label className="block text-sm">{t.money.note}
@@ -327,10 +327,10 @@ export default function FinanceCollectPage() {
 
       {checkoutOpen && target ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[10px] bg-white p-5">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[14px] bg-white p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-lg font-bold">{t.money.confirmPay}</h2>
-              <button type="button" className="rounded-[10px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setCheckoutOpen(false)}>
+              <button type="button" className="rounded-[14px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setCheckoutOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -339,7 +339,7 @@ export default function FinanceCollectPage() {
             <p className="mt-1 text-sm text-slate-500">{student?.name} · {target.title}</p>
 
             {uiMethod === "debt" ? (
-              <p className="mt-3 rounded-[10px] bg-amber-50 p-3 text-sm text-amber-800">{t.money.debtNote}</p>
+              <p className="mt-3 rounded-[14px] bg-amber-50 p-3 text-sm text-amber-800">{t.money.debtNote}</p>
             ) : null}
 
             {(uiMethod === "transfer" || uiMethod === "qr") ? (
@@ -365,10 +365,10 @@ export default function FinanceCollectPage() {
 
       {receipt ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-[10px] bg-white p-5">
+          <div className="w-full max-w-sm rounded-[14px] bg-white p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-lg font-bold">{t.money.successTitle}</h2>
-              <button type="button" className="rounded-[10px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setReceipt(null)}>
+              <button type="button" className="rounded-[14px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setReceipt(null)}>
                 <X size={18} />
               </button>
             </div>

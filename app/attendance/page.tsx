@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, inputClass } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { canSeeContact } from "@/lib/access";
 import { restoreAttendance, setAttendance } from "@/lib/actions";
 import { db } from "@/lib/db";
@@ -175,21 +176,28 @@ export default function AttendancePage() {
   return (
     <div className="pb-36 lg:pb-28">
       <h1 className="crm-page-title">{t.attend.title}</h1>
-      <p className="mt-2 rounded-[8px] bg-slate-50 px-3 py-1.5 text-xs text-slate-500">{t.attend.rule}</p>
-      <div className="mt-3">
-        <select className={inputClass} value={pick || currentClassId} onChange={(e) => setPick(e.target.value)}>
-          {daySessions.map((s) => {
-            const tu = users.find((u) => u.id === s.teacherId);
-            const r = rooms.find((roomRow) => roomRow.id === s.roomId);
-            const c = courses.find((courseRow) => courseRow.id === s.courseId);
-            return <option key={s.id} value={s.id}>{s.start}–{s.end} · {c?.name} · {tu?.name} · {r?.name}</option>;
-          })}
-          {daySessions.length === 0
-            ? branchClasses.slice(0, 20).map((c) => (
-              <option key={c.id} value={c.id}>{c.day} {c.start} · {c.name}</option>
-            ))
-            : null}
-        </select>
+      <p className="mt-4 rounded-[18px] border border-[var(--border)] bg-[var(--brand-50)] px-4 py-3 text-sm text-[var(--muted)]">{t.attend.rule}</p>
+      <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+        {(daySessions.length ? daySessions : branchClasses.slice(0, 8)).map((s) => {
+          const tu = users.find((u) => u.id === s.teacherId);
+          const c = courses.find((courseRow) => courseRow.id === s.courseId);
+          const on = (pick || currentClassId) === s.id;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setPick(s.id)}
+              className={cn(
+                "min-w-[11rem] shrink-0 rounded-[18px] border px-4 py-3 text-left",
+                on ? "border-[var(--brand-500)] bg-[var(--brand-50)]" : "border-[var(--border)] bg-white",
+              )}
+            >
+              <p className="text-sm font-bold text-[var(--foreground)]">{s.start}</p>
+              <p className="mt-1 truncate text-xs text-[var(--muted)]">{c?.name ?? s.name}</p>
+              <p className="truncate text-xs text-[var(--muted)]">{tu?.name}</p>
+            </button>
+          );
+        })}
       </div>
       {subMsg ? <p className="mt-2 text-sm text-rose-700">{subMsg}</p> : null}
       <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
@@ -200,8 +208,8 @@ export default function AttendancePage() {
         </div>
         <input className={`${inputClass} max-w-xs`} placeholder={t.attend.search} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {cancelled ? <p className="mt-3 rounded-[12px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{t.attend.cancelled}</p> : null}
-      {hiddenHolds > 0 ? <p className="mt-3 rounded-[12px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{fill(t.attend.hidden, { n: hiddenHolds })}</p> : null}
+      {cancelled ? <p className="mt-3 rounded-[18px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{t.attend.cancelled}</p> : null}
+      {hiddenHolds > 0 ? <p className="mt-3 rounded-[18px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{fill(t.attend.hidden, { n: hiddenHolds })}</p> : null}
       {!session ? <p className="mt-3 text-sm text-slate-500">{t.attend.noSessionNote}</p> : null}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button onClick={() => void markAllPresent()} disabled={eligible.length === 0}>{t.attend.markAll}</Button>
@@ -214,7 +222,7 @@ export default function AttendancePage() {
           const tone = flash[s.id] ?? row?.status;
           const shell = tone === "present" ? "border-green-300 bg-green-50" : tone === "absent" ? "border-slate-300 bg-slate-100" : tone === "excused" ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-white";
           return (
-            <li key={s.id} className={`rounded-[12px] border p-3 ${shell} ${hold ? "opacity-70" : ""}`}>
+            <li key={s.id} className={`rounded-[18px] border p-3 ${shell} ${hold ? "opacity-70" : ""}`}>
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
                 <div className="min-w-0 flex-1">
@@ -233,7 +241,7 @@ export default function AttendancePage() {
                     type="button"
                     disabled={hold}
                     onClick={() => void markOne(s, status)}
-                    className={`h-10 rounded-[10px] border-[1.5px] text-sm font-semibold disabled:cursor-not-allowed ${row?.status === status ? buttonTone[status] : buttonIdle[status]}`}
+                    className={`h-12 rounded-full border text-sm font-semibold disabled:cursor-not-allowed ${row?.status === status ? buttonTone[status] : buttonIdle[status]}`}
                   >
                     {status === "present" ? t.status.present : status === "absent" ? t.status.absent : t.status.excused}
                   </button>
@@ -248,20 +256,20 @@ export default function AttendancePage() {
           <p className="text-xs text-slate-500 lg:hidden">{t.attend.rule}</p>
           <div className="mt-1 flex items-center justify-between gap-3 lg:mt-0">
             <p className="text-base font-semibold tabular-nums">{fill(t.attend.marked, { done: marked.length, total: eligible.length })}</p>
-            <Button onClick={() => setSummary(true)}>{t.attend.done}</Button>
+            <Button className="w-full sm:w-auto" onClick={() => setSummary(true)}>{t.attend.done}</Button>
           </div>
         </div>
       </div>
       {summary ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
           <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setSummary(false)} />
-          <div className="relative w-full max-w-md rounded-[12px] bg-white p-5 shadow-xl">
+          <div className="relative w-full max-w-md rounded-[18px] bg-white p-5 shadow-xl">
             <h2 className="text-lg font-bold">{t.attend.summary}</h2>
             <p className="mt-1 text-sm text-slate-500">{klass?.name} · {today}</p>
             <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-[12px] bg-green-50 p-3"><dt className="text-sm text-green-800">{t.status.present}</dt><dd className="text-3xl font-bold tabular-nums">{counts.present}</dd></div>
-              <div className="rounded-[12px] bg-slate-100 p-3"><dt className="text-sm">{t.status.absent}</dt><dd className="text-3xl font-bold tabular-nums">{counts.absent}</dd></div>
-              <div className="rounded-[12px] bg-amber-50 p-3"><dt className="text-sm text-amber-800">{t.status.excused}</dt><dd className="text-3xl font-bold tabular-nums">{counts.excused}</dd></div>
+              <div className="rounded-[18px] bg-green-50 p-3"><dt className="text-sm text-green-800">{t.status.present}</dt><dd className="text-3xl font-bold tabular-nums">{counts.present}</dd></div>
+              <div className="rounded-[18px] bg-slate-100 p-3"><dt className="text-sm">{t.status.absent}</dt><dd className="text-3xl font-bold tabular-nums">{counts.absent}</dd></div>
+              <div className="rounded-[18px] bg-amber-50 p-3"><dt className="text-sm text-amber-800">{t.status.excused}</dt><dd className="text-3xl font-bold tabular-nums">{counts.excused}</dd></div>
             </dl>
             <p className="mt-4 text-sm text-slate-600">{cancelled ? t.attend.cancelledNote : t.attend.confirmNote}</p>
             <Button className="mt-4 w-full" onClick={() => setSummary(false)}>{t.common.confirm}</Button>

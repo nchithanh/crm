@@ -55,7 +55,7 @@ export default function StudentDetailPage() {
         </div>
       </header>
 
-      <dl className="mt-6 grid gap-3 rounded-[12px] border border-[#E2E8F0] bg-white p-4 text-sm md:grid-cols-2">
+      <dl className="mt-6 grid gap-3 rounded-[18px] border border-[var(--border)] bg-white p-4 text-sm md:grid-cols-2">
         <div>
           <dt className="text-slate-400">{t.nav.courses}</dt>
           <dd className="font-semibold">
@@ -86,7 +86,7 @@ export default function StudentDetailPage() {
         <ul className="mt-2 space-y-2">
           {linkedClasses.map((c) => (
             <li key={c!.id}>
-              <Link href={`/classes/${c!.id}`} className="block rounded-[12px] border border-[#E2E8F0] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+              <Link href={`/classes/${c!.id}`} className="block rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
                 <span className="font-semibold">{c!.name}</span>
                 <span className="mt-0.5 block text-sm text-slate-500">{c!.day} · {c!.start}–{c!.end}</span>
               </Link>

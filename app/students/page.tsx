@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { MoreHorizontal, Star } from "lucide-react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { StudentDrawer } from "@/components/student-drawer";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
@@ -111,7 +111,6 @@ export default function StudentsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [menuId, setMenuId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [bulkMsg, setBulkMsg] = useState("");
   const { student } = usePageQuery();
@@ -120,6 +119,11 @@ export default function StudentsPage() {
   useEffect(() => {
     if (student) setOpenId(student);
   }, [student]);
+
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get("q");
+    if (initial) setQ(initial);
+  }, []);
 
   const marksByStudent = useMemo(() => {
     const map = new Map<string, Attendance[]>();
@@ -215,12 +219,7 @@ export default function StudentsPage() {
   }, [q, status, courseFilter, branchId, branchPick, level, debt, remain, kpi, teacherId, attendBand, flaggedOnly, holdOnly]);
 
   useEffect(() => {
-    if (openId && rows.length && !rows.some((r) => r.id === openId)) {
-      setOpenId(null);
-      return;
-    }
-    if (openId || !rows[0] || typeof window === "undefined") return;
-    if (window.matchMedia("(min-width: 1024px)").matches) setOpenId(rows[0].id);
+    if (openId && rows.length && !rows.some((r) => r.id === openId)) setOpenId(null);
   }, [rows, openId]);
 
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -228,18 +227,8 @@ export default function StudentsPage() {
   const paged = rows.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
   const fromN = rows.length === 0 ? 0 : pageSafe * PAGE_SIZE + 1;
   const toN = Math.min(rows.length, pageSafe * PAGE_SIZE + paged.length);
-  const allChecked = paged.length > 0 && paged.every((st) => selected.includes(st.id));
   const picked = rows.filter((st) => selected.includes(st.id));
-  const showBranch = branchId === "all" && branchPick === "all";
   const teachers = users.filter((u) => u.role === "teacher");
-
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(key);
-      setSortDir(key === "name" ? "asc" : "desc");
-    }
-  }
 
   function closePanel() {
     setOpenId(null);
@@ -252,7 +241,6 @@ export default function StudentsPage() {
 
   function pick(id: string) {
     setOpenId(id);
-    setMenuId(null);
     const url = new URL(window.location.href);
     url.searchParams.set("student", id);
     window.history.replaceState(null, "", `${url.pathname}${url.search}`);
@@ -328,86 +316,106 @@ export default function StudentsPage() {
     return { primary, extra: extra.size };
   }
 
+  const canEnroll = role === "owner" || role === "reception";
+  const chip = holdOnly ? "hold" : remain === "le3" ? "low" : kpi === "unpaid" ? "unpaid" : kpi === "active" ? "active" : "all";
+  const chips: { id: "all" | "active" | "unpaid" | "low" | "hold"; label: string }[] = [
+    { id: "all", label: t.students.kpiTotal },
+    { id: "active", label: t.students.kpiActive },
+    ...(seeMoney ? [{ id: "unpaid" as const, label: t.students.kpiUnpaid }] : []),
+    { id: "low", label: t.students.remainLe3 },
+    { id: "hold", label: t.students.onHoldOnly },
+  ];
+  const homeKpis = kpiCards.filter((k) => k.id === "all" || k.id === "active" || (seeMoney ? k.id === "unpaid" : k.id === "follow")).slice(0, 3);
+
+  function setChip(id: "all" | "active" | "unpaid" | "low" | "hold") {
+    setHoldOnly(id === "hold");
+    setRemain(id === "low" ? "le3" : "all");
+    setKpi(id === "active" ? "active" : id === "unpaid" ? "unpaid" : "all");
+    setDebt("all");
+    setStatus("all");
+  }
+
   return (
-    <div className="flex min-h-0 flex-col gap-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex min-h-0 flex-col gap-4 pb-24">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="crm-page-title">{t.students.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{fill(t.students.count, { n: rows.length })}</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{fill(t.students.count, { n: rows.length })}</p>
         </div>
-        {seeMoney || seeContact ? (
-          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
-            {t.students.emptyCta}
-          </Link>
-        ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-        {kpiCards.map((k) => {
-          const on = kpi === k.id || (k.id === "all" && kpi === "all");
+      <label className="flex h-12 items-center gap-2 rounded-full bg-[var(--brand-50)] px-4 text-sm text-[var(--muted)]">
+        <Search size={18} />
+        <input
+          className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
+          placeholder={seeContact ? t.students.search : t.students.searchName}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </label>
+
+      <div className="grid grid-cols-3 gap-3">
+        {homeKpis.map((k) => {
+          const on = kpi === k.id;
           return (
             <button
               key={k.id}
               type="button"
-              onClick={() => setKpi(k.id)}
+              onClick={() => { setChip("all"); setKpi(k.id); }}
               className={cn(
-                "rounded-[10px] border px-3 py-2.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06)]",
-                on ? "border-[var(--brand-500)] bg-[var(--brand-50)]" : "border-[var(--border)] bg-[var(--card)]",
+                "rounded-[18px] border bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]",
+                on ? "border-[var(--brand-300)]" : "border-[var(--border)]",
               )}
             >
-              <p className="text-xs text-slate-500">{k.label}</p>
-              <p className="mt-0.5 text-xl font-bold tabular-nums text-[var(--foreground)]">{k.value}</p>
-              {k.hint ? <p className={cn("text-xs tabular-nums", k.hint.startsWith("↑") ? "text-green-600" : "text-rose-600")}>{k.hint}</p> : null}
+              <p className="text-xs font-medium text-[var(--muted)]">{k.label}</p>
+              <p className="crm-kpi mt-1 text-[var(--foreground)]">{k.value}</p>
             </button>
           );
         })}
       </div>
 
-      <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
-        <input className={`${inputClass} md:col-span-2 xl:col-span-2`} placeholder={seeContact ? t.students.search : t.students.searchName} value={q} onChange={(e) => setQ(e.target.value)} />
-        {branchId === "all" ? (
-          <select className={inputClass} value={branchPick} onChange={(e) => setBranchPick(e.target.value)}>
-            <option value="all">{t.common.branch}</option>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        ) : null}
-        <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
-          <option value="all">{t.common.level}</option>
-          <option value="begin">Begin</option>
-          <option value="inter">Inter</option>
-          <option value="advance">Advance</option>
-        </select>
-        <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
-          <option value="all">{t.common.status}</option>
-          <option value="studying">{t.students.badgeStudy}</option>
-          <option value="hold">{t.students.hold}</option>
-          <option value="paused">{t.students.paused}</option>
-          <option value="trial">{t.status.trial}</option>
-        </select>
-        <select className={inputClass} value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}>
-          <option value="all">{t.common.course}</option>
-          {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <select className={inputClass} value={debt} onChange={(e) => setDebt(e.target.value as "all" | "yes")} disabled={!seeMoney}>
-          <option value="all">{t.students.debt}</option>
-          <option value="yes">{t.students.hasDebt}</option>
-        </select>
-        <select className={inputClass} value={remain} onChange={(e) => setRemain(e.target.value as RemainFilter)}>
-          <option value="all">{t.students.remain}</option>
-          <option value="le3">{t.students.remainLe3}</option>
-          <option value="le5">{t.students.remainLe5}</option>
-          <option value="zero">{t.students.remainZero}</option>
-        </select>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" onClick={() => setMore((v) => !v)}>{t.students.more}</Button>
-        <Button type="button" variant="outline" onClick={() => download(rows)}>{t.students.export}</Button>
-        <Button type="button" variant="ghost" onClick={clearFilters}>{t.students.clearFilters}</Button>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {chips.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setChip(item.id)}
+            className={cn(
+              "h-9 shrink-0 rounded-full px-4 text-sm font-semibold",
+              chip === item.id ? "bg-[var(--brand-50)] text-[var(--brand-600)]" : "border border-[var(--border)] bg-white text-[var(--muted)]",
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+        <button type="button" className="h-9 shrink-0 rounded-full border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]" onClick={() => setMore((v) => !v)}>{t.students.more}</button>
       </div>
 
       {more ? (
-        <div className="grid gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-3 md:grid-cols-4">
+        <div className="grid gap-2 rounded-[18px] border border-[var(--border)] bg-white p-4 md:grid-cols-3">
+          {branchId === "all" ? (
+            <select className={inputClass} value={branchPick} onChange={(e) => setBranchPick(e.target.value)}>
+              <option value="all">{t.common.branch}</option>
+              {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          ) : null}
+          <select className={inputClass} value={level} onChange={(e) => setLevel(e.target.value as Level | "all")}>
+            <option value="all">{t.common.level}</option>
+            <option value="begin">Begin</option>
+            <option value="inter">Inter</option>
+            <option value="advance">Advance</option>
+          </select>
+          <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+            <option value="all">{t.common.status}</option>
+            <option value="studying">{t.students.badgeStudy}</option>
+            <option value="hold">{t.students.hold}</option>
+            <option value="paused">{t.students.paused}</option>
+            <option value="trial">{t.status.trial}</option>
+          </select>
+          <select className={inputClass} value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)}>
+            <option value="all">{t.common.course}</option>
+            {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
           <select className={inputClass} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
             <option value="all">{t.students.anyTeacher}</option>
             {teachers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -416,19 +424,19 @@ export default function StudentsPage() {
             <option value="all">{t.students.anyAttend}</option>
             <option value="low">{t.students.attendLow}</option>
           </select>
-          <label className="inline-flex h-10 items-center gap-2 text-sm">
+          <label className="inline-flex h-11 items-center gap-2 text-sm">
             <input type="checkbox" checked={flaggedOnly} onChange={(e) => setFlaggedOnly(e.target.checked)} />
             {t.students.flaggedOnly}
           </label>
-          <label className="inline-flex h-10 items-center gap-2 text-sm">
-            <input type="checkbox" checked={holdOnly} onChange={(e) => setHoldOnly(e.target.checked)} />
-            {t.students.onHoldOnly}
-          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => download(rows)}>{t.students.export}</Button>
+            <Button type="button" variant="ghost" onClick={clearFilters}>{t.students.clearFilters}</Button>
+          </div>
         </div>
       ) : null}
 
       {picked.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-3 py-2">
+        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 shadow-[var(--shadow-card)] lg:bottom-6 lg:left-[276px]">
           <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={() => openZalo(picked)}>{t.students.message}</Button> : null}
           <Button type="button" variant="outline" onClick={() => void assignFollow(picked)}>{t.students.assignFollow}</Button>
@@ -438,8 +446,8 @@ export default function StudentsPage() {
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-stretch">
-        <div className="flex min-h-0 flex-col rounded-[10px] border border-[var(--border)] bg-[var(--card)] shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,32rem)] lg:items-stretch">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
               <p className="text-sm text-slate-500">{t.students.empty}</p>
@@ -448,111 +456,35 @@ export default function StudentsPage() {
           ) : (
             <>
               <div className="min-h-0 flex-1 overflow-auto">
-                <table className="w-full min-w-[860px] text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-[var(--border)] bg-slate-50 text-left">
-                    <tr>
-                      <th className="sticky left-0 z-20 w-10 bg-slate-50 px-3 py-3">
-                        <input
-                          type="checkbox"
-                          aria-label={t.students.selectAll}
-                          checked={allChecked}
-                          onChange={(e) => setSelected(e.target.checked ? [...new Set([...selected, ...paged.map((st) => st.id)])] : selected.filter((id) => !paged.some((st) => st.id === id)))}
-                        />
-                      </th>
-                      <th className="sticky left-10 z-20 bg-slate-50 px-3 py-3">
-                        <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort("name")}>{t.nav.students}{sortKey === "name" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}</button>
-                      </th>
-                      {showBranch ? <th className="px-3 py-3 font-semibold text-slate-600">{t.common.branch}</th> : null}
-                      <th className="px-3 py-3 font-semibold text-slate-600">{t.common.course}</th>
-                      <th className="px-3 py-3 font-semibold text-slate-600">{t.common.teacher}</th>
-                      <th className="px-3 py-3 text-right">
-                        <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort("remain")}>{t.students.remain}{sortKey === "remain" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}</button>
-                      </th>
-                      <th className="px-3 py-3 text-right">
-                        <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort("attend")}>{t.students.attendCol}{sortKey === "attend" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}</button>
-                      </th>
-                      {seeMoney ? (
-                        <th className="px-3 py-3 text-right">
-                          <button type="button" className="font-semibold text-slate-600" onClick={() => toggleSort("debt")}>{t.students.badgeDebt}{sortKey === "debt" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}</button>
-                        </th>
-                      ) : null}
-                      <th className="px-3 py-3 font-semibold text-slate-600">{t.students.status}</th>
-                      <th className="w-10 px-2 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paged.map((st) => {
-                      const badges = studentBadges(st, holds, seeMoney, lang);
-                      const on = openId === st.id;
-                      const course = courses.find((c) => c.id === st.courseId);
-                      const teacher = teacherOf(course, users);
-                      const label = courseLabel(st);
-                      const rate = rateOf(marksByStudent.get(st.id) ?? []);
-                      return (
-                        <tr
-                          key={st.id}
-                          className={cn("cursor-pointer border-t border-slate-100", on ? "bg-[rgba(249,115,22,0.08)]" : "hover:bg-slate-50")}
-                          onClick={() => pick(st.id)}
-                        >
-                          <td className={cn("sticky left-0 z-10 px-3 py-3", on ? "bg-[rgba(249,115,22,0.08)]" : "bg-white")} onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="checkbox"
-                              aria-label={fill(t.students.selectOne, { name: st.name })}
-                              checked={selected.includes(st.id)}
-                              onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
-                            />
-                          </td>
-                          <td className={cn("sticky left-10 z-10 px-3 py-3", on ? "bg-[rgba(249,115,22,0.08)]" : "bg-white")}>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
-                              <span className="min-w-0">
-                                <span className="flex items-center gap-1 font-semibold text-[var(--foreground)]">
-                                  {st.name}
-                                  {st.flagged ? <Star size={14} className="fill-amber-400 text-amber-500" aria-label={t.students.flagged} /> : null}
-                                </span>
-                                <span className="block text-xs text-slate-400">{st.id}{seeContact ? ` · ${st.phone}` : ""}</span>
-                              </span>
-                            </div>
-                          </td>
-                          {showBranch ? <td className="px-3 py-3 text-slate-600">{branches.find((b) => b.id === st.branchId)?.name ?? "—"}</td> : null}
-                          <td className="px-3 py-3 text-slate-700">
-                            {label.primary}
-                            {label.extra > 0 ? <span className="ml-1 text-xs text-slate-400">{fill(t.students.extraCourses, { n: label.extra })}</span> : null}
-                          </td>
-                          <td className="px-3 py-3">
-                            {teacher ? (
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: teacher.avatarColor }}>{initials(teacher.name)}</span>
-                                <span className="text-slate-700">{teacher.name}</span>
-                              </span>
-                            ) : "—"}
-                          </td>
-                          <td className={cn("px-3 py-3 text-right tabular-nums", remainTone(st.remainingSessions))}>{st.remainingSessions}</td>
-                          <td className="px-3 py-3 text-right tabular-nums text-slate-700">{rate === null ? "—" : `${rate}%`}</td>
-                          {seeMoney ? <td className="px-3 py-3 text-right tabular-nums">{st.debt > 0 ? formatVnd(st.debt) : "—"}</td> : null}
-                          <td className="px-3 py-3">
-                            <span className="flex flex-wrap gap-1">
-                              {badges.slice(0, 3).map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
+                <ul className="divide-y divide-[var(--border)]">
+                  {paged.map((st) => {
+                    const badges = studentBadges(st, holds, seeMoney, lang);
+                    const on = openId === st.id;
+                    const label = courseLabel(st);
+                    const pill = badges[0];
+                    return (
+                      <li key={st.id}>
+                        <div className={cn("flex items-center gap-2 px-3 py-3", on && "bg-[rgba(124,58,237,0.10)]")}>
+                          <input
+                            type="checkbox"
+                            aria-label={fill(t.students.selectOne, { name: st.name })}
+                            checked={selected.includes(st.id)}
+                            onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
+                          />
+                          <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => pick(st.id)}>
+                            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate font-semibold text-[var(--foreground)]">{st.name}</span>
+                              <span className="block truncate text-xs text-[var(--muted)]">{label.primary} · {fill(t.drawer.sessionsLeft, { n: st.remainingSessions })}</span>
                             </span>
-                          </td>
-                          <td className="relative px-2 py-3" onClick={(e) => e.stopPropagation()}>
-                            <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] hover:bg-slate-100" aria-label={t.students.menu} onClick={() => setMenuId(menuId === st.id ? null : st.id)}>
-                              <MoreHorizontal size={16} />
-                            </button>
-                            {menuId === st.id ? (
-                              <div className="absolute right-2 z-30 mt-1 w-44 rounded-[10px] border border-[var(--border)] bg-white py-1 text-sm shadow-md">
-                                <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => pick(st.id)}>{t.students.view}</button>
-                                {seeMoney ? <Link className="block px-3 py-2 hover:bg-slate-50" href={`/collect-fees?student=${st.id}`}>{t.students.collectQuick}</Link> : null}
-                                {seeContact ? <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => openZalo([st])}>{t.students.message}</button> : null}
-                                <Link className="block px-3 py-2 hover:bg-slate-50" href="/mid-course-enroll">{t.drawer.enrollMore}</Link>
-                              </div>
-                            ) : null}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            {pill ? <Badge tone={pill.tone}>{pill.label}</Badge> : null}
+                            <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
               <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
                 <p className="text-xs text-slate-500">{fill(t.students.range, { from: fromN, to: toN, total: rows.length })}</p>
@@ -569,7 +501,7 @@ export default function StudentsPage() {
           {openId ? (
             <StudentDrawer key={openId} studentId={openId} onClose={closePanel} variant="panel" />
           ) : (
-            <div className="flex h-full min-h-[28rem] items-center justify-center rounded-[10px] border border-dashed border-[var(--border)] bg-[var(--card)] px-6 text-center text-sm text-slate-500">
+            <div className="flex h-full min-h-[28rem] items-center justify-center rounded-[14px] border border-dashed border-[var(--border)] bg-[var(--card)] px-6 text-center text-sm text-slate-500">
               {t.students.pickHint}
             </div>
           )}
@@ -580,6 +512,15 @@ export default function StudentsPage() {
         <div className="lg:hidden">
           <StudentDrawer key={`m-${openId}`} studentId={openId} onClose={closePanel} variant="drawer" />
         </div>
+      ) : null}
+      {canEnroll ? (
+        <Link
+          href="/mid-course-enroll"
+          aria-label={t.students.emptyCta}
+          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_8px_24px_rgba(124,58,237,0.35)] lg:bottom-8"
+        >
+          <Plus size={24} />
+        </Link>
       ) : null}
     </div>
   );

@@ -110,6 +110,19 @@ export default function FinanceOverviewPage() {
               ))}
             </div>
           </div>
+          <div className="mb-4 flex items-center gap-4">
+            <div
+              className="h-28 w-28 shrink-0 rounded-full"
+              style={{
+                background: `conic-gradient(#7C3AED 0 ${(view.snap.collected ? view.snap.cash / Math.max(view.snap.collected, 1) : 0) * 360}deg, #6EE7B7 0 360deg)`,
+              }}
+              aria-hidden
+            />
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[var(--brand-500)]" />{t.finance.cash} · {formatVnd(view.snap.cash)}</li>
+              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />{t.finance.transfer} · {formatVnd(view.snap.transfer)}</li>
+            </ul>
+          </div>
           <CollectionChart data={view.chart} empty={t.finance.chartEmpty} />
         </Card>
         <AgingCard
@@ -135,7 +148,7 @@ export default function FinanceOverviewPage() {
               const st = debtUiStatus(row);
               const student = students.find((s) => s.id === row.studentId);
               return (
-                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-slate-100 px-3 py-2 text-sm">
+                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-slate-100 px-3 py-2 text-sm">
                   <span>
                     <span className="block font-semibold">{student?.name ?? row.studentId}</span>
                     <span className={st === "overdue" ? "text-rose-600" : "text-amber-700"}>

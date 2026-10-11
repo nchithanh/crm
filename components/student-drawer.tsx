@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { MoreHorizontal, X } from "lucide-react";
+import { MessageCircle, MoreHorizontal, Phone, Wallet, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canApproveHold, canSeeContact, canSeeMoney } from "@/lib/access";
 import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag } from "@/lib/actions";
@@ -119,7 +119,7 @@ export function StudentDrawer({
   if (student === undefined) {
     if (variant === "panel") {
       return (
-        <aside className="flex h-full min-h-[28rem] w-full flex-col rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-slate-500">
+        <aside className="flex h-full min-h-[28rem] w-full flex-col rounded-[14px] border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-slate-500">
           {t.drawer.loading}
         </aside>
       );
@@ -199,62 +199,66 @@ export function StudentDrawer({
       <aside
         className={
           variant === "panel"
-            ? "flex h-full max-h-[calc(100dvh-8rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--card)] shadow-[0_1px_2px_rgba(15,23,42,0.06)]"
-            : "relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-xl"
+            ? "flex h-full max-h-[calc(100dvh-7rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]"
+            : "relative flex h-full w-full max-w-xl flex-col bg-[#F8F7FC]"
         }
       >
-        <header className="shrink-0 border-b border-[var(--border)] px-5 py-4">
-          <div className="flex items-start gap-3">
-            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student.avatarColor }}>
+        <header className="shrink-0 bg-white px-5 pt-5 pb-3">
+          <div className="flex items-start justify-end">
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--brand-50)]" aria-label={t.drawer.close} onClick={onClose}>
+              <X size={18} />
+            </button>
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <span className="inline-flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white" style={{ background: student.avatarColor }}>
               {initials(student.name)}
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-lg font-bold text-slate-900">{student.name}</h2>
-                <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] hover:bg-slate-100" aria-label={t.drawer.close} onClick={onClose}>
-                  <X size={18} />
-                </button>
-              </div>
-              {seeContact ? (
-                <button type="button" className="mt-0.5 text-left text-sm text-slate-500 hover:text-[var(--brand-600)]" onClick={() => void copyPhone()}>
-                  {student.phone || "—"}{copied ? ` · ${t.students.copied}` : ""}
-                </button>
-              ) : (
-                <p className="mt-0.5 text-sm text-slate-400">{t.drawer.phoneHidden}</p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-1">
-                {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
-                {student.flagged ? <Badge tone="warn">{t.students.flagged}</Badge> : null}
-              </div>
+            <h2 className="mt-3 text-2xl font-bold text-[var(--foreground)]">{student.name}</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">{course?.name ?? t.drawer.noCourse} · {levelLabel(student.level)}</p>
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
+              {student.flagged ? <Badge tone="warn">{t.students.flagged}</Badge> : null}
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            {seeContact ? (
+              <a href={phone ? `tel:${phone}` : undefined} className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-50)]"><Phone size={18} /></span>
+                {t.task.call}
+              </a>
+            ) : <span />}
+            {seeContact ? (
+              <a href={zaloHref(phone) || "#"} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-50)]"><MessageCircle size={18} /></span>
+                {t.task.zalo}
+              </a>
+            ) : <span />}
             {seeMoney ? (
-              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)]">
+              <Link href={`/collect-fees?student=${student.id}`} className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-50)]"><Wallet size={18} /></span>
                 {t.drawer.collect}
               </Link>
-            ) : null}
-            <Link href="/mid-course-enroll" className="crm-outline inline-flex h-10 items-center rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
-              {t.drawer.enrollMore}
-            </Link>
-            <div className="relative">
-              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] hover:bg-slate-50" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-                <MoreHorizontal size={16} />
+            ) : <span />}
+            <div className="relative flex flex-col items-center">
+              <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-50)]"><MoreHorizontal size={18} /></span>
+                {t.drawer.moreActions}
               </button>
               {menu ? (
-                <div className="absolute right-0 z-20 mt-1 w-52 rounded-[10px] border border-[var(--border)] bg-white py-1 text-sm shadow-md">
+                <div className="absolute top-16 right-0 z-20 w-52 rounded-[18px] border border-[var(--border)] bg-white py-1 text-left text-sm shadow-[var(--shadow-card)]">
                   {seeContact && kid && student.parentPhone ? (
-                    <a className="block px-3 py-2 hover:bg-slate-50" href={zaloHref(student.parentPhone) || "#"} target="_blank" rel="noreferrer">{t.drawer.messageParent}</a>
+                    <a className="block px-3 py-2 hover:bg-[var(--brand-50)]" href={zaloHref(student.parentPhone) || "#"} target="_blank" rel="noreferrer">{t.drawer.messageParent}</a>
                   ) : null}
-                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => { setTab("hold"); setMenu(false); }}>{t.drawer.requestHold}</button>
-                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-slate-50" onClick={() => { void setStudentsFlag([student.id], !student.flagged); setMenu(false); }}>{t.drawer.toggleFlag}</button>
-                  <Link className="block px-3 py-2 hover:bg-slate-50" href={`/students/${student.id}`}>{t.drawer.fullProfile}</Link>
+                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-[var(--brand-50)]" onClick={() => { setTab("hold"); setMenu(false); }}>{t.drawer.requestHold}</button>
+                  <button type="button" className="block w-full px-3 py-2 text-left hover:bg-[var(--brand-50)]" onClick={() => { void setStudentsFlag([student.id], !student.flagged); setMenu(false); }}>{t.drawer.toggleFlag}</button>
+                  <Link className="block px-3 py-2 hover:bg-[var(--brand-50)]" href={`/students/${student.id}`}>{t.drawer.fullProfile}</Link>
+                  <Link className="block px-3 py-2 hover:bg-[var(--brand-50)]" href="/mid-course-enroll">{t.drawer.enrollMore}</Link>
                 </div>
               ) : null}
             </div>
           </div>
           <div
-            className="mt-4 flex gap-1 overflow-x-auto"
+            className="mt-5 flex gap-2 overflow-x-auto"
             role="tablist"
             onKeyDown={(e) => {
               if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -271,7 +275,7 @@ export function StudentDrawer({
                 role="tab"
                 aria-selected={tab === id}
                 onClick={() => setTab(id)}
-                className={tab === id ? "shrink-0 whitespace-nowrap border-b-2 border-[var(--brand-500)] px-3 py-2 text-sm font-semibold text-[var(--brand-700)]" : "shrink-0 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm text-slate-500"}
+                className={tab === id ? "shrink-0 whitespace-nowrap rounded-full bg-[var(--brand-500)] px-3.5 py-1.5 text-sm font-semibold text-white" : "shrink-0 whitespace-nowrap rounded-full bg-[var(--brand-50)] px-3.5 py-1.5 text-sm font-medium text-[var(--muted)]"}
               >
                 {tabLabel[id]}
               </button>
@@ -282,7 +286,7 @@ export function StudentDrawer({
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {tab === "overview" ? (
             <div className="space-y-4 text-sm">
-              <section className="rounded-[10px] border border-[var(--border)] p-3">
+              <section className="rounded-[14px] border border-[var(--border)] p-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.health}</h3>
                 <dl className="mt-2 grid grid-cols-2 gap-3">
                   <div>
@@ -310,16 +314,16 @@ export function StudentDrawer({
                   </div>
                 </dl>
                 {student.remainingSessions <= 3 ? (
-                  <Link href="/mid-course-enroll" className="mt-3 inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">{t.drawer.renew}</Link>
+                  <Link href="/mid-course-enroll" className="mt-3 inline-flex h-10 items-center rounded-[14px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">{t.drawer.renew}</Link>
                 ) : null}
               </section>
-              <section className="rounded-[10px] border border-[var(--border)] p-3">
+              <section className="rounded-[14px] border border-[var(--border)] p-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.enrollment}</h3>
                 <p className="mt-2 font-semibold">{course?.name ?? t.drawer.noCourse}</p>
                 <p className="text-slate-500">{levelLabel(student.level)} · {teacher?.name ?? "—"} · {branch?.name ?? "—"}</p>
                 <p className="mt-1 text-slate-500">{t.drawer.package} {pack?.name ?? "—"}</p>
               </section>
-              <section className="rounded-[10px] bg-slate-50 p-3">
+              <section className="rounded-[14px] bg-slate-50 p-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.contact}</h3>
                 <p className="mt-1 font-semibold">{seeContact ? student.phone || "—" : t.drawer.phoneHidden}</p>
                 <p className="text-slate-500">{seeContact ? student.email || "—" : "—"}</p>
@@ -353,7 +357,7 @@ export function StudentDrawer({
               <ul className="space-y-2">
                 {student.notes.length === 0 ? <li className="text-slate-500">{t.drawer.notesEmpty}</li> : null}
                 {student.notes.map((n, i) => (
-                  <li key={i} className="rounded-[10px] border border-[var(--border)] px-3 py-2">
+                  <li key={i} className="rounded-[14px] border border-[var(--border)] px-3 py-2">
                     <p>{n.text}</p>
                     <p className="mt-1 text-xs text-slate-400">{relativeDayLabel(n.day, lang)} · {n.day}</p>
                   </li>
@@ -369,7 +373,7 @@ export function StudentDrawer({
           {show("courses") ? (
             <section className="space-y-3 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.courses}</h2> : null}
-              <article className="rounded-[12px] border border-[#E2E8F0] p-3">
+              <article className="rounded-[18px] border border-[var(--border)] p-3">
                 <p className="font-semibold text-slate-900">{course?.name ?? t.drawer.noCourse}</p>
                 <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {branch?.name}</p>
                 <p className="mt-2">
@@ -387,7 +391,7 @@ export function StudentDrawer({
               {enrollments.length > 0 ? (
                 <ul className="space-y-2">
                   {[...enrollments].sort((a, b) => b.day.localeCompare(a.day)).map((e) => (
-                    <li key={e.id} className="rounded-[12px] border border-slate-100 px-3 py-2 text-slate-600">
+                    <li key={e.id} className="rounded-[18px] border border-slate-100 px-3 py-2 text-slate-600">
                       <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.planId)?.name ?? "—"}</span>
                       {" · "}{courses.find((c) => c.id === e.courseId)?.name}
                       {" · "}{e.sessions} · {e.day}
@@ -396,9 +400,9 @@ export function StudentDrawer({
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
+                <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[14px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
               </div>
-              <div className="rounded-[12px] border border-[#E2E8F0] p-3">
+              <div className="rounded-[18px] border border-[var(--border)] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.changeClass}</p>
                 <select className={`${inputClass} mt-2`} value={classId} onChange={(e) => setClassId(e.target.value)}>
                   <option value="">{t.drawer.pickClass}</option>
@@ -455,11 +459,11 @@ export function StudentDrawer({
             <section className="space-y-3 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.money}</h2> : null}
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-[12px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
-                <div className="rounded-[12px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
+                <div className="rounded-[18px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
+                <div className="rounded-[18px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
-              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
-              <div className="overflow-auto rounded-[12px] border border-[#E2E8F0]">
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[14px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <div className="overflow-auto rounded-[18px] border border-[var(--border)]">
                 <table className="w-full min-w-[320px] text-sm">
                   <thead className="bg-slate-50 text-left text-xs text-slate-500">
                     <tr>
@@ -490,10 +494,10 @@ export function StudentDrawer({
 
           {show("hold") ? (
             <section className="space-y-3 text-sm">
-              <p className="rounded-[10px] bg-slate-50 px-3 py-2 text-xs text-slate-600">{t.hold.lead}</p>
+              <p className="rounded-[14px] bg-slate-50 px-3 py-2 text-xs text-slate-600">{t.hold.lead}</p>
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.hold}</h2> : null}
               {currentHold ? (
-                <article className="rounded-[12px] border border-[#E2E8F0] p-3">
+                <article className="rounded-[18px] border border-[var(--border)] p-3">
                   <Badge tone={currentHold.status === "approved" ? "warn" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
                   <p className="mt-2 font-semibold">{currentHold.fromDay} → {currentHold.toDay}</p>
                   <p className="text-slate-500">{currentHold.reason}</p>
@@ -518,7 +522,7 @@ export function StudentDrawer({
                 <p className="text-slate-500">{t.drawer.noHold}</p>
               )}
               {canRequestHold ? (
-                <div className="grid gap-2 rounded-[12px] border border-[#E2E8F0] bg-slate-50 p-3">
+                <div className="grid gap-2 rounded-[18px] border border-[var(--border)] bg-slate-50 p-3">
                   <Field label={t.drawer.holdFrom}>
                     <input className={inputClass} type="date" value={holdFrom} onChange={(e) => setHoldFrom(e.target.value)} />
                   </Field>

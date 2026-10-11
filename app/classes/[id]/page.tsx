@@ -68,16 +68,16 @@ export default function ClassDetailPage() {
         <p className="mt-1 text-sm text-slate-500">{klass.day} · {klass.start}–{klass.end}</p>
         <div className="mt-2 flex flex-wrap gap-2 text-sm">
           {teacher ? (
-            <Link href={`/teachers/${teacher.id}`} className="rounded-[8px] bg-slate-100 px-2 py-1 font-medium text-[var(--brand-700)] hover:underline">
+            <Link href={`/teachers/${teacher.id}`} className="rounded-[12px] bg-slate-100 px-2 py-1 font-medium text-[var(--brand-700)] hover:underline">
               GV: {teacher.name}
             </Link>
           ) : null}
           {room ? (
-            <Link href="/rooms" className="rounded-[8px] bg-slate-100 px-2 py-1 text-slate-700 hover:underline">
+            <Link href="/rooms" className="rounded-[12px] bg-slate-100 px-2 py-1 text-slate-700 hover:underline">
               {room.name}
             </Link>
           ) : (
-            <span className="rounded-[8px] bg-amber-50 px-2 py-1 text-amber-700">No room</span>
+            <span className="rounded-[12px] bg-amber-50 px-2 py-1 text-amber-700">No room</span>
           )}
           <Badge tone={klass.status === "cancelled" ? "danger" : "ok"}>{klass.status}</Badge>
         </div>
@@ -104,7 +104,7 @@ export default function ClassDetailPage() {
             if (!s) return null;
             const markRow = attendance.find((a) => a.subject === "student" && a.personId === s.id);
             return (
-              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#E2E8F0] bg-white px-3 py-2.5">
+              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[18px] border border-[var(--border)] bg-white px-3 py-2.5">
                 <Link href={`/students/${s.id}`} className="flex items-center gap-2 font-semibold text-[var(--brand-600)] hover:underline">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
                   {s.name}

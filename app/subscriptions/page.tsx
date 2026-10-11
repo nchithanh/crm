@@ -96,7 +96,7 @@ export default function SubscriptionsPage() {
 
       <section className="mt-8">
         <h2 className="text-base font-bold">{t.pages.subActive}</h2>
-        <div className="mt-3 overflow-auto rounded-[12px] border border-[#E2E8F0] bg-white">
+        <div className="mt-3 overflow-auto rounded-[18px] border border-[var(--border)] bg-white">
           <table className="w-full min-w-[800px] text-sm">
             <thead className="bg-slate-50 text-left">
               <tr>

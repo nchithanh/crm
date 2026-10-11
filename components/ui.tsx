@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-/** CTA: text-sm / font-semibold — design-language.md */
+/** CTA — PeopleHub: 14px radius, violet primary. design-language.md */
 export const ctaPrimary =
-  "inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--brand-600)] active:bg-[var(--brand-700)]";
+  "inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-[14px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-600)] active:opacity-90";
 export const ctaOutline =
-  "crm-outline inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)] hover:bg-[var(--brand-50)] active:bg-[var(--brand-100)]";
+  "inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[var(--brand-300)] bg-white px-4 text-sm font-semibold text-[var(--brand-600)] hover:bg-[var(--brand-50)] active:opacity-90";
 export const ctaGhost =
-  "inline-flex h-10 min-h-10 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200";
+  "inline-flex h-11 min-h-11 items-center justify-center gap-2 rounded-[14px] px-3 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--brand-50)] active:opacity-90";
 
 export function Button({
   className,
@@ -32,7 +32,7 @@ export function Button({
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={cn("rounded-[12px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]", className)}>
+    <div className={cn("rounded-[18px] border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card)]", className)}>
       {children}
     </div>
   );
@@ -48,12 +48,12 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[6px] px-2 py-0.5 text-xs font-semibold",
-        tone === "ok" && "bg-green-50 text-[#16A34A]",
-        tone === "warn" && "bg-amber-50 text-[#D97706]",
-        tone === "danger" && "bg-rose-50 text-[#DC2626]",
-        tone === "info" && "bg-sky-50 text-sky-700",
-        tone === "neutral" && "bg-slate-100 text-slate-600",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
+        tone === "ok" && "bg-green-50 text-green-700",
+        tone === "warn" && "bg-amber-50 text-amber-700",
+        tone === "danger" && "bg-rose-50 text-rose-700",
+        tone === "info" && "bg-[var(--brand-50)] text-[var(--brand-600)]",
+        tone === "neutral" && "bg-[#F5F6FA] text-[var(--muted)]",
       )}
     >
       {children}
@@ -77,8 +77,8 @@ export function Field({
 }
 
 export const inputClass =
-  "h-10 w-full min-w-0 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-base font-normal text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
+  "h-11 w-full min-w-0 rounded-[12px] border border-[var(--border)] bg-white px-3 text-base font-normal text-[var(--foreground)] outline-none focus:border-[var(--brand-300)] focus:ring-2 focus:ring-[var(--brand-100)]";
 
 /** Toolbar / filter selects — không `w-full` (tránh full-bleed trên desktop). */
 export const inputClassInline =
-  "h-10 w-auto min-w-[9rem] shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-base font-normal text-[#0F172A] outline-none focus:ring-2 focus:ring-[var(--brand-500)]";
+  "h-11 w-auto min-w-[9rem] shrink-0 rounded-[12px] border border-[var(--border)] bg-white px-3 text-base font-normal text-[var(--foreground)] outline-none focus:border-[var(--brand-300)] focus:ring-2 focus:ring-[var(--brand-100)]";

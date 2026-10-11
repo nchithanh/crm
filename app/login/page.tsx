@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { Lock, X } from "lucide-react";
 import anhDemo from "@/data/anh/demo-accounts.json";
 import boiDemo from "@/data/boi/demo-accounts.json";
 import nhacDemo from "@/data/nhac/demo-accounts.json";
@@ -41,12 +41,14 @@ export default function LoginPage() {
   const demo = demos[option.id];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
-      <div className="rounded-[12px] border border-[#E2E8F0] bg-white px-5 py-8 shadow-[0_1px_2px_rgba(15,23,42,0.06)] sm:px-8">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8">
+      <div className="rounded-[18px] border border-[var(--border)] bg-white px-5 py-8 shadow-[var(--shadow-card)] sm:px-8">
         <div className="flex flex-col items-center text-center">
-          <BrandMark className="h-14 w-14" />
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">{t.brand}</h1>
-          <p className="mt-1.5 text-sm text-slate-700">{fill(t.login.hint, { name: option.label })}</p>
+          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-50)]">
+            <BrandMark className="h-10 w-10" />
+          </span>
+          <h1 className="crm-page-title mt-4">{t.brand}</h1>
+          <p className="mt-1.5 text-sm text-[var(--muted)]">{fill(t.login.hint, { name: option.label })}</p>
         </div>
 
         <form
@@ -65,8 +67,10 @@ export default function LoginPage() {
         >
           <label className="block min-w-0 text-sm">
             <span className="text-slate-500">{t.login.pinLabel}</span>
-            <input
-              className={`${inputClass} mt-1 tracking-[0.2em]`}
+            <span className="relative mt-1 block">
+              <Lock size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--muted)]" />
+              <input
+                className={`${inputClass} pl-9 tracking-[0.2em]`}
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={4}
@@ -75,6 +79,7 @@ export default function LoginPage() {
               onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
               autoFocus
             />
+            </span>
           </label>
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
           <Button className="w-full" type="submit">
@@ -95,7 +100,7 @@ export default function LoginPage() {
                     setPin(a.pin);
                     setError("");
                   }}
-                  className="flex h-11 w-full items-center justify-between gap-3 rounded-[10px] border border-[#E2E8F0] bg-white px-3.5 text-left transition hover:border-[var(--brand-500)] hover:bg-[var(--brand-50)]"
+                  className="flex h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[var(--border)] bg-white px-3.5 text-left transition hover:border-[var(--brand-500)] hover:bg-[var(--brand-50)]"
                 >
                   <span className="truncate text-sm font-medium text-slate-800">
                     {roleLabel(a.role, lang)}
@@ -133,15 +138,15 @@ export default function LoginPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="download-guide-title"
-            className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-[12px] bg-white shadow-xl sm:mx-4 sm:rounded-[12px]"
+            className="relative z-10 flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-[12px] bg-white shadow-xl sm:mx-4 sm:rounded-[18px]"
           >
-            <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
               <h2 id="download-guide-title" className="text-sm font-bold text-slate-900">
                 {t.login.downloadGuideTitle}
               </h2>
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] text-slate-500 hover:bg-slate-100"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] text-slate-500 hover:bg-slate-100"
                 aria-label={t.common.close}
                 onClick={() => setGuideOpen(false)}
               >
@@ -152,7 +157,7 @@ export default function LoginPage() {
               <img
                 src={guideSrc}
                 alt={t.login.downloadGuideAlt}
-                className="h-auto w-full rounded-[10px]"
+                className="h-auto w-full rounded-[14px]"
               />
             </div>
           </div>

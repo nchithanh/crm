@@ -299,7 +299,7 @@ export default function SchedulePage() {
             </Button>
           ))}
           {group !== "day" ? weekDays.map((day) => (
-            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
+            <button key={day} type="button" className={day === focusDay ? "h-10 rounded-[14px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[14px] border border-[var(--border)] bg-white px-3 text-sm"} onClick={() => setFocusDay(day)}>
               {weekdayShort(new Date(`${day}T12:00:00`).getDay(), lang)} {day.slice(8)}
             </button>
           )) : null}
@@ -312,10 +312,10 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {notice ? <p className="mt-3 rounded-[12px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p> : null}
+      {notice ? <p className="mt-3 rounded-[18px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p> : null}
 
       {mode === "week" ? (
-        <div className="mt-4 max-h-[72dvh] overflow-auto rounded-[12px] border border-slate-200 bg-white">
+        <div className="mt-4 max-h-[72dvh] overflow-auto rounded-[18px] border border-slate-200 bg-white">
           <div className="flex min-w-[760px]">
             <div className="sticky left-0 z-20 w-14 shrink-0 bg-white">
               <div className="sticky top-0 h-12 border-b border-slate-100 bg-white" />
@@ -364,7 +364,7 @@ export default function SchedulePage() {
                         onDrop={(e) => { e.stopPropagation(); void dropOn(e, col); }}
                         onDragEnd={() => { window.setTimeout(() => { dragged.current = false; }, 0); }}
                         onClick={() => { if (dragged.current) return; setOpenId(s.id); setReason(""); setNotice(""); }}
-                        className={`absolute inset-x-1 overflow-hidden rounded-[10px] border border-[#E2E8F0] px-2 py-1 text-left text-[11px] leading-snug shadow-[0_1px_2px_rgba(15,23,42,0.06)] ${tone(s.status)} ${clash ? "ring-2 ring-rose-400" : ""}`}
+                        className={`absolute inset-x-1 overflow-hidden rounded-[14px] border border-[var(--border)] px-2 py-1 text-left text-[11px] leading-snug shadow-[var(--shadow-card)] ${tone(s.status)} ${clash ? "ring-2 ring-rose-400" : ""}`}
                         style={{ top: top + 2, height }}
                       >
                         <p className="font-semibold tabular-nums">{s.start}–{s.end}</p>
@@ -385,14 +385,14 @@ export default function SchedulePage() {
             <p key={d} className="px-1 text-center text-xs font-semibold text-slate-400">{d}</p>
           ))}
           {monthCells.map((day, i) => (
-            <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[12px] border p-1 ${day === today ? "border-[var(--brand-500)]" : "border-slate-100"}`}>
+            <div key={day ?? `e-${i}`} className={`min-h-24 rounded-[18px] border p-1 ${day === today ? "border-[var(--brand-500)]" : "border-slate-100"}`}>
               {day ? (
                 <button type="button" className="text-xs text-slate-500" onClick={() => { setFocusDay(day); setMode("week"); const target = new Date(`${day}T12:00:00`); const current = new Date(`${mondayOf(0)}T12:00:00`); setWeekOffset(Math.floor((target.getTime() - current.getTime()) / (7 * 86400000))); }}>
                   {Number(day.slice(8))}
                 </button>
               ) : null}
               {day ? filtered.filter((s) => s.day === day).map((s) => (
-                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[8px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => { setOpenId(s.id); setReason(""); }}>
+                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[12px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => { setOpenId(s.id); setReason(""); }}>
                   {s.start} {courses.find((c) => c.id === s.courseId)?.name}
                 </button>
               )) : null}

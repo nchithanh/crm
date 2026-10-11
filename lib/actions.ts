@@ -393,7 +393,7 @@ export async function enrollStudent(input: {
   return "";
 }
 
-const avatarColors = ["#F97316", "#0EA5E9", "#7C3AED", "#059669", "#DB2777"];
+const avatarColors = ["#7C3AED", "#0EA5E9", "#059669", "#DB2777", "#F59E0B"];
 
 export async function createStudent(input: { name: string; phone: string; branchId: string }) {
   const name = input.name.trim();
@@ -408,7 +408,7 @@ export async function createStudent(input: { name: string; phone: string; branch
     phone,
     email: "",
     birthDay: "",
-    avatarColor: avatarColors[Math.floor(Math.random() * avatarColors.length)] ?? "#F97316",
+    avatarColor: avatarColors[Math.floor(Math.random() * avatarColors.length)] ?? "#7C3AED",
     status: "active",
     subscriptionId: "",
     courseId: "",
@@ -676,7 +676,7 @@ export async function cancelSession(sessionId: string, actorId: string, reason: 
   });
 }
 
-const TEACHER_COLORS = ["#F97316", "#2563EB", "#7C3AED", "#0891B2", "#0F766E"];
+const TEACHER_COLORS = ["#7C3AED", "#2563EB", "#059669", "#0891B2", "#DB2777"];
 
 function slotLine(weekdays: number[], start: string) {
   const days = [...weekdays].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));

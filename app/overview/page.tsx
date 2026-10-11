@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -9,7 +10,7 @@ import {
   Check,
   Clock,
   LineChart,
-  Plus,
+  Search,
   Sparkles,
   Users,
   Wallet,
@@ -23,7 +24,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
+import { ctaOutline } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { debtRemaining } from "@/lib/metrics";
@@ -90,7 +91,7 @@ function ChartTip({
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
   return (
-    <div className="rounded-[10px] border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
+    <div className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-bold tabular-nums">{formatVnd(row?.amount ?? 0)}</p>
       <p className="tabular-nums text-slate-500">{row?.count ?? 0} {receipts}</p>
@@ -108,6 +109,7 @@ function phaseLabel(start: string) {
 export default function DashboardPage() {
   const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
+  const userName = useAuthStore((s) => s.user?.name) ?? "";
   const showMoney = canSeeMoney(role);
   const branches = useLiveQuery(() => db.branches.toArray());
   const students = useLiveQuery(() => db.students.toArray());
@@ -128,6 +130,8 @@ export default function DashboardPage() {
   const { branchId } = useStudioBranch();
   const [period, setPeriod] = useState<Period>("month");
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
+  const [homeQ, setHomeQ] = useState("");
+  const router = useRouter();
 
   const ready = Boolean(
     branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && classStudents && audits,
@@ -354,15 +358,15 @@ export default function DashboardPage() {
   if (!ready || !model) {
     return (
       <div className="space-y-4">
-        <div className="h-16 animate-pulse rounded-[12px] bg-slate-100" />
+        <div className="h-16 animate-pulse rounded-[18px] bg-slate-100" />
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
           {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-[12px] bg-slate-100" />
+            <div key={i} className="h-28 animate-pulse rounded-[18px] bg-slate-100" />
           ))}
         </div>
         <div className="grid gap-4 lg:grid-cols-5">
-          <div className="h-72 animate-pulse rounded-[12px] bg-slate-100 lg:col-span-3" />
-          <div className="h-72 animate-pulse rounded-[12px] bg-slate-100 lg:col-span-2" />
+          <div className="h-72 animate-pulse rounded-[18px] bg-slate-100 lg:col-span-3" />
+          <div className="h-72 animate-pulse rounded-[18px] bg-slate-100 lg:col-span-2" />
         </div>
       </div>
     );
@@ -474,43 +478,53 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-3">
-      <div>
-        <h1 className="crm-page-title">{t.dash.title}</h1>
+    <div className="flex flex-col gap-4">
+      <div className="order-1">
+        <h1 className="crm-page-title">
+          {userName
+            ? fill(
+                new Date().getHours() < 12
+                  ? t.dash.greetMorning
+                  : new Date().getHours() < 18
+                    ? t.dash.greetAfternoon
+                    : t.dash.greetEvening,
+                { name: userName },
+              )
+            : t.dash.title}
+        </h1>
         <p className="mt-1 text-sm text-slate-500">{settings?.name || "Edu Dance"} · {t.common.sample}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link href={`/attendance${q}`} className={ctaPrimary}>
-            <Check size={16} /> {t.dash.quickAttend}
-          </Link>
-          <Link href={`/mid-course-enroll${q}`} className={ctaOutline}>
-            <Plus size={16} /> {t.dash.enrollStudent}
-          </Link>
-          {showMoney ? (
-            <Link href={`/revenue${q}`} className={ctaGhost}>
-              <LineChart size={16} /> {t.dash.viewReport}
-            </Link>
-          ) : null}
-          <select className="ml-auto h-10 rounded-[8px] border border-[#E2E8F0] bg-white px-3 text-sm text-slate-700" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
-            <option value="today">{t.common.today}</option>
-            <option value="d7">{t.dash.days7}</option>
-            <option value="d30">{t.dash.days30}</option>
-            <option value="month">{t.dash.thisMonth}</option>
-          </select>
-        </div>
+        <form
+          className="mt-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const query = homeQ.trim();
+            router.push(query ? `/students?q=${encodeURIComponent(query)}` : "/students");
+          }}
+        >
+          <label className="flex h-12 items-center gap-2 rounded-full bg-[var(--brand-50)] px-4 text-sm text-[var(--muted)]">
+            <Search size={18} />
+            <input
+              className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
+              placeholder={t.shell.search}
+              value={homeQ}
+              onChange={(e) => setHomeQ(e.target.value)}
+            />
+          </label>
+        </form>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 xl:grid-cols-6">
-        {kpis.map((card) => {
+      <div className="order-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {kpis.slice(0, 3).map((card) => {
           const Icon = card.icon;
           const body = (
             <>
               <div className="flex items-start justify-between gap-2">
                 <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--brand-50)] text-[var(--brand-600)]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] bg-[var(--brand-50)] text-[var(--brand-600)]">
                   <Icon size={16} />
                 </span>
               </div>
-              <p className={`mt-1 text-2xl font-bold tabular-nums tracking-tight ${card.warn ? "text-amber-700" : "text-[#0F172A]"}`}>{card.value}</p>
+              <p className={`mt-1 crm-kpi ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
               <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") ? "text-green-600" : card.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
               {card.id === "rate" ? <Spark values={model.attendSpark} /> : null}
               {card.id === "debt" && showMoney ? (
@@ -520,7 +534,7 @@ export default function DashboardPage() {
               ) : null}
             </>
           );
-          const className = "block rounded-[12px] border border-[#E2E8F0] bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-[var(--brand-100)]";
+          const className = "block rounded-[18px] border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]";
           return card.href ? (
             <Link key={card.label} href={card.href} className={className}>{body}</Link>
           ) : (
@@ -529,14 +543,19 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <section aria-labelledby="ops-strip-heading" className="space-y-2">
+      <Link href="/dolphin-ai" className="order-3 block rounded-[18px] bg-[var(--brand-50)] px-5 py-4">
+        <p className="text-sm font-semibold text-[var(--brand-700)]">{t.shell.askDolphin}</p>
+        <p className="mt-1 text-sm text-[var(--muted)]">{t.pages.aiLead}</p>
+      </Link>
+
+      <section aria-labelledby="ops-strip-heading" className="order-8 space-y-2">
         <h2 id="ops-strip-heading" className="crm-section-title">{t.dash.opsStrip}</h2>
         <div className="grid grid-cols-2 gap-2 xl:grid-cols-5">
           {opsCards.map((card) => (
             <Link
               key={card.id}
               href={card.href}
-              className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-3 shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition hover:-translate-y-px hover:border-[var(--brand-100)]"
+              className="rounded-[14px] border border-[var(--border)] bg-[var(--card)] p-3 shadow-[var(--shadow-card)] transition hover:-translate-y-px hover:border-[var(--brand-100)]"
             >
               <p className="text-xs font-medium text-slate-500">{card.label}</p>
               <p className={`mt-1 text-xl font-bold tabular-nums ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
@@ -546,8 +565,8 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-4">
+      <div className="order-5 grid gap-3 lg:grid-cols-2">
+        <section className="rounded-[18px] border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
           <h2 className="crm-section-title">{t.dash.workToday}</h2>
           {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">{t.dash.noWork}</p>
@@ -558,9 +577,9 @@ export default function DashboardPage() {
                 .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]))
                 .map((tk) => (
                   <li key={tk.id}>
-                    <Link href="/tasks" className="flex items-center justify-between gap-2 rounded-[10px] px-2 py-2 hover:bg-slate-50">
+                    <Link href="/tasks" className="flex items-center justify-between gap-2 rounded-[14px] px-2 py-2 hover:bg-slate-50">
                       <span className="text-sm">{tk.title}</span>
-                      <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold ${tk.priority === "high" ? "bg-rose-50 text-rose-700" : tk.priority === "medium" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                      <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${tk.priority === "high" ? "bg-rose-50 text-rose-700" : tk.priority === "medium" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
                         {tk.priority === "high" ? t.dash.priHigh : tk.priority === "medium" ? t.dash.priMed : t.dash.priLow}
                       </span>
                     </Link>
@@ -569,7 +588,7 @@ export default function DashboardPage() {
             </ul>
           )}
         </section>
-        <section className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-4">
+        <section className="rounded-[14px] border border-[var(--border)] bg-[var(--card)] p-4">
           <h2 className="crm-section-title">{t.dash.freeSlots}</h2>
           {(() => {
             const branchRooms = (rooms ?? []).filter((r) => branchId === "all" || r.branchId === branchId);
@@ -599,13 +618,19 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-5">
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
+      <div className="order-9 grid gap-3 lg:grid-cols-5">
+        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
+            <select className="h-10 rounded-full border border-[var(--border)] bg-white px-3 text-sm" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
+              <option value="today">{t.common.today}</option>
+              <option value="d7">{t.dash.days7}</option>
+              <option value="d30">{t.dash.days30}</option>
+              <option value="month">{t.dash.thisMonth}</option>
+            </select>
             <div className="flex gap-1">
               {([7, 30] as const).map((n) => (
-                <button key={n} type="button" className={`h-10 rounded-[10px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[#E2E8F0] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
+                <button key={n} type="button" className={`h-10 rounded-[14px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
                   {n} {t.dash.dayUnit}
                 </button>
               ))}
@@ -633,11 +658,11 @@ export default function DashboardPage() {
             <p className="mt-6 text-sm text-slate-500">{t.dash.teacherNoRevenue}</p>
           )}
         </section>
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
+        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
           <h2 className="text-base font-semibold">{t.dash.funnel}</h2>
           <p className="mt-1 text-xs text-slate-400">{t.dash.funnelNote}</p>
           {model.staleLeads > 0 ? (
-            <p className="mt-2 rounded-[12px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <p className="mt-2 rounded-[18px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
               {fill(t.dash.stale, { n: model.staleLeads })}
             </p>
           ) : null}
@@ -647,7 +672,7 @@ export default function DashboardPage() {
               const conv = next && step.count > 0 ? Math.round((next.count / step.count) * 100) : null;
               return (
                 <li key={step.id}>
-                  <Link href={`/follow-up?stage=${step.id}`} className="block rounded-[12px] px-1 py-1 hover:bg-slate-50">
+                  <Link href={`/follow-up?stage=${step.id}`} className="block rounded-[18px] px-1 py-1 hover:bg-slate-50">
                     <div className="flex items-center justify-between text-sm">
                       <span>{step.label}</span>
                       <span className="font-semibold tabular-nums">{step.count}</span>
@@ -664,8 +689,8 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="order-4 grid gap-3 lg:grid-cols-2">
+        <section className="rounded-[18px] border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-base font-semibold">{t.dash.todayClasses}</h2>
           {model.todaySessions.length === 0 ? (
             <div className="mt-6 text-center">
@@ -685,7 +710,7 @@ export default function DashboardPage() {
                 const bar = ratio >= 0.95 ? "bg-rose-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-[var(--brand-500)]";
                 const phase = phaseLabel(s.start);
                 return (
-                  <li key={s.id} className="rounded-[12px] border border-slate-100 p-3">
+                  <li key={s.id} className="rounded-[18px] border border-slate-100 p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="flex gap-2">
                         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: teacher?.avatarColor ?? "#64748B" }}>
@@ -696,7 +721,7 @@ export default function DashboardPage() {
                           <p className="text-sm text-slate-500">{teacher?.name} · {room?.name}</p>
                           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                             <span>{branches?.find((b) => b.id === s.branchId)?.name}</span>
-                            <span className={`rounded-[6px] px-2 py-0.5 font-semibold ${phase === "live" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase === "live" ? t.dash.live : t.dash.soon}</span>
+                            <span className={`rounded-full px-2 py-0.5 font-semibold ${phase === "live" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase === "live" ? t.dash.live : t.dash.soon}</span>
                           </p>
                         </div>
                       </div>
@@ -719,10 +744,10 @@ export default function DashboardPage() {
             <Link href={`/schedule${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
           ) : null}
         </section>
-        <section className="rounded-[12px] border border-[#E2E8F0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+        <section className="rounded-[18px] border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)]">
           <h2 className="flex items-center gap-2 text-base font-semibold">
             <Link href="/tasks" className="inline-flex items-center gap-2 hover:text-[var(--brand-700)]">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--brand-50)] text-[var(--brand-600)]">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-[14px] bg-[var(--brand-50)] text-[var(--brand-600)]">
                 <Sparkles size={16} aria-hidden />
               </span>
               {t.dash.tasks}
@@ -738,15 +763,15 @@ export default function DashboardPage() {
           ) : (
             <div className="mt-2 space-y-2">
               {model.groups.map((group) => (
-                <div key={group.title} className={`rounded-[10px] border-l-4 px-2 py-1 ${group.tone === "danger" ? "border-[#DC2626] bg-rose-50/70" : group.tone === "warn" ? "border-[#D97706] bg-amber-50/70" : "border-slate-300 bg-slate-50"}`}>
+                <div key={group.title} className={`rounded-[14px] border-l-4 px-2 py-1 ${group.tone === "danger" ? "border-[#DC2626] bg-rose-50/70" : group.tone === "warn" ? "border-[#D97706] bg-amber-50/70" : "border-slate-300 bg-slate-50"}`}>
                   <p className={`text-xs font-semibold uppercase ${group.tone === "danger" ? "text-rose-700" : group.tone === "warn" ? "text-amber-700" : "text-slate-500"}`}>{group.title}</p>
                   <ul className="mt-1 space-y-1">
                     {group.items.map((item) => (
                       <li key={item.id}>
-                        <Link href={item.href} className="flex items-center justify-between gap-2 rounded-[12px] px-2 py-2 hover:bg-slate-50">
+                        <Link href={item.href} className="flex items-center justify-between gap-2 rounded-[18px] px-2 py-2 hover:bg-slate-50">
                           <span className="text-sm">{item.label}</span>
                           <span className="flex items-center gap-2">
-                            <span className={`rounded-[6px] px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{item.count}</span>
+                            <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{item.count}</span>
                             <span className="text-xs font-semibold text-emerald-700">{t.dash.viewAll}</span>
                           </span>
                         </Link>
@@ -760,14 +785,14 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="order-10 grid gap-3 lg:grid-cols-2">
+        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-base font-semibold">{t.dash.topCourses}</h2>
           <ol className="mt-3 space-y-2">
             {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
             {model.ranking.map((c, i) => (
               <li key={c.id}>
-                <Link href={`/courses${q}`} className="flex items-center justify-between rounded-[12px] px-1 py-1 text-sm hover:bg-slate-50">
+                <Link href={`/courses${q}`} className="flex items-center justify-between rounded-[18px] px-1 py-1 text-sm hover:bg-slate-50">
                   <span>{i + 1}. {c.name} · {levelLabel(c.level)}</span>
                   <span className="font-semibold tabular-nums">{fill(t.dash.studentCount, { n: c.count })}</span>
                 </Link>
@@ -775,7 +800,7 @@ export default function DashboardPage() {
             ))}
           </ol>
         </section>
-        <section className="rounded-[12px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="flex items-center gap-2 text-base font-semibold"><LineChart size={16} /> {t.dash.recent}</h2>
           <ul className="mt-3 space-y-3">
             {model.activity.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noActivity}</li> : null}

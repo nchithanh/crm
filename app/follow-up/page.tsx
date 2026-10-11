@@ -114,7 +114,7 @@ export default function LeadsPage() {
         <input className={`${inputClass} w-auto shrink-0`} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.care.toDay} />
       </div>
       {chosen.length > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 py-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[14px] border border-slate-200 bg-white px-3 py-2">
           <span className="text-sm font-semibold">{fill(t.care.selected, { n: chosen.length })}</span>
           <select className={`${inputClass} w-auto`} value={assignTo} onChange={(e) => setAssignTo(e.target.value)}>
             <option value="">{t.care.assignTo}</option>
@@ -128,7 +128,7 @@ export default function LeadsPage() {
       {mode === "kanban" ? (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
           {stages.map((col) => (
-            <section key={col.id} className="w-72 shrink-0 rounded-[12px] bg-slate-100/80 p-2" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const id = e.dataTransfer.getData("text/plain"); if (id) void moveLead(id, col.id); }}>
+            <section key={col.id} className="w-72 shrink-0 rounded-[18px] bg-slate-100/80 p-2" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const id = e.dataTransfer.getData("text/plain"); if (id) void moveLead(id, col.id); }}>
               <h2 className="px-2 py-2 text-sm font-semibold">{col.label}<span className="ml-2 text-slate-400">{filtered.filter((l) => l.stage === col.id).length}</span></h2>
               <ul className="space-y-2">
                 {filtered.filter((l) => l.stage === col.id).map((l) => {
@@ -136,7 +136,7 @@ export default function LeadsPage() {
                   const cold = isCold(l);
                   return (
                     <li key={l.id}>
-                      <article className={`rounded-[12px] bg-white p-3 shadow-sm ${cold ? "border border-amber-400" : "border border-transparent"}`}>
+                      <article className={`rounded-[18px] bg-white p-3 shadow-sm ${cold ? "border border-amber-400" : "border border-transparent"}`}>
                         <div className="flex items-start gap-2">
                           <input type="checkbox" className="mt-1 h-5 w-5" checked={picked.includes(l.id)} aria-label={`Chọn ${l.name}`} onChange={() => toggle(l.id)} />
                           <button type="button" draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", l.id)} onClick={() => setOpenId(l.id)} className="min-w-0 flex-1 text-left">
@@ -155,7 +155,7 @@ export default function LeadsPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-4 max-h-[70dvh] overflow-auto rounded-[12px] border border-slate-200 bg-white">
+        <div className="mt-4 max-h-[70dvh] overflow-auto rounded-[18px] border border-slate-200 bg-white">
           <table className="w-full min-w-[860px] text-sm">
             <thead className="sticky top-0 bg-slate-50 text-left">
               <tr>
@@ -185,7 +185,7 @@ export default function LeadsPage() {
 
       {form ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
-          <form className="w-full max-w-md rounded-[12px] bg-white p-4" onSubmit={(e) => {
+          <form className="w-full max-w-md rounded-[18px] bg-white p-4" onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim() || !phone.trim() || !me) return;
             void addLead({ name, phone, interest, source: leadSource, ownerId: me.id }).then(() => { setForm(false); setName(""); setPhone(""); setInterest(""); });
@@ -246,7 +246,7 @@ function LeadDrawer({
           </select>
         </label>
         {lead.stage === "won" ? (
-          <div className="mt-3 rounded-[12px] bg-[var(--brand-50)] p-3">
+          <div className="mt-3 rounded-[18px] bg-[var(--brand-50)] p-3">
             <p className="text-sm font-semibold">{t.care.convert}</p>
             {lead.convertedStudentId ? <p className="mt-1 text-sm text-slate-600">{t.care.converted}</p> : (
               <>
@@ -266,7 +266,7 @@ function LeadDrawer({
         <h3 className="mt-5 text-sm font-semibold">{t.care.addTouch}</h3>
         <div className="mt-2 flex gap-2">
           {(["call", "zalo", "note"] as const).map((item) => (
-            <button key={item} type="button" className={kind === item ? "h-10 rounded-[10px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[10px] border border-[#E2E8F0] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
+            <button key={item} type="button" className={kind === item ? "h-10 rounded-[14px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[14px] border border-[var(--border)] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
               {item === "call" ? t.care.call : item === "zalo" ? "Zalo" : t.care.note}
             </button>
           ))}

@@ -92,7 +92,7 @@ export default function ClassesPage() {
 
       {openId ? <ClassDrawer classId={openId} onClose={() => setOpenId(null)} /> : null}
 
-      <div className="mt-4 overflow-auto rounded-[10px] border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+      <div className="mt-4 overflow-auto rounded-[14px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
         <table className="w-full min-w-[900px] text-sm">
           <thead className="sticky top-0 bg-slate-50 text-left">
             <tr>

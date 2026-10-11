@@ -35,7 +35,7 @@ export default function QrAttendancePage() {
     <div>
       <h1 className="crm-page-title">{t.pages.qr}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.pages.qrLead}</p>
-      <select className="mt-4 min-h-11 w-full max-w-md rounded-[12px] border border-slate-200 px-3" value={current} onChange={(e) => setClassId(e.target.value)}>
+      <select className="mt-4 min-h-11 w-full max-w-md rounded-[18px] border border-slate-200 px-3" value={current} onChange={(e) => setClassId(e.target.value)}>
         {classes.map((c) => (
           <option key={c.id} value={c.id}>{c.day} {c.start} · {c.name}</option>
         ))}
@@ -53,7 +53,7 @@ export default function QrAttendancePage() {
       ) : null}
       <Card className="mt-4 max-w-lg p-4">
         <h2 className="font-semibold">{t.pages.fakeScan}</h2>
-        <select className="mt-3 min-h-11 w-full rounded-[12px] border border-slate-200 px-3" value={studentId} onChange={(e) => setStudentId(e.target.value)}>
+        <select className="mt-3 min-h-11 w-full rounded-[18px] border border-slate-200 px-3" value={studentId} onChange={(e) => setStudentId(e.target.value)}>
           <option value="">{t.pages.pickStudent}</option>
           {roster.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>

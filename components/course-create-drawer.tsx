@@ -98,9 +98,9 @@ export function CourseCreateDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
       <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-white shadow-[-8px_0_24px_rgba(15,23,42,0.12)]">
-        <header className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h2 className="text-base font-bold text-slate-900">{t.catalog.drawerTitle}</h2>
-          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[10px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
             <X size={18} />
           </button>
         </header>
@@ -154,8 +154,8 @@ export function CourseCreateDrawer({
                   type="button"
                   onClick={() => toggleAssistant(x.id)}
                   className={assistantIds.includes(x.id)
-                    ? "rounded-[8px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
-                    : "rounded-[8px] border border-[#E2E8F0] px-2.5 py-1.5 text-sm"}
+                    ? "rounded-[12px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
+                    : "rounded-[12px] border border-[var(--border)] px-2.5 py-1.5 text-sm"}
                 >
                   {x.name}
                 </button>
@@ -172,8 +172,8 @@ export function CourseCreateDrawer({
                   type="button"
                   onClick={() => toggleDay(d)}
                   className={weekdays.includes(d)
-                    ? "rounded-[8px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
-                    : "rounded-[8px] border border-[#E2E8F0] px-2.5 py-1.5 text-sm"}
+                    ? "rounded-[12px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
+                    : "rounded-[12px] border border-[var(--border)] px-2.5 py-1.5 text-sm"}
                 >
                   {weekdayShort(d, lang)}
                 </button>
@@ -186,11 +186,11 @@ export function CourseCreateDrawer({
           </Field>
 
           {previewDays.length > 0 ? (
-            <div className="rounded-[10px] border border-[var(--brand-100)] bg-[var(--brand-50)] px-3 py-2.5 text-sm text-[var(--brand-700)]">
+            <div className="rounded-[14px] border border-[var(--brand-100)] bg-[var(--brand-50)] px-3 py-2.5 text-sm text-[var(--brand-700)]">
               {fill(t.catalog.previewWillCreate, { n: previewDays.length, dates: dateLabel })}
             </div>
           ) : (
-            <div className="rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+            <div className="rounded-[14px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
               {t.catalog.needWeekday}
             </div>
           )}
@@ -198,7 +198,7 @@ export function CourseCreateDrawer({
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
         </div>
 
-        <footer className="flex shrink-0 gap-2 border-t border-[#E2E8F0] px-5 py-4">
+        <footer className="flex shrink-0 gap-2 border-t border-[var(--border)] px-5 py-4">
           <Button type="button" variant="outline" onClick={onClose}>{t.common.cancel}</Button>
           <Button type="button" disabled={saving || previewDays.length === 0} onClick={() => void save()}>
             {t.catalog.confirmCreate}

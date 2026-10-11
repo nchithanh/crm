@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { ChevronRight } from "lucide-react";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { canApproveHold } from "@/lib/access";
 import { decideHold, endHoldEarly } from "@/lib/actions";
@@ -9,7 +10,7 @@ import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { holdStatusLabel } from "@/lib/labels";
-import { localDayKey } from "@/lib/utils";
+import { initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Hold } from "@/types";
 
@@ -85,58 +86,49 @@ export default function HoldsPage() {
     <div>
       <h1 className="crm-page-title">{t.hold.title}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.hold.lead}</p>
-      {message ? <p className="mt-3 rounded-[10px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
+      {message ? <p className="mt-3 rounded-[14px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
             className={tab === item.id
-              ? "h-10 shrink-0 rounded-[10px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white"
-              : "h-10 shrink-0 rounded-[10px] border border-[#E2E8F0] bg-white px-4 text-sm"}
+              ? "h-9 shrink-0 rounded-full bg-[var(--brand-50)] px-4 text-sm font-semibold text-[var(--brand-600)]"
+              : "h-9 shrink-0 rounded-full border border-[var(--border)] bg-white px-4 text-sm font-medium text-[var(--muted)]"}
             onClick={() => setTab(item.id)}
           >
             {item.label}
           </button>
         ))}
       </div>
-      <div className="mt-4 max-h-[70dvh] overflow-auto rounded-[10px] border border-slate-200 bg-white">
-        <table className="w-full min-w-[860px] text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-left">
-            <tr>
-              {[t.hold.colStudent, t.hold.colPack, t.hold.colRemain, t.hold.colFrom, t.hold.colTo, t.hold.colApprover, t.hold.colStatus].map((h) => (
-                <th key={h} className="px-3 py-3 font-semibold">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? <tr><td className="px-3 py-6 text-slate-500" colSpan={7}>{t.hold.empty}</td></tr> : null}
-            {rows.map((h) => {
-              const student = students.find((s) => s.id === h.studentId);
-              const pack = packForStudent(h.studentId);
-              return (
-                <tr
-                  key={h.id}
-                  className="cursor-pointer border-t border-slate-100 hover:bg-[var(--brand-50)]"
-                  onClick={() => { setOpenId(h.id); setMessage(""); setRejectReason(h.rejectReason ?? ""); }}
-                >
-                  <td className="px-3 py-3 font-semibold">{student?.name}</td>
-                  <td className="px-3 py-3">{pack?.name ?? "—"}</td>
-                  <td className="px-3 py-3 tabular-nums">{student?.remainingSessions ?? h.credits}</td>
-                  <td className="px-3 py-3">{h.fromDay}</td>
-                  <td className="px-3 py-3">{h.toDay}</td>
-                  <td className="px-3 py-3">{users.find((u) => u.id === h.approverId)?.name ?? "—"}</td>
-                  <td className="px-3 py-3">
-                    <Badge tone={h.status === "pending" ? "warn" : h.status === "approved" ? "info" : h.status === "rejected" ? "danger" : "neutral"}>
-                      {holdStatusLabel(h.status, lang)}
-                    </Badge>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ul className="mt-4 space-y-3">
+        {rows.length === 0 ? <li className="rounded-[18px] bg-white px-4 py-8 text-center text-sm text-[var(--muted)]">{t.hold.empty}</li> : null}
+        {rows.map((h) => {
+          const student = students.find((s) => s.id === h.studentId);
+          const pack = packForStudent(h.studentId);
+          return (
+            <li key={h.id}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]"
+                onClick={() => { setOpenId(h.id); setMessage(""); setRejectReason(h.rejectReason ?? ""); }}
+              >
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student?.avatarColor ?? "#7C3AED" }}>
+                  {initials(student?.name ?? "?")}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-semibold text-[var(--foreground)]">{student?.name}</span>
+                  <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">{pack?.name ?? "—"} · {h.fromDay} → {h.toDay}</span>
+                </span>
+                <Badge tone={h.status === "pending" ? "warn" : h.status === "approved" ? "ok" : h.status === "rejected" ? "danger" : "neutral"}>
+                  {holdStatusLabel(h.status, lang)}
+                </Badge>
+                <ChevronRight size={18} className="shrink-0 text-[var(--muted)]" />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
       {open ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
           <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setOpenId(null)} />

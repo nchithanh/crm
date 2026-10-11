@@ -2,23 +2,23 @@
 
 :root,
 html[data-theme="light"] {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f8f7fc;
+  --foreground: #1a1a2e;
   --card: #ffffff;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --brand-50: #fff7ed;
-  --brand-100: #ffedd5;
-  --brand-300: #fdba74;
-  --brand-400: #fb923c;
-  --brand-500: #f97316;
-  --brand-600: #ea580c;
-  --brand-700: #c2410c;
-  --brand-950: #431407;
-  --radius-card: 12px;
-  --nav-active: #f1f5f9;
-  --nav-active-text: #0f172a;
+  --muted: #6b7280;
+  --border: #e8e9f0;
+  --shadow-card: 0 8px 24px rgba(26, 26, 46, 0.06);
+  --brand-50: #f3f0ff;
+  --brand-100: #eef0ff;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #7c3aed;
+  --brand-600: #6d28d9;
+  --brand-700: #5b21b6;
+  --brand-950: #2e1065;
+  --radius-card: 18px;
+  --nav-active: #f3f0ff;
+  --nav-active-text: #6d28d9;
 }
 
 html[data-theme="dark"] {
@@ -38,36 +38,15 @@ html[data-theme="dark"] body {
   color: var(--foreground);
 }
 
-html[data-vertical="nhay"] {
-  --brand-50: #fff7ed;
-  --brand-100: #ffedd5;
-  --brand-500: #f97316;
-  --brand-600: #ea580c;
-  --brand-700: #c2410c;
-}
-
-html[data-vertical="anh"] {
-  --brand-50: #eff6ff;
-  --brand-100: #dbeafe;
-  --brand-500: #2563eb;
-  --brand-600: #1d4ed8;
-  --brand-700: #1e40af;
-}
-
-html[data-vertical="nhac"] {
-  --brand-50: #f5f3ff;
-  --brand-100: #ede9fe;
+html[data-vertical="nhay"],
+html[data-vertical="anh"],
+html[data-vertical="nhac"],
+html[data-vertical="boi"] {
+  --brand-50: #f3f0ff;
+  --brand-100: #eef0ff;
   --brand-500: #7c3aed;
   --brand-600: #6d28d9;
   --brand-700: #5b21b6;
-}
-
-html[data-vertical="boi"] {
-  --brand-50: #ecfeff;
-  --brand-100: #cffafe;
-  --brand-500: #0891b2;
-  --brand-600: #0e7490;
-  --brand-700: #155e75;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }
@@ -100,12 +79,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Type scale — SoT: context/design-language.md (align POS) */
+/* Type scale — SoT: context/design-language.md (PeopleHub) */
 .crm-page-title {
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.75rem; /* 28px */
   font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: var(--foreground);
 }
 .crm-section-title {
@@ -115,9 +94,9 @@ body {
   color: var(--foreground);
 }
 .crm-kpi {
-  font-size: 1.5rem; /* 24px */
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 2rem; /* 32px */
+  font-weight: 800;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 .crm-body {
@@ -182,7 +161,7 @@ a { text-decoration: none; }
 
 button.bg-emerald-500,
 a.bg-emerald-500,
-a[class*="bg-[#F97316]"],
+a[class*="bg-[#7C3AED]"],
 a[class*="bg-[var(--brand-500)]"] {
   color: #fff;
 }
