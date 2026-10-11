@@ -1,8 +1,8 @@
 # Dolphin CRM FE
 
-Local-first. Dữ liệu mẫu: **Edu Dance** (studio giả, 3 cơ sở). Accent cam `#F97316`.
+Local-first. Dữ liệu mẫu: **Edu Dance** (studio giả, 3 cơ sở). Accent đen `#111111`.
 
-Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Skin **PeopleHub** (tím `#7C3AED`, thẻ 18px, pill, bottom nav 5 mục). SoT: `context/design-language.md`. Students = KPI + right panel; Overview = lời chào + ops strip. Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`.
+Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Skin trắng / đen (`#111111`, thẻ 18px, pill, bottom nav 5 mục). SoT: `context/design-language.md`. Students = KPI + drawer; Overview = lời chào + thẻ học viên mới + ops strip. Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`.
 
 `npm run dev` → http://127.0.0.1:3014
 

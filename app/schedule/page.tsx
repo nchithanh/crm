@@ -11,13 +11,12 @@ import { sessionStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { conflictLabel, formatMinutes, GRID_END, GRID_START, minutesOf } from "@/lib/schedule";
 import { useI18n } from "@/lib/i18n";
-import { localDayKey, roomWithBranch, weekdayLabel, weekdayShort } from "@/lib/utils";
+import { cn, localDayKey, roomWithBranch, weekdayLabel, weekdayShort } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { ClassSession, SessionStatus } from "@/types";
 
-const HOUR_PX = 52;
-const HOURS = Array.from({ length: GRID_END - GRID_START + 1 }, (_, i) => GRID_START + i);
+const HOUR_ROWS = Array.from({ length: GRID_END - GRID_START }, (_, i) => GRID_START + i);
 
 type Group = "day" | "room" | "teacher" | "branch";
 
@@ -158,11 +157,12 @@ export default function SchedulePage() {
     event.preventDefault();
     const id = event.dataTransfer.getData("text/session");
     const session = sessions.find((s) => s.id === id);
-    const column = (event.currentTarget as HTMLElement).closest("[data-column]") as HTMLElement | null;
-    if (!session || !user || !canEdit || !column) return;
-    const bounds = column.getBoundingClientRect();
-    const y = event.clientY - bounds.top;
-    let startMin = GRID_START * 60 + Math.round(((y / HOUR_PX) * 60) / 30) * 30;
+    const cell = event.currentTarget as HTMLElement;
+    if (!session || !user || !canEdit || !cell.dataset.hour) return;
+    const hour = Number(cell.dataset.hour);
+    const bounds = cell.getBoundingClientRect();
+    const half = event.clientY > bounds.top + bounds.height / 2;
+    let startMin = hour * 60 + (half ? 30 : 0);
     if (startMin < GRID_START * 60) startMin = GRID_START * 60;
     const duration = Math.max(30, minutesOf(session.end) - minutesOf(session.start));
     const endMin = startMin + duration;
@@ -248,7 +248,6 @@ export default function SchedulePage() {
     if (!error) setCreating(false);
   }
 
-  const gridHeight = (GRID_END - GRID_START) * HOUR_PX;
   const monthTitle = new Date(new Date().getFullYear(), new Date().getMonth() + monthOffset, 1).toLocaleDateString("vi-VN", { month: "long", year: "numeric" });
 
   return (
@@ -315,68 +314,69 @@ export default function SchedulePage() {
       {notice ? <p className="mt-3 rounded-[18px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{notice}</p> : null}
 
       {mode === "week" ? (
-        <div className="mt-4 max-h-[72dvh] overflow-auto rounded-[18px] border border-slate-200 bg-white">
-          <div className="flex min-w-[760px]">
-            <div className="sticky left-0 z-20 w-14 shrink-0 bg-white">
-              <div className="sticky top-0 h-12 border-b border-slate-100 bg-white" />
-              <div className="relative" style={{ height: gridHeight }}>
-                {HOURS.slice(0, -1).map((hour) => (
-                  <div key={hour} className="absolute right-1 text-[11px] text-slate-400" style={{ top: (hour - GRID_START) * HOUR_PX - 6 }}>{String(hour).padStart(2, "0")}:00</div>
-                ))}
-              </div>
-            </div>
-            <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(148px, 1fr))` }}>
+        <div className="mt-4 overflow-auto rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+          <div className="min-w-[720px]">
+            <div className="grid border-b border-slate-100 bg-slate-50 text-xs font-semibold" style={{ gridTemplateColumns: group === "day" ? "56px repeat(7, minmax(0, 1fr))" : `56px repeat(${Math.max(columns.length, 1)}, minmax(148px, 1fr))` }}>
+              <div className="p-2 text-slate-400">{t.roomsCal.hour}</div>
               {columns.map((col) => (
-                <div key={col.id} className="sticky top-0 z-10 flex h-12 flex-col justify-center border-b border-l border-slate-100 bg-white px-2">
-                  <p className="text-sm font-semibold">{col.title}</p>
-                  <p className="text-xs text-slate-400">{col.sub}</p>
-                </div>
-              ))}
-              {columns.map((col) => (
-                <div
-                  key={`${col.id}-body`}
-                  data-column={col.id}
-                  className="relative border-l border-slate-100"
-                  style={{ height: gridHeight }}
-                  onDragOver={(e) => { if (canEdit) e.preventDefault(); }}
-                  onDrop={(e) => void dropOn(e, col)}
+                <button
+                  key={col.id}
+                  type="button"
+                  onClick={() => setFocusDay(col.day)}
+                  className={cn("border-l border-slate-100 p-2 text-left hover:bg-white", col.day === today && "text-[var(--brand-600)]")}
                 >
-                  {HOURS.slice(0, -1).map((hour) => (
-                    <div key={hour} className="absolute inset-x-0 border-t border-slate-100" style={{ top: (hour - GRID_START) * HOUR_PX }} />
-                  ))}
-                  {col.day === today ? <div className="absolute inset-x-0 z-[1] h-px bg-[var(--brand-500)]" style={{ top: Math.min(gridHeight, Math.max(0, ((new Date().getHours() * 60 + new Date().getMinutes() - GRID_START * 60) / 60) * HOUR_PX)) }} /> : null}
-                  {sessionsIn(col).map((s) => {
-                    const course = courses.find((c) => c.id === s.courseId);
-                    const teacher = users.find((u) => u.id === s.teacherId);
-                    const room = rooms.find((r) => r.id === s.roomId);
-                    const cap = classes.find((c) => c.id === s.classId)?.capacity ?? 0;
-                    const top = ((minutesOf(s.start) - GRID_START * 60) / 60) * HOUR_PX;
-                    const height = Math.max(36, ((minutesOf(s.end) - minutesOf(s.start)) / 60) * HOUR_PX - 4);
-                    const clash = conflictLabel(sessions, s);
-                    const movable = canEdit && s.status !== "cancelled" && s.status !== "completed";
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        draggable={movable}
-                        onDragStart={(e) => { dragged.current = true; e.dataTransfer.setData("text/session", s.id); e.dataTransfer.effectAllowed = "move"; }}
-                        onDragOver={(e) => { if (movable) e.preventDefault(); }}
-                        onDrop={(e) => { e.stopPropagation(); void dropOn(e, col); }}
-                        onDragEnd={() => { window.setTimeout(() => { dragged.current = false; }, 0); }}
-                        onClick={() => { if (dragged.current) return; setOpenId(s.id); setReason(""); setNotice(""); }}
-                        className={`absolute inset-x-1 overflow-hidden rounded-[14px] border border-[var(--border)] px-2 py-1 text-left text-[11px] leading-snug shadow-[var(--shadow-card)] ${tone(s.status)} ${clash ? "ring-2 ring-rose-400" : ""}`}
-                        style={{ top: top + 2, height }}
-                      >
-                        <p className="font-semibold tabular-nums">{s.start}–{s.end}</p>
-                        <p className="truncate font-medium">{course?.name} · {levelLabel(course?.level ?? "")}</p>
-                        {height > 52 ? <p className="truncate text-slate-600">{shortName(teacher?.name ?? "")} · {room?.name}</p> : null}
-                        {height > 68 ? <p>{seated(s.id ?? "")}/{cap}{clash ? ` · ${clash}` : ""}</p> : null}
-                      </button>
-                    );
-                  })}
-                </div>
+                  <span className="block">{group === "day" ? weekdayShort(new Date(`${col.day}T12:00:00`).getDay(), lang) : col.title}</span>
+                  <span className="text-slate-500">{group === "day" ? `${col.day.slice(8)}/${col.day.slice(5, 7)}` : col.sub}</span>
+                </button>
               ))}
             </div>
+            {HOUR_ROWS.map((hour) => (
+              <div key={hour} className="grid border-b border-slate-50 text-xs" style={{ gridTemplateColumns: group === "day" ? "56px repeat(7, minmax(0, 1fr))" : `56px repeat(${Math.max(columns.length, 1)}, minmax(148px, 1fr))` }}>
+                <div className="p-2 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</div>
+                {columns.map((col) => {
+                  const hits = sessionsIn(col).filter((s) => minutesOf(s.start) < (hour + 1) * 60 && minutesOf(s.end) > hour * 60);
+                  const starts = hits.filter((s) => minutesOf(s.start) >= hour * 60);
+                  return (
+                    <div
+                      key={`${col.id}-${hour}`}
+                      data-column={col.id}
+                      data-hour={hour}
+                      onDragOver={(e) => { if (canEdit) e.preventDefault(); }}
+                      onDrop={(e) => void dropOn(e, col)}
+                      className={cn(
+                        "min-h-12 border-l border-slate-50 px-1 py-1 text-left",
+                        hits.length === 0 && "bg-green-50/70",
+                        hits.length > 0 && "bg-[var(--brand-50)]",
+                      )}
+                    >
+                      {starts.map((s) => {
+                        const course = courses.find((c) => c.id === s.courseId);
+                        const teacher = users.find((u) => u.id === s.teacherId);
+                        const room = rooms.find((r) => r.id === s.roomId);
+                        const clash = conflictLabel(sessions, s);
+                        const movable = canEdit && s.status !== "cancelled" && s.status !== "completed";
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            draggable={movable}
+                            onDragStart={(e) => { dragged.current = true; e.dataTransfer.setData("text/session", s.id); e.dataTransfer.effectAllowed = "move"; }}
+                            onDragOver={(e) => { if (movable) e.preventDefault(); }}
+                            onDragEnd={() => { window.setTimeout(() => { dragged.current = false; }, 0); }}
+                            onClick={() => { if (dragged.current) return; setOpenId(s.id); setReason(""); setNotice(""); }}
+                            className={cn("mb-1 block w-full rounded-[8px] px-1 py-0.5 text-left leading-snug", tone(s.status), clash && "ring-2 ring-rose-400")}
+                          >
+                            <span className="block font-semibold tabular-nums">{s.start}–{s.end}</span>
+                            <span className="line-clamp-2 font-medium">{course?.name} · {levelLabel(course?.level ?? "")}</span>
+                            <span className="block truncate text-slate-600">{shortName(teacher?.name ?? "")} · {room?.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       ) : (

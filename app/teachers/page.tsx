@@ -6,7 +6,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronRight, X } from "lucide-react";
 import { TeacherDrawer } from "@/components/teacher-drawer";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { canManageCatalog } from "@/lib/access";
+import { canManageCatalog, canSeeContact } from "@/lib/access";
 import { createTeacher, updateTeacher } from "@/lib/actions";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
@@ -44,10 +44,12 @@ function statusTone(status: TeacherStatus): "ok" | "warn" | "neutral" {
 export default function TeachersPage() {
   const { t } = useI18n();
   const canEdit = canManageCatalog(useAuthStore((s) => s.user?.role));
+  const seeContact = canSeeContact(useAuthStore((s) => s.user?.role));
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const sessions = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const { branchId } = useStudioBranch();
   const [q, setQ] = useState("");
@@ -81,6 +83,10 @@ export default function TeachersPage() {
     const classCount = (id: string) => classes.filter((c) => c.teacherId === id).length;
     const weekCount = (id: string) =>
       sessions.filter((x) => x.teacherId === id && x.day >= week.from && x.day <= week.to && x.status !== "cancelled").length;
+    const studentCount = (id: string) => {
+      const mine = new Set(courses.filter((c) => c.teacherId === id).map((c) => c.id));
+      return students.filter((st) => st.status !== "paused" && mine.has(st.courseId)).length;
+    };
     const dir = sortDir === "asc" ? 1 : -1;
     return filtered.sort((a, b) => {
       if (sortKey === "branch") {
@@ -96,8 +102,9 @@ export default function TeachersPage() {
       teacher: u,
       classCount: classCount(u.id),
       weekCount: weekCount(u.id),
+      studentCount: studentCount(u.id),
     }));
-  }, [teachers, q, status, style, branchId, sortKey, sortDir, branches, classes, sessions, week.from, week.to]);
+  }, [teachers, q, status, style, branchId, sortKey, sortDir, branches, classes, sessions, courses, students, week.from, week.to]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -154,30 +161,49 @@ export default function TeachersPage() {
           ) : null}
         </div>
       ) : (
-        <ul className="mt-4 space-y-3">
-          {rows.map(({ teacher, classCount, weekCount }) => {
+        <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+          <li className={cn("hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid", seeContact ? "lg:grid-cols-[minmax(8rem,1.2fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.8fr)_minmax(6rem,0.9fr)_4.5rem_5.5rem_4.5rem_5.5rem]" : "lg:grid-cols-[minmax(8rem,1.3fr)_minmax(6rem,0.8fr)_minmax(6rem,1fr)_4.5rem_5.5rem_4.5rem_5.5rem]")}>
+            <span>{t.teachers.name}</span>
+            <span>{t.common.branch}</span>
+            {seeContact ? <span>{t.students.phone}</span> : null}
+            <span>{t.teachers.styles}</span>
+            <span>{t.teachers.classes}</span>
+            <span>{t.teachers.perWeek}</span>
+            <span>{t.nav.students}</span>
+            <span>{t.common.status}</span>
+          </li>
+          {rows.map(({ teacher, classCount, weekCount, studentCount }) => {
             const st = teacher.teacherStatus ?? "active";
             return (
               <li key={teacher.id}>
                 <button
                   type="button"
                   onClick={() => setOpenId(teacher.id)}
-                  className="flex w-full items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]"
+                  className={cn("flex w-full flex-wrap items-center gap-3 px-4 py-4 text-left hover:bg-black/5 lg:grid lg:gap-x-3", seeContact ? "lg:grid-cols-[minmax(8rem,1.2fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.8fr)_minmax(6rem,0.9fr)_4.5rem_5.5rem_4.5rem_5.5rem]" : "lg:grid-cols-[minmax(8rem,1.3fr)_minmax(6rem,0.8fr)_minmax(6rem,1fr)_4.5rem_5.5rem_4.5rem_5.5rem]")}
                 >
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: teacher.avatarColor }}>
-                    {initials(teacher.name)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-base font-semibold text-[var(--foreground)]">{teacher.name}</span>
-                    <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">
-                      {branches.find((b) => b.id === teacher.branchId)?.name ?? "—"} · {classCount} · {weekCount}
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: teacher.avatarColor }}>
+                      {initials(teacher.name)}
                     </span>
-                    <span className="mt-2 flex flex-wrap gap-1">
-                      <Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge>
-                      {(teacher.styles ?? []).slice(0, 2).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
+                    <span className="min-w-0">
+                      <span className="block truncate text-base font-semibold text-[var(--foreground)]">{teacher.name}</span>
+                      <span className="mt-0.5 block truncate text-sm text-[var(--muted)] lg:hidden">
+                        {branches.find((b) => b.id === teacher.branchId)?.name ?? "—"} · {weekCount} {t.teachers.perWeek} · {studentCount} {t.nav.students}
+                      </span>
+                      <span className="mt-1 inline-flex lg:hidden"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></span>
                     </span>
                   </span>
-                  <ChevronRight size={18} className="shrink-0 text-[var(--muted)]" />
+                  <span className="hidden truncate text-sm lg:block">{branches.find((b) => b.id === teacher.branchId)?.name ?? "—"}</span>
+                  {seeContact ? <span className="hidden truncate text-sm tabular-nums lg:block">{teacher.phone || "—"}</span> : null}
+                  <span className="mt-2 flex w-full flex-wrap gap-1 lg:mt-0 lg:w-auto">
+                    {(teacher.styles ?? []).slice(0, 2).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
+                    {(teacher.styles ?? []).length === 0 ? <span className="text-sm text-[var(--muted)]">—</span> : null}
+                  </span>
+                  <span className="hidden tabular-nums text-sm lg:block">{classCount}</span>
+                  <span className="hidden tabular-nums text-sm lg:block">{weekCount}</span>
+                  <span className="hidden tabular-nums text-sm lg:block">{studentCount}</span>
+                  <span className="hidden lg:block"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></span>
+                  <ChevronRight size={18} className="shrink-0 text-[var(--muted)] lg:hidden" />
                 </button>
               </li>
             );

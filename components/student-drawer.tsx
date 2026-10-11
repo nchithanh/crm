@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { MessageCircle, MoreHorizontal, Phone, Wallet, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
@@ -14,7 +14,7 @@ import { attendLabel, holdStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
 import { debtRemaining } from "@/lib/metrics";
 import { studentBadges } from "@/lib/student-badges";
-import { ageYears, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel, zaloHref } from "@/lib/utils";
+import { ageYears, cn, dayFromOffset, formatVnd, initials, isMinor, localDayKey, relativeDayLabel, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
 const tabIds = ["overview", "courses", "attendance", "money", "hold", "notes"] as const;
@@ -61,15 +61,30 @@ export function StudentDrawer({
   const [holdBusy, setHoldBusy] = useState(false);
   const [menu, setMenu] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [leaving, setLeaving] = useState(false);
+  const leavingRef = useRef(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  function requestClose() {
+    if (variant === "panel") {
+      onCloseRef.current();
+      return;
+    }
+    if (leavingRef.current) return;
+    leavingRef.current = true;
+    setLeaving(true);
+    window.setTimeout(() => onCloseRef.current(), 200);
+  }
 
   useEffect(() => {
     if (variant === "panel") return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, variant]);
+  }, [variant]);
 
   useEffect(() => {
     setTab("overview");
@@ -125,8 +140,9 @@ export function StudentDrawer({
       );
     }
     return (
-      <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-        <aside className="h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
+      <div className={cn("fixed inset-0 z-50 flex justify-end", leaving && "pointer-events-none")}>
+        <button type="button" className={cn("crm-drawer-backdrop absolute inset-0 bg-slate-900/40", leaving && "is-leaving")} aria-label={t.drawer.close} onClick={requestClose} />
+        <aside className="crm-drawer-panel h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
       </div>
     );
   }
@@ -200,12 +216,12 @@ export function StudentDrawer({
         className={
           variant === "panel"
             ? "flex h-full max-h-[calc(100dvh-7rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]"
-            : "relative flex h-full w-full max-w-xl flex-col bg-[#F8F7FC]"
+            : cn("crm-drawer-panel relative flex h-full w-full max-w-xl flex-col overflow-x-hidden bg-[#F8F7FC]", leaving && "is-leaving")
         }
       >
         <header className="shrink-0 bg-white px-5 pt-5 pb-3">
           <div className="flex items-start justify-end">
-            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--brand-50)]" aria-label={t.drawer.close} onClick={onClose}>
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--brand-50)]" aria-label={t.drawer.close} onClick={requestClose}>
               <X size={18} />
             </button>
           </div>
@@ -258,7 +274,7 @@ export function StudentDrawer({
             </div>
           </div>
           <div
-            className="mt-5 flex gap-2 overflow-x-auto"
+            className="crm-x-scroll mt-5 flex gap-2"
             role="tablist"
             onKeyDown={(e) => {
               if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -559,7 +575,7 @@ export function StudentDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.drawer.close} onClick={onClose} />
+      <button type="button" className={cn("crm-drawer-backdrop absolute inset-0 bg-slate-900/40", leaving && "is-leaving")} aria-label={t.drawer.close} onClick={requestClose} />
       {shell}
     </div>
   );

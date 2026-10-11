@@ -1,7 +1,15 @@
 # Changelog
 
+## 2026-10-12
+
+- Khóa: desktop thêm giáo viên, chi nhánh, phòng, sĩ số, số buổi, level, trạng thái. Buổi học: cột Học viên có thanh tiến độ (đen / vàng từ 80% / đỏ từ 95%). Giáo viên: buổi trong tuần, số học viên đang dạy, bộ môn; SĐT chỉ với quản lý và lễ tân.
+
 ## 2026-10-11
 
+- Theme trắng / đen: nút và active `#111111`, nền trắng. Tổng quan thêm thẻ Học viên mới kèm `% so với tháng trước`. Danh sách học viên: cột Tỷ lệ có mặt; 3 cột đầu hẹp hơn.
+- Học viên: drawer trượt vào/ra; tab chi tiết kéo ngang nhưng ẩn thanh cuộn. Danh sách desktop thêm khóa, giáo viên, chuyên cần, buổi còn, thanh toán, liên hệ và nút Hồ sơ.
+- Tổng quan: Vận hành hôm nay ngay dưới 3 thông số; Hoạt động gần đây còn 5 dòng cho ngang Top 5 khóa. Học viên: drawer cố định như giáo viên; desktop thêm cột khóa, giáo viên, buổi còn, điểm danh, trạng thái (công nợ nếu được xem). Ẩn nút ghi danh tròn trên desktop.
+- Tổng quan: biểu đồ ngay dưới 3 thông số. Lịch tuần: lưới giờ × ngày giống lịch phòng. Học viên: 3 KPI nằm trong cột danh sách để hồ sơ lên cùng hàng. Thanh cuộn mỏng hơn. Nút ghi danh desktop không đè nút hỗ trợ.
 - Bố cục PeopleHub (không chỉ đổi màu): Học viên là hàng avatar + chip + FAB, hồ sơ có header icon; Tổng quan là lời chào + tìm + 3 KPI + buổi sắp tới; Điểm danh chọn buổi bằng thẻ; Khóa / giáo viên / bảo lưu là danh sách thẻ.
 - Skin: primary tím `#7C3AED`, nền `#F8F7FC`, thẻ bo 18px, badge pill. Mobile bottom: Tổng quan · Học viên · Điểm danh · Tài chính (giáo viên: Tác vụ) · Thêm. Quy tắc: `context/design-language.md`.
 

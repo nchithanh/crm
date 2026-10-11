@@ -114,7 +114,7 @@ export default function FinanceOverviewPage() {
             <div
               className="h-28 w-28 shrink-0 rounded-full"
               style={{
-                background: `conic-gradient(#7C3AED 0 ${(view.snap.collected ? view.snap.cash / Math.max(view.snap.collected, 1) : 0) * 360}deg, #6EE7B7 0 360deg)`,
+                background: `conic-gradient(#111111 0 ${(view.snap.collected ? view.snap.cash / Math.max(view.snap.collected, 1) : 0) * 360}deg, #6EE7B7 0 360deg)`,
               }}
               aria-hidden
             />

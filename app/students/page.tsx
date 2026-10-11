@@ -14,7 +14,7 @@ import { usePageQuery } from "@/lib/page-query";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
 import { studentBadges } from "@/lib/student-badges";
-import { cn, formatVnd, initials, localDayKey, zaloHref } from "@/lib/utils";
+import { cn, initials, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { Attendance, Course, Level, Student, Subscription, User } from "@/types";
@@ -311,9 +311,11 @@ export default function StudentsPage() {
   ];
 
   function courseLabel(st: Student) {
-    const primary = courses.find((c) => c.id === st.courseId)?.name ?? "—";
-    const extra = new Set((subsByStudent.get(st.id) ?? []).map((sub) => sub.courseId).filter((id) => id && id !== st.courseId));
-    return { primary, extra: extra.size };
+    const ids = [st.courseId, ...(subsByStudent.get(st.id) ?? []).map((sub) => sub.courseId)];
+    const names = [...new Set(ids.filter(Boolean))]
+      .map((id) => courses.find((c) => c.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+    return { primary: names[0] ?? "—", extra: Math.max(0, names.length - 1), names: names.join(", ") || "—" };
   }
 
   const canEnroll = role === "owner" || role === "reception";
@@ -335,6 +337,15 @@ export default function StudentsPage() {
     setStatus("all");
   }
 
+  const listCols =
+    seeMoney && seeContact
+      ? "lg:grid-cols-[1.75rem_minmax(7.5rem,10rem)_minmax(8rem,12rem)_minmax(7rem,9.5rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(6.5rem,1fr)_minmax(4.75rem,0.8fr)_4.5rem]"
+      : seeMoney
+        ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(5rem,0.9fr)_4.5rem]"
+        : seeContact
+          ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6.5rem,1.1fr)_minmax(5rem,0.9fr)_4.5rem]"
+          : "lg:grid-cols-[1.75rem_minmax(8rem,12rem)_minmax(8rem,14rem)_minmax(7rem,11rem)_minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)_minmax(5rem,0.9fr)_4.5rem]";
+
   return (
     <div className="flex min-h-0 flex-col gap-4 pb-24">
       <div className="flex items-center justify-between gap-3">
@@ -344,6 +355,7 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      <div className="flex min-w-0 flex-col gap-4">
       <label className="flex h-12 items-center gap-2 rounded-full bg-[var(--brand-50)] px-4 text-sm text-[var(--muted)]">
         <Search size={18} />
         <input
@@ -436,7 +448,7 @@ export default function StudentsPage() {
       ) : null}
 
       {picked.length > 0 ? (
-        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 shadow-[var(--shadow-card)] lg:bottom-6 lg:left-[276px]">
+        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 shadow-[var(--shadow-card)] lg:right-20 lg:bottom-6 lg:left-[276px]">
           <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={() => openZalo(picked)}>{t.students.message}</Button> : null}
           <Button type="button" variant="outline" onClick={() => void assignFollow(picked)}>{t.students.assignFollow}</Button>
@@ -446,8 +458,7 @@ export default function StudentsPage() {
         </div>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,32rem)] lg:items-stretch">
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+      <div className="flex min-h-0 flex-col overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
               <p className="text-sm text-slate-500">{t.students.empty}</p>
@@ -457,29 +468,69 @@ export default function StudentsPage() {
             <>
               <div className="min-h-0 flex-1 overflow-auto">
                 <ul className="divide-y divide-[var(--border)]">
+                  <li className={cn("hidden items-center gap-x-3 px-3 py-2 text-xs font-semibold text-[var(--muted)] lg:grid", listCols)}>
+                    <span />
+                    <span>{t.common.student}</span>
+                    <span>{t.common.course}</span>
+                    <span>{t.common.teacher}</span>
+                    <span>{t.drawer.attendRate}</span>
+                    <span>{t.students.remain}</span>
+                    {seeMoney ? <span>{t.students.pay}</span> : null}
+                    {seeContact ? <span>{t.students.contact}</span> : null}
+                    <span>{t.common.status}</span>
+                    <span />
+                  </li>
                   {paged.map((st) => {
                     const badges = studentBadges(st, holds, seeMoney, lang);
                     const on = openId === st.id;
                     const label = courseLabel(st);
                     const pill = badges[0];
+                    const course = courses.find((c) => c.id === st.courseId);
+                    const teacher = users.find((u) => u.id === course?.teacherId);
+                    const rate = rateOf(marksByStudent.get(st.id) ?? []);
                     return (
                       <li key={st.id}>
-                        <div className={cn("flex items-center gap-2 px-3 py-3", on && "bg-[rgba(124,58,237,0.10)]")}>
+                        <div
+                          className={cn("flex cursor-pointer items-center gap-2 px-3 py-3 lg:grid lg:gap-x-3", listCols, on && "bg-black/5")}
+                          onClick={() => pick(st.id)}
+                        >
                           <input
                             type="checkbox"
                             aria-label={fill(t.students.selectOne, { name: st.name })}
                             checked={selected.includes(st.id)}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
                           />
-                          <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => pick(st.id)}>
+                          <span className="flex min-w-0 flex-1 items-center gap-3">
                             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
-                            <span className="min-w-0 flex-1">
+                            <span className="min-w-0">
                               <span className="block truncate font-semibold text-[var(--foreground)]">{st.name}</span>
-                              <span className="block truncate text-xs text-[var(--muted)]">{label.primary} · {fill(t.drawer.sessionsLeft, { n: st.remainingSessions })}</span>
+                              <span className="block truncate text-xs text-[var(--muted)] lg:hidden">{label.primary} · {fill(t.drawer.sessionsLeft, { n: st.remainingSessions })}</span>
                             </span>
-                            {pill ? <Badge tone={pill.tone}>{pill.label}</Badge> : null}
-                            <ChevronRight size={16} className="shrink-0 text-[var(--muted)]" />
+                            {pill ? <span className="lg:hidden"><Badge tone={pill.tone}>{pill.label}</Badge></span> : null}
+                          </span>
+                          <span className="hidden text-sm leading-snug lg:line-clamp-2">{label.names}</span>
+                          <span className="hidden min-w-0 items-center gap-2 lg:flex">
+                            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: teacher?.avatarColor ?? "#111111" }}>{teacher ? initials(teacher.name) : "—"}</span>
+                            <span className="truncate text-sm">{teacher?.name ?? "—"}</span>
+                          </span>
+                          <span className="hidden tabular-nums text-sm font-semibold lg:block">{rate === null ? "—" : `${rate}%`}</span>
+                          <span className={cn("hidden tabular-nums lg:block", remainTone(st.remainingSessions))}>{st.remainingSessions}</span>
+                          {seeMoney ? (
+                            <span className="hidden lg:block">
+                              <Badge tone={st.debt > 0 ? "warn" : "ok"}>{st.debt > 0 ? t.students.kpiUnpaid : t.students.paid}</Badge>
+                            </span>
+                          ) : null}
+                          {seeContact ? <span className="hidden truncate text-sm tabular-nums lg:block">{st.phone || "—"}</span> : null}
+                          <span className="hidden lg:block">{pill ? <Badge tone={pill.tone}>{pill.label}</Badge> : "—"}</span>
+                          <button
+                            type="button"
+                            className="hidden h-8 items-center rounded-full border border-[var(--border)] bg-white px-3 text-xs font-semibold lg:inline-flex"
+                            onClick={(e) => { e.stopPropagation(); pick(st.id); }}
+                          >
+                            {t.drawer.fullProfile}
                           </button>
+                          <ChevronRight size={16} className="shrink-0 text-[var(--muted)] lg:hidden" />
                         </div>
                       </li>
                     );
@@ -496,28 +547,16 @@ export default function StudentsPage() {
             </>
           )}
         </div>
-
-        <div className="hidden min-h-0 lg:block">
-          {openId ? (
-            <StudentDrawer key={openId} studentId={openId} onClose={closePanel} variant="panel" />
-          ) : (
-            <div className="flex h-full min-h-[28rem] items-center justify-center rounded-[14px] border border-dashed border-[var(--border)] bg-[var(--card)] px-6 text-center text-sm text-slate-500">
-              {t.students.pickHint}
-            </div>
-          )}
-        </div>
       </div>
 
       {openId ? (
-        <div className="lg:hidden">
-          <StudentDrawer key={`m-${openId}`} studentId={openId} onClose={closePanel} variant="drawer" />
-        </div>
+        <StudentDrawer key={openId} studentId={openId} onClose={closePanel} />
       ) : null}
       {canEnroll ? (
         <Link
           href="/mid-course-enroll"
           aria-label={t.students.emptyCta}
-          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_8px_24px_rgba(124,58,237,0.35)] lg:bottom-8"
+          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white shadow-[0_8px_24px_rgba(0,0,0,0.25)] lg:hidden"
         >
           <Plus size={24} />
         </Link>

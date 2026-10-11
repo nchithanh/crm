@@ -113,7 +113,7 @@ export default function HoldsPage() {
                 className="flex w-full items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[var(--shadow-card)]"
                 onClick={() => { setOpenId(h.id); setMessage(""); setRejectReason(h.rejectReason ?? ""); }}
               >
-                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student?.avatarColor ?? "#7C3AED" }}>
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student?.avatarColor ?? "#111111" }}>
                   {initials(student?.name ?? "?")}
                 </span>
                 <span className="min-w-0 flex-1">

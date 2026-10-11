@@ -131,7 +131,15 @@ export default function ClassesPage() {
                     ) : "—"}
                   </td>
                   <td className="px-3 py-3 text-slate-600">{room ? <Link href="/rooms" className="hover:underline" onClick={(e) => e.stopPropagation()}>{room.name}</Link> : "—"}</td>
-                  <td className="px-3 py-3 tabular-nums">{seated}/{c.capacity}</td>
+                  <td className="px-3 py-3">
+                    <span className="tabular-nums">{seated}/{c.capacity}</span>
+                    <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100" aria-hidden>
+                      <div
+                        className={`h-full ${seated / Math.max(c.capacity, 1) >= 0.95 ? "bg-rose-500" : seated / Math.max(c.capacity, 1) >= 0.8 ? "bg-amber-500" : "bg-[var(--brand-500)]"}`}
+                        style={{ width: `${Math.min(100, (seated / Math.max(c.capacity, 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </td>
                   <td className="px-3 py-3">
                     <Badge tone={c.status === "cancelled" ? "danger" : c.status === "completed" ? "neutral" : c.status === "ongoing" ? "ok" : "info"}>
                       {c.status}

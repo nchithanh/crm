@@ -10,7 +10,7 @@ import { canManageCatalog } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
-import { initials } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
@@ -59,27 +59,53 @@ export default function CoursesPage() {
         />
       ) : null}
 
-      <ul className="mt-4 space-y-3">
-        {rows.map(({ course, classCount, studentCount, main }) => (
-          <li key={course.id}>
-            <Link href={`/courses/${course.id}`} className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 shadow-[var(--shadow-card)]">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: main?.avatarColor ?? "#7C3AED" }}>
-                {initials(main?.name ?? course.name)}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-base font-semibold text-[var(--foreground)]">{course.name}</span>
-                <span className="mt-0.5 block truncate text-sm text-[var(--muted)]">
-                  {branches.find((b) => b.id === course.branchId)?.name} · {studentCount}/{course.capacity ?? 12} · {classCount} {t.nav.classes}
+      <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+        <li className="hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem]">
+          <span>{t.common.course}</span>
+          <span>{t.common.teacher}</span>
+          <span>{t.common.branch}</span>
+          <span>{t.common.room}</span>
+          <span>{t.nav.students}</span>
+          <span>{t.nav.classes}</span>
+          <span>{t.common.level}</span>
+          <span>{t.common.status}</span>
+        </li>
+        {rows.map(({ course, classCount, studentCount, main }) => {
+          const room = rooms.find((r) => r.id === course.roomId);
+          const branch = branches.find((b) => b.id === course.branchId)?.name ?? "—";
+          const cap = course.capacity ?? 12;
+          return (
+            <li key={course.id}>
+              <Link href={`/courses/${course.id}`} className="flex items-center gap-3 px-4 py-4 hover:bg-black/5 lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3">
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: main?.avatarColor ?? "#111111" }}>
+                    {initials(main?.name ?? course.name)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-base font-semibold text-[var(--foreground)]">{course.name}</span>
+                    <span className="mt-0.5 block truncate text-sm text-[var(--muted)] lg:hidden">
+                      {branch} · {main?.name ?? "—"} · {studentCount}/{cap}
+                    </span>
+                  </span>
                 </span>
-                <span className="mt-2 flex flex-wrap gap-1">
-                  <Badge tone="info">{levelLabel(course.level)}</Badge>
+                <span className="hidden min-w-0 items-center gap-2 lg:flex">
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: main?.avatarColor ?? "#111111" }}>{main ? initials(main.name) : "—"}</span>
+                  <span className="truncate text-sm">{main?.name ?? "—"}</span>
+                </span>
+                <span className="hidden truncate text-sm lg:block">{branch}</span>
+                <span className="hidden truncate text-sm lg:block">{room?.name ?? "—"}</span>
+                <span className="hidden tabular-nums text-sm lg:block">{studentCount}/{cap}</span>
+                <span className="hidden tabular-nums text-sm lg:block">{classCount}</span>
+                <span className="hidden lg:block"><Badge tone="info">{levelLabel(course.level)}</Badge></span>
+                <span className="mt-2 flex flex-wrap gap-1 lg:mt-0">
+                  <span className="lg:hidden"><Badge tone="info">{levelLabel(course.level)}</Badge></span>
                   <Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge>
                 </span>
-              </span>
-              <ChevronRight size={18} className="shrink-0 text-[var(--muted)]" />
-            </Link>
-          </li>
-        ))}
+                <ChevronRight size={18} className="shrink-0 text-[var(--muted)] lg:hidden" />
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

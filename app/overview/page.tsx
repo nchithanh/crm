@@ -149,7 +149,10 @@ export default function DashboardPage() {
     const branchCourses = courses.filter((c) => inBranch(c.branchId));
     const active = branchStudents.filter((s) => s.status === "active");
     const joined = (prefix: string) => active.filter((s) => s.joinedDay.startsWith(prefix)).length;
-    const studentDelta = joined(month) - joined(monthShift(month, -1));
+    const joinedNow = joined(month);
+    const joinedPrev = joined(monthShift(month, -1));
+    const studentDelta = joinedNow - joinedPrev;
+    const newPct = joinedPrev === 0 ? (joinedNow === 0 ? 0 : 100) : Math.round(((joinedNow - joinedPrev) / joinedPrev) * 100);
 
     const todaySessions = branchSessions.filter((s) => s.day === today && s.status !== "cancelled");
     const seatedOf = (classId: string) => {
@@ -282,7 +285,7 @@ export default function DashboardPage() {
       ...audits.map((a) => ({ id: a.id, day: a.day, text: a.text })),
     ]
       .sort((a, b) => (a.day < b.day ? 1 : -1))
-      .slice(0, 8);
+      .slice(0, 5);
 
     const weekStart = addDays(today, -6);
     const lowAttendSessions = branchSessions.filter((s) => {
@@ -320,6 +323,8 @@ export default function DashboardPage() {
       q,
       active: active.length,
       studentDelta,
+      newStudents: joinedNow,
+      newPct,
       todayClassCount: todaySessions.length,
       todayStudentCount,
       todaySessions,
@@ -385,6 +390,14 @@ export default function DashboardPage() {
       label: t.dash.activeStudents,
       value: String(model.active),
       hint: fill(t.dash.vsLast, { n: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta}` }),
+      href: `/students${q}`,
+      icon: Users,
+    },
+    {
+      id: "new",
+      label: t.dash.newStudents,
+      value: String(model.newStudents),
+      hint: fill(t.dash.vsLast, { n: `${model.newPct >= 0 ? "+" : ""}${model.newPct}%` }),
       href: `/students${q}`,
       icon: Users,
     },
@@ -513,8 +526,8 @@ export default function DashboardPage() {
         </form>
       </div>
 
-      <div className="order-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {kpis.slice(0, 3).map((card) => {
+      <div className="order-2 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {kpis.slice(0, 4).map((card) => {
           const Icon = card.icon;
           const body = (
             <>
@@ -525,7 +538,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className={`mt-1 crm-kpi ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
-              <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") ? "text-green-600" : card.hint.startsWith("↓") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
+              <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") || card.hint.startsWith("+") ? "text-green-600" : card.hint.startsWith("↓") || card.hint.startsWith("-") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
               {card.id === "rate" ? <Spark values={model.attendSpark} /> : null}
               {card.id === "debt" && showMoney ? (
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
@@ -543,12 +556,12 @@ export default function DashboardPage() {
         })}
       </div>
 
-      <Link href="/dolphin-ai" className="order-3 block rounded-[18px] bg-[var(--brand-50)] px-5 py-4">
+      <Link href="/dolphin-ai" className="order-5 block rounded-[18px] bg-[var(--brand-50)] px-5 py-4">
         <p className="text-sm font-semibold text-[var(--brand-700)]">{t.shell.askDolphin}</p>
         <p className="mt-1 text-sm text-[var(--muted)]">{t.pages.aiLead}</p>
       </Link>
 
-      <section aria-labelledby="ops-strip-heading" className="order-8 space-y-2">
+      <section aria-labelledby="ops-strip-heading" className="order-3 space-y-2">
         <h2 id="ops-strip-heading" className="crm-section-title">{t.dash.opsStrip}</h2>
         <div className="grid grid-cols-2 gap-2 xl:grid-cols-5">
           {opsCards.map((card) => (
@@ -565,7 +578,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="order-5 grid gap-3 lg:grid-cols-2">
+      <div className="order-7 grid gap-3 lg:grid-cols-2">
         <section className="rounded-[18px] border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
           <h2 className="crm-section-title">{t.dash.workToday}</h2>
           {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
@@ -618,7 +631,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="order-9 grid gap-3 lg:grid-cols-5">
+      <div className="order-4 grid gap-3 lg:grid-cols-5">
         <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
@@ -689,7 +702,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="order-4 grid gap-3 lg:grid-cols-2">
+      <div className="order-6 grid gap-3 lg:grid-cols-2">
         <section className="rounded-[18px] border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-base font-semibold">{t.dash.todayClasses}</h2>
           {model.todaySessions.length === 0 ? (
@@ -785,8 +798,8 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="order-10 grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="order-8 grid items-stretch gap-3 lg:grid-cols-2">
+        <section className="h-full rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-base font-semibold">{t.dash.topCourses}</h2>
           <ol className="mt-3 space-y-2">
             {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
@@ -800,7 +813,7 @@ export default function DashboardPage() {
             ))}
           </ol>
         </section>
-        <section className="rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="h-full rounded-[18px] border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="flex items-center gap-2 text-base font-semibold"><LineChart size={16} /> {t.dash.recent}</h2>
           <ul className="mt-3 space-y-3">
             {model.activity.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noActivity}</li> : null}
