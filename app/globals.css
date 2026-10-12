@@ -208,6 +208,14 @@ a { text-decoration: none; }
   height: 0;
 }
 
+@keyframes crm-menu-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes crm-menu-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
 @keyframes crm-drawer-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -228,6 +236,8 @@ a { text-decoration: none; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+.crm-menu-panel { animation: crm-menu-in 200ms ease-out; }
+.crm-menu-panel.is-leaving { animation: crm-menu-out 200ms ease-in forwards; }
 .crm-drawer-panel { animation: crm-drawer-in 200ms ease-out; }
 .crm-drawer-panel.is-leaving { animation: crm-drawer-out 200ms ease-in forwards; }
 .crm-drawer-backdrop { animation: crm-fade-in 200ms ease-out; }
@@ -237,6 +247,7 @@ a { text-decoration: none; }
   animation: crm-tab-in 180ms ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
+  .crm-menu-panel,
   .crm-drawer-panel,
   .crm-drawer-backdrop,
   .crm-tab-panel { animation: none; }

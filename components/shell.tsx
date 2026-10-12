@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   ArrowLeftRight,
@@ -143,7 +143,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const canEnroll = user?.role === "owner" || user?.role === "reception";
   const collect = canCollect(user?.role);
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
-  const [open, setOpen] = useState(false);
+  const [menuOn, setMenuOn] = useState(false);
+  const [menuLeaving, setMenuLeaving] = useState(false);
+  const menuTimer = useRef<number | null>(null);
+
+  function openMenu() {
+    if (menuTimer.current) window.clearTimeout(menuTimer.current);
+    setMenuLeaving(false);
+    setMenuOn(true);
+  }
+
+  function closeMenu() {
+    if (!menuOn || menuLeaving) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMenuOn(false);
+      return;
+    }
+    setMenuLeaving(true);
+    menuTimer.current = window.setTimeout(() => {
+      setMenuOn(false);
+      setMenuLeaving(false);
+      menuTimer.current = null;
+    }, 200);
+  }
   const [sheetOpen, setSheetOpen] = useState(false);
   const [headerMore, setHeaderMore] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -243,7 +265,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   function NavPanel({ showBrand, hideHrefs = [] }: { showBrand: boolean; hideHrefs?: string[] }) {
     const close = () => {
-      setOpen(false);
+      closeMenu();
       setSheetOpen(false);
     };
     return (
@@ -331,16 +353,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-[#2e2e44] bg-[#1c1c2a] lg:flex">
         <NavPanel showBrand />
       </aside>
-      {open ? (
+      {menuOn ? (
         <>
-          <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <div className="fixed inset-y-0 left-0 z-[51] flex h-full w-[80%] flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
+          <button
+            type="button"
+            className={cn("crm-drawer-backdrop fixed inset-0 z-50 bg-slate-900/40 lg:hidden", menuLeaving && "is-leaving")}
+            onClick={closeMenu}
+            aria-label={t.common.close}
+          />
+          <div className={cn("crm-menu-panel fixed inset-y-0 left-0 z-[51] flex h-full w-[80%] flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden", menuLeaving && "is-leaving")}>
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-2">
                 <BrandMark className="h-8 w-8" />
                 <p className="font-bold text-[var(--brand-600)]">{t.shell.product}</p>
               </div>
-              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:bg-white/10" onClick={() => setOpen(false)} aria-label={t.common.close}>
+              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:bg-white/10" onClick={closeMenu} aria-label={t.common.close}>
                 <X size={18} />
               </button>
             </div>
@@ -355,7 +382,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--foreground)]"
-            onClick={() => setOpen(true)}
+            onClick={openMenu}
             aria-label={t.common.menu}
           >
             <Menu size={20} />

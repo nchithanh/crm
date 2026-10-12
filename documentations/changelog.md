@@ -2,6 +2,7 @@
 
 ## 2026-10-13
 
+- Menu hamburger trên mobile trượt từ mép trái ra khi mở và trượt vào khi đóng.
 - Mua / gia hạn: nút tạo nằm cùng hàng Học viên, SKU và Khóa.
 - Chăm sóc: thẻ sinh nhật có Chia sẻ mã. Trạng thái Chưa chăm sóc, Đã gửi Zalo, Đã gửi mã giảm giá.
 - Chăm sóc: đóng popup mã sinh nhật thì thẻ học viên vẫn hiện tên chương trình và mã vừa tạo.
