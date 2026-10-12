@@ -341,12 +341,12 @@ export default function StudentsPage() {
 
   const listCols =
     seeMoney && seeContact
-      ? "lg:grid-cols-[1.75rem_minmax(7.5rem,10rem)_minmax(8rem,12rem)_minmax(7rem,9.5rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(6.5rem,1fr)_minmax(4.75rem,0.8fr)_4.5rem]"
+      ? "lg:grid-cols-[1.75rem_minmax(7.5rem,10rem)_minmax(8rem,12rem)_minmax(7rem,9.5rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(6.5rem,1fr)_minmax(4.75rem,0.8fr)]"
       : seeMoney
-        ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(5rem,0.9fr)_4.5rem]"
+        ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6rem,1fr)_minmax(5rem,0.9fr)]"
         : seeContact
-          ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6.5rem,1.1fr)_minmax(5rem,0.9fr)_4.5rem]"
-          : "lg:grid-cols-[1.75rem_minmax(8rem,12rem)_minmax(8rem,14rem)_minmax(7rem,11rem)_minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)_minmax(5rem,0.9fr)_4.5rem]";
+          ? "lg:grid-cols-[1.75rem_minmax(7.5rem,11rem)_minmax(8rem,13rem)_minmax(7rem,10rem)_minmax(5.5rem,1fr)_minmax(4.25rem,0.7fr)_minmax(6.5rem,1.1fr)_minmax(5rem,0.9fr)]"
+          : "lg:grid-cols-[1.75rem_minmax(8rem,12rem)_minmax(8rem,14rem)_minmax(7rem,11rem)_minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)_minmax(5rem,0.9fr)]";
 
   return (
     <div className="flex min-h-0 flex-col gap-4 pb-24">
@@ -502,7 +502,6 @@ export default function StudentsPage() {
                     {seeMoney ? <span>{t.students.pay}</span> : null}
                     {seeContact ? <span>{t.students.contact}</span> : null}
                     <span>{t.common.status}</span>
-                    <span />
                   </li>
                   {paged.map((st) => {
                     const badges = studentBadges(st, holds, seeMoney, lang);
@@ -585,13 +584,6 @@ export default function StudentsPage() {
                           ) : null}
                           {seeContact ? <span className="hidden truncate text-sm tabular-nums lg:block">{st.phone || "—"}</span> : null}
                           <span className="hidden lg:block">{pill ? <Badge tone={pill.tone}>{pill.label}</Badge> : "—"}</span>
-                          <button
-                            type="button"
-                            className="hidden h-8 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold lg:inline-flex"
-                            onClick={(e) => { e.stopPropagation(); pick(st.id); }}
-                          >
-                            {t.drawer.fullProfile}
-                          </button>
                         </div>
                       </li>
                     );

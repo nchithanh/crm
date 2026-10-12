@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { PromotionPicker } from "@/components/promotion-picker";
+import { TransferQr } from "@/components/finance/transfer-qr";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
-import { addPackage, enrollStudent } from "@/lib/actions";
+import { addPackage, enrollStudent, payReceivable } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
+import { pickPaymentAccount, transferMemo } from "@/lib/payment-accounts";
+import { quotePromotion, splitCodes } from "@/lib/promotions";
 import { isSubscriptionValid, needsRenew } from "@/lib/subscription";
-import { formatVnd, localDayKey } from "@/lib/utils";
+import { cn, formatVnd, localDayKey } from "@/lib/utils";
+import type { PayMethod } from "@/types";
 
 export default function SubscriptionsPage() {
   const { t } = useI18n();
@@ -16,11 +21,39 @@ export default function SubscriptionsPage() {
   const subscriptions = useLiveQuery(() => db.subscriptions.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const promotions = useLiveQuery(() => db.promotions.toArray(), []) ?? [];
+  const paymentAccounts = useLiveQuery(() => db.paymentAccounts.toArray(), []) ?? [];
+  const paymentRoutes = useLiveQuery(() => db.paymentRoutes.toArray(), []) ?? [];
+  const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const [studentId, setStudentId] = useState("");
   const [planId, setPlanId] = useState("");
   const [courseId, setCourseId] = useState("");
-  const [msg, setMsg] = useState("");
+  const [promotionId, setPromotionId] = useState("");
+  const [promoCodes, setPromoCodes] = useState("");
+  const [payMethod, setPayMethod] = useState<"cash" | "transfer" | "debt">("cash");
+  const [error, setError] = useState("");
+  const [done, setDone] = useState("");
+  const [busy, setBusy] = useState(false);
   const today = localDayKey();
+  const buyer = students.find((row) => row.id === studentId);
+  const sku = plans.find((row) => row.id === planId && row.kind === "course");
+  const course = courses.find((row) => row.id === courseId);
+  const usedPromoIds = subscriptions.filter((row) => row.studentId === studentId && row.promotionId).map((row) => row.promotionId as string);
+  const selectedPromo = promotions.find((row) => row.id === promotionId);
+  const promoQuote = sku && course && selectedPromo
+    ? quotePromotion({
+        promotion: selectedPromo,
+        tuition: sku.price,
+        course,
+        codes: splitCodes(promoCodes),
+        alreadyUsed: usedPromoIds.includes(promotionId),
+      })
+    : null;
+  const payable = promoQuote?.quote?.payable ?? sku?.price ?? 0;
+  const payAccount = useMemo(
+    () => pickPaymentAccount(payable, paymentAccounts, paymentRoutes),
+    [payable, paymentAccounts, paymentRoutes],
+  );
 
   const rows = useMemo(
     () => [...subscriptions].sort((a, b) => (a.day < b.day ? 1 : -1)),
@@ -54,43 +87,138 @@ export default function SubscriptionsPage() {
         <h2 className="text-base font-bold">{t.pages.addSessions}</h2>
         <Card className="mt-3 p-4">
           <form
-            className="grid gap-3 md:grid-cols-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!studentId || !planId || !courseId) return;
-              void enrollStudent({ studentId, planId, courseId }).then((code) => {
-                setMsg(code || "");
-                if (!code) {
-                  setStudentId("");
-                  setPlanId("");
-                  setCourseId("");
+            className="grid gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!studentId || !planId || !courseId || !sku) return;
+              if (promotionId && promoQuote && !promoQuote.quote) {
+                setDone("");
+                setError(promoQuote.error);
+                return;
+              }
+              setBusy(true);
+              setError("");
+              setDone("");
+              void (async () => {
+                const created = await enrollStudent({
+                  studentId,
+                  planId,
+                  courseId,
+                  promotionId: promotionId || undefined,
+                  codes: splitCodes(promoCodes),
+                });
+                if (created.error || !created.installmentId) {
+                  setBusy(false);
+                  setError(created.error);
+                  return;
                 }
-              });
+                if (payMethod !== "debt" && created.payable > 0) {
+                  const paid = await payReceivable({
+                    receivableId: created.installmentId,
+                    amount: created.payable,
+                    method: (payMethod === "cash" ? "cash" : "transfer") as PayMethod,
+                  });
+                  setBusy(false);
+                  if (typeof paid === "string") {
+                    setError(paid);
+                    return;
+                  }
+                  setDone(`${t.money.collected} ${formatVnd(paid.amount)}`);
+                } else {
+                  setBusy(false);
+                  setDone(payMethod === "debt" ? t.pages.boughtDebt : t.pages.bought);
+                }
+                setStudentId("");
+                setPlanId("");
+                setCourseId("");
+                setPromotionId("");
+                setPromoCodes("");
+                setPayMethod("cash");
+              })();
             }}
           >
-            <Field label={t.common.student}>
-              <select className={inputClass} value={studentId} onChange={(e) => setStudentId(e.target.value)}>
-                <option value="">{t.common.choose}</option>
-                {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </Field>
-            <Field label={t.pages.pack}>
-              <select className={inputClass} value={planId} onChange={(e) => setPlanId(e.target.value)}>
-                <option value="">{t.common.choose}</option>
-                {plans.filter((p) => p.kind === "course").map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </Field>
-            <Field label={t.common.course}>
-              <select className={inputClass} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-                <option value="">{t.common.choose}</option>
-                {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </Field>
-            <div className="flex items-end">
-              <Button className="w-full" type="submit">{t.pages.enroll}</Button>
+            <div className="grid gap-3 md:grid-cols-4 md:items-end">
+              <Field label={t.common.student}>
+                <select className={inputClass} value={studentId} onChange={(e) => { setStudentId(e.target.value); setPromotionId(""); }}>
+                  <option value="">{t.common.choose}</option>
+                  {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </Field>
+              <Field label={t.pages.pack}>
+                <select className={inputClass} value={planId} onChange={(e) => { setPlanId(e.target.value); setPromotionId(""); }}>
+                  <option value="">{t.common.choose}</option>
+                  {plans.filter((p) => p.kind === "course").map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </Field>
+              <Field label={t.common.course}>
+                <select className={inputClass} value={courseId} onChange={(e) => { setCourseId(e.target.value); setPromotionId(""); }}>
+                  <option value="">{t.common.choose}</option>
+                  {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </Field>
+              <Button className="min-h-12 w-full" type="submit" disabled={busy || !sku || !course || !buyer}>
+                {payMethod === "debt" || payable <= 0 ? t.pages.enroll : `${t.money.payCta} · ${formatVnd(payable)}`}
+              </Button>
             </div>
+            {sku && course && buyer ? (
+              <div className="space-y-3">
+                <PromotionPicker
+                  promotions={promotions}
+                  tuition={sku.price}
+                  course={course}
+                  usedIds={usedPromoIds}
+                  selectedId={promotionId}
+                  codes={promoCodes}
+                  onSelect={setPromotionId}
+                  onCodes={setPromoCodes}
+                />
+                <dl className="grid grid-cols-2 gap-1 text-sm">
+                  <dt className="text-slate-500">{t.promo.listPrice}</dt>
+                  <dd className="text-right tabular-nums">{formatVnd(sku.price)}</dd>
+                  <dt className="text-slate-500">{t.promo.cut}</dt>
+                  <dd className="text-right tabular-nums">{formatVnd(promoQuote?.quote?.discount ?? 0)}</dd>
+                  <dt className="font-semibold">{t.promo.payable}</dt>
+                  <dd className="text-right text-base font-bold tabular-nums">{formatVnd(payable)}</dd>
+                </dl>
+                <div className="grid grid-cols-3 gap-1">
+                  {([
+                    ["cash", t.money.methodCash],
+                    ["transfer", t.money.methodCk],
+                    ["debt", t.money.methodDebt],
+                  ] as const).map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setPayMethod(id)}
+                      className={cn(
+                        "rounded-[5px] border px-2 py-2.5 text-sm font-semibold",
+                        payMethod === id
+                          ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]"
+                          : "border-slate-200 text-slate-700",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {payMethod === "transfer" && payable > 0 ? (
+                  <TransferQr
+                    amount={payable}
+                    studentName={buyer.name}
+                    studentPhone={buyer.phone}
+                    studio={settings?.name}
+                    account={payAccount}
+                    memo={transferMemo(buyer.name)}
+                  />
+                ) : null}
+                {payMethod === "debt" ? (
+                  <p className="rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
+                ) : null}
+              </div>
+            ) : null}
+            {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+            {done ? <p className="text-sm text-green-800">{done}</p> : null}
           </form>
-          {msg ? <p className="mt-2 text-sm text-rose-700">{msg}</p> : null}
         </Card>
       </section>
 

@@ -335,7 +335,7 @@ export async function enrollStudent(input: {
   const planId = input.planId || input.packageId || "";
   const pack = await db.subscriptionPlans.get(planId);
   const student = await db.students.get(input.studentId);
-  if (!pack || !student || pack.kind === "hold") return "Gói này không dùng để ghi danh khóa.";
+  if (!pack || !student || pack.kind === "hold") return enrollFail("Gói này không dùng để ghi danh khóa.");
   let courseId = input.courseId || "";
   if (!courseId && input.classId) {
     const fromClass = await db.classes.get(input.classId);
@@ -343,15 +343,15 @@ export async function enrollStudent(input: {
     else if (await db.courses.get(input.classId)) courseId = input.classId;
   }
   const course = await db.courses.get(courseId);
-  if (!course) return "Không thấy khóa.";
+  if (!course) return enrollFail("Không thấy khóa.");
   const classes = await db.classes.where("courseId").equals(course.id).toArray();
   const today = localDayKey();
   const next = [...classes]
     .filter((s) => s.status !== "cancelled" && s.status !== "completed" && s.day >= today)
     .sort((a, b) => a.index - b.index)[0];
-  if (!next) return "Khóa đã hết buổi.";
+  if (!next) return enrollFail("Khóa đã hết buổi.");
   const gate = canJoinAtSession(course.level, next.index);
-  if (!gate.ok) return gate.reason;
+  if (!gate.ok) return enrollFail(gate.reason);
   const day = localDayKey();
   const end = new Date();
   end.setMonth(end.getMonth() + pack.months);
@@ -366,7 +366,7 @@ export async function enrollStudent(input: {
   let usedCodes: string[] = [];
   if (input.promotionId) {
     const promo = await db.promotions.get(input.promotionId);
-    if (!promo) return "Không thấy chương trình.";
+    if (!promo) return enrollFail("Không thấy chương trình.");
     const prior = await db.subscriptions.filter((row) => row.studentId === student.id && row.promotionId === promo.id).count();
     const quoted = quotePromotion({
       promotion: promo,
@@ -376,7 +376,7 @@ export async function enrollStudent(input: {
       codes: input.codes ?? [],
       alreadyUsed: prior > 0,
     });
-    if (!quoted.quote) return quoted.error;
+    if (!quoted.quote) return enrollFail(quoted.error);
     payable = quoted.quote.payable;
     discount = quoted.quote.discount;
     extraSessions = quoted.quote.extraSessions;
@@ -432,7 +432,11 @@ export async function enrollStudent(input: {
       if (!exists) await db.classStudents.add({ id: csId, classId: klass.id, studentId: student.id });
     }
   });
-  return "";
+  return { error: "", installmentId: debtId, payable };
+}
+
+function enrollFail(error: string) {
+  return { error, installmentId: "", payable: 0 };
 }
 
 const avatarColors = ["#7C3AED", "#0EA5E9", "#059669", "#DB2777", "#F59E0B"];
@@ -510,7 +514,7 @@ export async function enrollMidCourse(input: {
   promotionId?: string;
   codes?: string[];
 }) {
-  return enrollStudent({
+  const result = await enrollStudent({
     studentId: input.studentId,
     planId: input.planId || input.packageId || "",
     courseId: input.courseId || "",
@@ -519,6 +523,7 @@ export async function enrollMidCourse(input: {
     promotionId: input.promotionId,
     codes: input.codes,
   });
+  return result.error;
 }
 
 export async function savePromotion(input: {

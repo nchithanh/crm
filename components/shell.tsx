@@ -128,7 +128,7 @@ function financeSection(path: string) {
 function active(href: string, path: string) {
   if (href === "/overview") return path === "/overview" || path === "/";
   if (href === "/finance") return path === "/finance";
-  if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/") || path.startsWith("/qr-attendance");
+  if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/");
   return path === href || path.startsWith(`${href}/`);
 }
 
@@ -241,7 +241,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[#d4d4e2]";
 
-  function NavPanel({ showBrand }: { showBrand: boolean }) {
+  function NavPanel({ showBrand, hideHrefs = [] }: { showBrand: boolean; hideHrefs?: string[] }) {
     const close = () => {
       setOpen(false);
       setSheetOpen(false);
@@ -272,19 +272,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </select>
         </div>
         <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-4">
-          <div className="space-y-0.5">
-            {top
-              .filter((item) => canSeeNavHref(user?.role, item.href))
-              .map((item) => renderNavLink(item, close))}
-          </div>
-          {visibleGroups.map((group) => (
+          {top.filter((item) => canSeeNavHref(user?.role, item.href) && !hideHrefs.includes(item.href)).length > 0 ? (
+            <div className="space-y-0.5">
+              {top
+                .filter((item) => canSeeNavHref(user?.role, item.href) && !hideHrefs.includes(item.href))
+                .map((item) => renderNavLink(item, close))}
+            </div>
+          ) : null}
+          {visibleGroups.map((group) => {
+            const items = group.items.filter((item) => !hideHrefs.includes(item.href));
+            if (items.length === 0) return null;
+            return (
             <div key={group.title} className="border-t border-[#2e2e44] pt-3">
               <p className={groupLabelClass}>{t.nav[group.title]}</p>
               <div className="space-y-0.5">
-                {group.items.map((item) => renderNavLink(item, close))}
+                {items.map((item) => renderNavLink(item, close))}
               </div>
             </div>
-          ))}
+            );
+          })}
           {canSeeNavHref(user?.role, ai.href) ? renderNavLink(ai, close) : null}
         </nav>
         {user ? (
@@ -555,7 +561,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="h-1 w-10 rounded-full bg-white/30" aria-hidden />
             </div>
             <div className="min-h-0 flex-1 overflow-hidden">
-              <NavPanel showBrand={false} />
+              <NavPanel showBrand={false} hideHrefs={mobile.map((item) => item.href)} />
             </div>
           </div>
         </div>

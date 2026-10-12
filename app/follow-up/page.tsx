@@ -1,17 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Field, inputClass, inputClassInline } from "@/components/ui";
-import { addLead, addLeadTouch, assignLeads, convertLead, moveLead, setLeadReminder } from "@/lib/actions";
+import { addLead, addLeadTouch, assignLeads, convertLead, moveLead, savePromotion, setLeadReminder } from "@/lib/actions";
+import { canManagePromotions, canSeeContact } from "@/lib/access";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { leadStageLabel, leadStages } from "@/lib/labels";
 import { usePageQuery } from "@/lib/page-query";
+import { shareTransferNotice } from "@/lib/share-transfer";
 import { dayFromOffset, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-import type { Lead, LeadStage } from "@/types";
+import { useStudioBranch } from "@/stores/branch-store";
+import type { Lead, LeadStage, Student } from "@/types";
 
 function zaloSample(studio: string, template: string) {
   return fill(template, { studio });
@@ -96,6 +100,7 @@ export default function LeadsPage() {
           <Button onClick={() => setForm(true)}>{t.care.add}</Button>
         </div>
       </div>
+      <BirthdayReminders />
       <div className="mt-4 flex gap-2 overflow-x-auto">
         <input className={`${inputClass} !w-auto min-w-0 flex-1 !max-w-none`} placeholder={t.care.search} value={q} onChange={(e) => setQ(e.target.value)} />
         <select className={inputClassInline} value={source} onChange={(e) => setSource(e.target.value)}>
@@ -205,6 +210,329 @@ export default function LeadsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function addDays(day: string, n: number) {
+  const [y, m, d] = day.split("-").map(Number);
+  return localDayKey(new Date(y, (m ?? 1) - 1, (d ?? 1) + n, 12));
+}
+
+function isRealDay(day: string) {
+  const [y, m, d] = day.split("-").map(Number);
+  if (!y || !m || !d) return false;
+  const dt = new Date(y, m - 1, d, 12);
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+}
+
+function nextBirthday(birthDay: string, today: string) {
+  const parts = birthDay.split("-");
+  const month = parts[1];
+  const date = parts[2];
+  if (!month || !date) return null;
+  const year = Number(today.slice(0, 4));
+  const thisYear = `${year}-${month}-${date}`;
+  if (isRealDay(thisYear) && thisYear >= today) return thisYear;
+  const nextYear = `${year + 1}-${month}-${date}`;
+  return isRealDay(nextYear) ? nextYear : null;
+}
+
+function birthdayCode(name: string, day: string) {
+  const plain = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d");
+  const last = plain.trim().split(/\s+/).at(-1) ?? "HV";
+  const token = last.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase() || "HV";
+  return `SN${token}${day.slice(5, 10).replace("-", "")}`;
+}
+
+function BirthdayReminders() {
+  const { t } = useI18n();
+  const me = useAuthStore((s) => s.user);
+  const { branchId } = useStudioBranch();
+  const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
+  const [draft, setDraft] = useState<{
+    studentId: string;
+    name: string;
+    code: string;
+    percent: string;
+    startDay: string;
+    endDay: string;
+  } | null>(null);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [created, setCreated] = useState<{
+    studentId: string;
+    promoName: string;
+    code: string;
+    percent: string;
+    startDay: string;
+    endDay: string;
+    studentName: string;
+    phone: string;
+  } | null>(null);
+  const [shown, setShown] = useState<Record<string, { promoName: string; code: string; percent: string; startDay: string; endDay: string }>>({});
+  const [care, setCare] = useState<Record<string, { zalo: boolean; code: boolean }>>({});
+  const [shareNote, setShareNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const seeContact = canSeeContact(me?.role);
+  const canSave = canManagePromotions(me?.role);
+  const today = localDayKey();
+  const due = useMemo(() => {
+    return students
+      .filter((student) => branchId === "all" || student.branchId === branchId)
+      .map((student) => {
+        const day = nextBirthday(student.birthDay, today);
+        if (!day) return null;
+        const left = Math.round((new Date(`${day}T12:00:00`).getTime() - new Date(`${today}T12:00:00`).getTime()) / 86400000);
+        if (left < 0 || left > 7) return null;
+        return { student, day, left };
+      })
+      .filter((row): row is { student: Student; day: string; left: number } => row !== null)
+      .sort((a, b) => a.left - b.left || a.student.name.localeCompare(b.student.name));
+  }, [students, branchId, today]);
+
+  function openPreview(student: Student, day: string) {
+    setError("");
+    setCreated(null);
+    setShareNote("");
+    setCopied(false);
+    setDraft({
+      studentId: student.id,
+      name: fill(t.care.promoName, { name: student.name }),
+      code: birthdayCode(student.name, day),
+      percent: "10",
+      startDay: day,
+      endDay: addDays(day, 6),
+    });
+  }
+
+  async function copyDraft() {
+    if (!draft?.code.trim()) return;
+    await navigator.clipboard.writeText(draft.code.trim().toUpperCase());
+    setCopied(true);
+  }
+
+  async function saveDraft() {
+    if (!draft || !canSave) return;
+    setBusy(true);
+    setError("");
+    const code = await savePromotion({
+      role: me?.role,
+      name: draft.name,
+      startDay: draft.startDay,
+      endDay: draft.endDay,
+      weekdays: [],
+      branchIds: [],
+      courseIds: [],
+      minTuition: null,
+      benefit: "percent",
+      benefitValue: Number(draft.percent),
+      codeMode: "or",
+      codes: [{ code: draft.code, maxUses: null }],
+      oncePerStudent: true,
+      active: true,
+      note: "",
+    });
+    setBusy(false);
+    const message: Record<string, string> = {
+      owner: t.promo.ownerOnly,
+      name: t.promo.needName,
+      date: t.promo.needDate,
+      value: t.promo.needValue,
+      percent: t.promo.needPercent,
+      codes: t.promo.needCodes,
+    };
+    if (code) {
+      setError(message[code] || code);
+      return;
+    }
+    const student = students.find((row) => row.id === draft.studentId);
+    const saved = {
+      studentId: draft.studentId,
+      promoName: draft.name.trim(),
+      code: draft.code.trim().toUpperCase(),
+      percent: String(Math.round(Number(draft.percent))),
+      startDay: draft.startDay,
+      endDay: draft.endDay,
+      studentName: student?.name ?? draft.name.trim(),
+      phone: student?.phone ?? "",
+    };
+    setCreated(saved);
+    setShown((cur) => ({
+      ...cur,
+      [saved.studentId]: {
+        promoName: saved.promoName,
+        code: saved.code,
+        percent: saved.percent,
+        startDay: saved.startDay,
+        endDay: saved.endDay,
+      },
+    }));
+    setDraft(null);
+    setShareNote("");
+  }
+
+  async function shareCreated() {
+    if (!created) return;
+    const text = fill(t.care.shareText, {
+      name: created.studentName,
+      code: created.code,
+      percent: created.percent,
+      from: created.startDay,
+      to: created.endDay,
+    });
+    const result = await shareTransferNotice({ title: created.promoName, text, phone: created.phone });
+    if (result === "aborted") return;
+    setShareNote(result === "copied" ? t.care.shareCopied : "");
+    markCare(created.studentId, "code");
+  }
+
+  function markCare(studentId: string, kind: "zalo" | "code") {
+    setCare((cur) => ({
+      ...cur,
+      [studentId]: { zalo: cur[studentId]?.zalo ?? false, code: cur[studentId]?.code ?? false, [kind]: true },
+    }));
+  }
+
+  async function sendZaloWish(student: Student) {
+    const result = await shareTransferNotice({
+      title: t.care.shareZalo,
+      text: fill(t.care.zaloWish, { name: student.name }),
+      phone: student.phone,
+    });
+    if (result !== "aborted") markCare(student.id, "zalo");
+  }
+
+  async function shareCardCode(student: Student) {
+    const row = shown[student.id];
+    if (!row) return;
+    const result = await shareTransferNotice({
+      title: row.promoName,
+      text: fill(t.care.shareText, {
+        name: student.name,
+        code: row.code,
+        percent: row.percent,
+        from: row.startDay,
+        to: row.endDay,
+      }),
+      phone: student.phone,
+    });
+    if (result !== "aborted") markCare(student.id, "code");
+  }
+
+  return (
+    <section className="mt-4" aria-labelledby="care-remind-heading">
+      <h2 id="care-remind-heading" className="text-base font-bold">{t.care.remindTitle}</h2>
+      {([
+        ["today", t.care.todayTitle, t.care.todayEmpty, due.filter((row) => row.left === 0)],
+        ["soon", t.care.upcomingTitle, t.care.upcomingEmpty, due.filter((row) => row.left > 0)],
+      ] as const).map(([id, title, empty, rows]) => (
+        <div key={id} className="mt-3">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          {rows.length === 0 ? <p className="mt-1 text-sm text-slate-500">{empty}</p> : (
+            <ul className="mt-2 max-h-80 space-y-2 overflow-y-auto">
+              {rows.map(({ student, day, left }) => {
+                const phone = student.phone?.trim() ?? "";
+                const zalo = zaloHref(phone);
+                return (
+                  <li key={student.id} className="rounded-[5px] border border-slate-200 bg-white px-3 py-3">
+                    <p className="font-semibold">{student.name}</p>
+                    <p className="text-sm text-slate-500">
+                      <time dateTime={day}>{left === 0 ? t.care.birthdayToday : fill(t.care.birthdayIn, { day, n: left })}</time>
+                    </p>
+                    {shown[student.id] ? (
+                      <p className="mt-1 text-sm font-semibold text-[var(--brand-700)]">{shown[student.id].promoName} · {shown[student.id].code}</p>
+                    ) : null}
+                    <p className="mt-1 text-xs font-semibold">
+                      {care[student.id]?.zalo || care[student.id]?.code ? (
+                        <span className="text-green-800">
+                          {[care[student.id]?.zalo ? t.care.statusZalo : "", care[student.id]?.code ? t.care.statusCode : ""].filter(Boolean).join(" · ")}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">{t.care.statusNone}</span>
+                      )}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button type="button" className="min-h-10" onClick={() => openPreview(student, day)}>{t.care.quickCode}</Button>
+                      {shown[student.id] ? (
+                        <Button type="button" variant="outline" className="min-h-10" onClick={() => void shareCardCode(student)}>{t.care.shareCode}</Button>
+                      ) : null}
+                      {seeContact && phone ? (
+                        <a className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`tel:${phone}`}>{t.care.call}</a>
+                      ) : null}
+                      {seeContact && zalo ? (
+                        <button type="button" className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" onClick={() => void sendZaloWish(student)}>Zalo</button>
+                      ) : null}
+                      <Link className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`/students/${student.id}`}>{t.care.openStudent}</Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      ))}
+      {created ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
+          <div className="w-full max-w-md rounded-[5px] bg-white p-4">
+            <h3 className="text-lg font-bold">{t.care.saved}</h3>
+            <dl className="mt-3 grid grid-cols-2 gap-y-2 text-sm">
+              <dt className="text-slate-500">{t.promo.name}</dt>
+              <dd className="text-right font-semibold">{created.promoName}</dd>
+              <dt className="text-slate-500">{t.care.code}</dt>
+              <dd className="text-right font-semibold tabular-nums">{created.code}</dd>
+              <dt className="text-slate-500">{t.care.discount}</dt>
+              <dd className="text-right tabular-nums">{created.percent}%</dd>
+              <dt className="text-slate-500">{t.care.fromDay}</dt>
+              <dd className="text-right"><time dateTime={created.startDay}>{created.startDay}</time></dd>
+              <dt className="text-slate-500">{t.care.toDay}</dt>
+              <dd className="text-right"><time dateTime={created.endDay}>{created.endDay}</time></dd>
+            </dl>
+            {shareNote ? <p className="mt-3 text-sm text-green-800">{shareNote}</p> : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => setCreated(null)}>{t.common.close}</Button>
+              <Button type="button" onClick={() => void shareCreated()}>{t.care.shareZalo}</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {draft ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
+          <form
+            className="w-full max-w-md rounded-[5px] bg-white p-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveDraft();
+            }}
+          >
+            <h3 className="text-lg font-bold">{t.care.previewTitle}</h3>
+            <div className="mt-3 space-y-3">
+              <Field label={t.promo.name}>
+                <input className={inputClass} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+              </Field>
+              <Field label={t.care.code}>
+                <input className={inputClass} value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })} />
+              </Field>
+              <Field label={t.care.discount}>
+                <input className={inputClass} inputMode="numeric" value={draft.percent} onChange={(event) => setDraft({ ...draft, percent: event.target.value })} />
+              </Field>
+              <Field label={t.care.fromDay}>
+                <input className={inputClass} type="date" value={draft.startDay} onChange={(event) => setDraft({ ...draft, startDay: event.target.value })} />
+              </Field>
+              <Field label={t.care.toDay}>
+                <input className={inputClass} type="date" value={draft.endDay} onChange={(event) => setDraft({ ...draft, endDay: event.target.value })} />
+              </Field>
+            </div>
+            {!canSave ? <p className="mt-3 text-sm text-slate-500">{t.care.receptionHint}</p> : null}
+            {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t.common.cancel}</Button>
+              <Button type="button" variant="outline" onClick={() => void copyDraft()}>{copied ? t.care.copied : t.care.copyCode}</Button>
+              {canSave ? <Button type="submit" disabled={busy}>{t.care.saveCode}</Button> : null}
+            </div>
+          </form>
+        </div>
+      ) : null}
+    </section>
   );
 }
 

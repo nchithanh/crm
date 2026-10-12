@@ -2,6 +2,14 @@
 
 ## 2026-10-13
 
+- Mua / gia hạn: nút tạo nằm cùng hàng Học viên, SKU và Khóa.
+- Chăm sóc: thẻ sinh nhật có Chia sẻ mã. Trạng thái Chưa chăm sóc, Đã gửi Zalo, Đã gửi mã giảm giá.
+- Chăm sóc: đóng popup mã sinh nhật thì thẻ học viên vẫn hiện tên chương trình và mã vừa tạo.
+- Chăm sóc: sinh nhật tách Hôm nay và Sắp tới. Lưu mã xong popup hiện chương trình vừa tạo và nút Chia sẻ Zalo.
+- Chăm sóc: khối Việc cần nhắc hiện sinh nhật trong 7 ngày. Tạo mã nhanh mở preview để sửa rồi lưu (chỉ quản lý). Lễ tân sao chép mã. Cùng thẻ có Gọi, Zalo và Mở học viên.
+- Menu: trang Điểm danh QR chỉ làm sáng mục QR. Sheet Thêm trên mobile không lặp Tổng quan, Học viên, Điểm danh và Tài chính đã có ở thanh dưới.
+- Danh sách học viên desktop bỏ nút Hồ sơ. Bấm dòng vẫn mở drawer.
+- Mua / gia hạn subscription: hiện học phí SKU, khuyến mãi và số còn lại. Tiền mặt hoặc chuyển khoản thu ngay. Nợ chỉ ghi công nợ. Ghi danh giữa khóa vẫn thu sau, qua Thu học phí.
 - SKU: plan mẫu đổi tên thành SKU. Form tạo có thời lượng (tháng) và số buổi trong thời lượng đó. Tháng không còn tự tính từ số buổi.
 - Promotion seed: đủ case tự áp dụng (phần trăm, số tiền, buổi, thứ, ngưỡng), mã OR, mã AND, sắp tới và đã tắt. Học phí trong mẫu là của studio.
 - Promotion: danh sách và form chương trình. Điều kiện cùng lúc. Mã không, mã OR, hoặc mã AND. Ghi danh và thu phí chọn một chương trình, hiện học phí gốc và số còn lại. Kỳ đã thu không tính lại.
