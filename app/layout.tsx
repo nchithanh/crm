@@ -26,12 +26,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" data-vertical="nhay" data-theme="light" suppressHydrationWarning>
+    <html lang="vi" data-vertical="nhay" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html:
-              '(function(){try{var t=localStorage.getItem("crm-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");var v=localStorage.getItem("dolphin-crm-vertical");if(v==="nhay"||v==="anh"||v==="nhac"||v==="boi")document.documentElement.setAttribute("data-vertical",v);}catch(e){}})();',
+              '(function(){try{var v=localStorage.getItem("dolphin-crm-vertical");if(v==="nhay"||v==="anh"||v==="nhac"||v==="boi")document.documentElement.setAttribute("data-vertical",v);}catch(e){}})();',
           }}
         />
       </head>

@@ -12,12 +12,13 @@ import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { usePageQuery } from "@/lib/page-query";
 import { debtRemaining } from "@/lib/metrics";
+import { pickPaymentAccount, transferMemo } from "@/lib/payment-accounts";
 import { cn, formatVnd } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { PayMethod } from "@/types";
 
-type CollectUiMethod = "cash" | "transfer" | "qr" | "debt";
+type CollectUiMethod = "cash" | "transfer" | "debt";
 type Receipt = { studentName: string; title: string; amount: number; method: PayMethod; day: string; note: string };
 
 function printReceipt(receipt: Receipt, studio: string, labels: { title: string; cash: string; transfer: string }) {
@@ -43,6 +44,8 @@ export default function FinanceCollectPage() {
   const packages = useLiveQuery(() => db.subscriptionPlans.toArray(), []) ?? [];
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
+  const paymentAccounts = useLiveQuery(() => db.paymentAccounts.toArray(), []) ?? [];
+  const paymentRoutes = useLiveQuery(() => db.paymentRoutes.toArray(), []) ?? [];
   const [q, setQ] = useState("");
   const [studentId, setStudentId] = useState("");
   const [receivableId, setReceivableId] = useState("");
@@ -85,6 +88,11 @@ export default function FinanceCollectPage() {
   const course = courses.find((c) => c.id === student?.courseId);
   const target = debts.find((r) => r.id === receivableId) ?? debts.find((r) => debtRemaining(r) > 0);
   const payAmount = Number(amount) || 0;
+  const payAccount = useMemo(
+    () => pickPaymentAccount(payAmount, paymentAccounts, paymentRoutes),
+    [payAmount, paymentAccounts, paymentRoutes],
+  );
+  const payMemo = student ? transferMemo(student.name) : "";
   const history = useMemo(() => payments.filter((p) => {
     if (studentId && p.studentId !== studentId) return false;
     if (branchId !== "all" && p.branchId !== branchId) return false;
@@ -97,7 +105,6 @@ export default function FinanceCollectPage() {
   const methodLabel = (m: CollectUiMethod) => {
     if (m === "cash") return t.money.methodCash;
     if (m === "transfer") return t.money.methodCk;
-    if (m === "qr") return t.money.methodQr;
     return t.money.methodDebt;
   };
 
@@ -144,7 +151,7 @@ export default function FinanceCollectPage() {
       method: toPayMethod(uiMethod),
       note,
       billNote: billName,
-      billImage: uiMethod === "transfer" || uiMethod === "qr" ? billImage : "",
+      billImage: uiMethod === "transfer" ? billImage : "",
     });
     setBusy(false);
     if (typeof result === "string") {
@@ -248,11 +255,10 @@ export default function FinanceCollectPage() {
                 <span className="tabular-nums">{formatVnd(payAmount)}</span>
               </div>
 
-              <div className="grid grid-cols-4 gap-1">
+              <div className="grid grid-cols-3 gap-1">
                 {([
                   ["cash", t.money.methodCash],
                   ["transfer", t.money.methodCk],
-                  ["qr", t.money.methodQr],
                   ["debt", t.money.methodDebt],
                 ] as const).map(([id, label]) => (
                   <button
@@ -260,7 +266,7 @@ export default function FinanceCollectPage() {
                     type="button"
                     onClick={() => setUiMethod(id)}
                     className={cn(
-                      "rounded-[5px] border px-1 py-2.5 text-[11px] font-semibold",
+                      "rounded-[5px] border px-2 py-2.5 text-sm font-semibold",
                       uiMethod === id
                         ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                         : "border-slate-200 text-slate-700",
@@ -271,12 +277,14 @@ export default function FinanceCollectPage() {
                 ))}
               </div>
 
-              {(uiMethod === "transfer" || uiMethod === "qr") && payAmount > 0 ? (
+              {uiMethod === "transfer" && payAmount > 0 ? (
                 <TransferQr
                   amount={payAmount}
                   studentName={student.name}
                   studentPhone={student.phone}
                   studio={settings?.name}
+                  account={payAccount}
+                  memo={payMemo}
                 />
               ) : null}
 
@@ -288,7 +296,7 @@ export default function FinanceCollectPage() {
                 <input className={`${inputClass} mt-1`} value={note} onChange={(e) => setNote(e.target.value)} />
               </label>
 
-              {(uiMethod === "transfer" || uiMethod === "qr") ? (
+              {uiMethod === "transfer" ? (
                 <label className="block text-sm">{t.pages.bill}
                   <input className={`${inputClass} mt-1`} type="file" accept="image/*" onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -342,12 +350,14 @@ export default function FinanceCollectPage() {
               <p className="mt-3 rounded-[5px] bg-amber-50 p-3 text-sm text-amber-800">{t.money.debtNote}</p>
             ) : null}
 
-            {(uiMethod === "transfer" || uiMethod === "qr") ? (
+            {uiMethod === "transfer" ? (
               <TransferQr
                 amount={payAmount}
                 studentName={student?.name}
                 studentPhone={student?.phone}
                 studio={settings?.name}
+                account={payAccount}
+                memo={payMemo}
               />
             ) : null}
 

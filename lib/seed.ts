@@ -13,6 +13,8 @@ import type {
   Installment,
   Lead,
   Payment,
+  PaymentAccount,
+  PaymentRoute,
   Promotion,
   RoomBooking,
   Student,
@@ -27,7 +29,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "14c";
+const SEED_VERSION = "14d";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -41,6 +43,43 @@ function addMonths(day: string, months: number) {
   const dt = new Date(y, (m ?? 1) - 1 + months, d ?? 1, 12);
   return localDayKey(dt);
 }
+
+/** Số TK giả. Mã bank theo SePay (qr.sepay.vn). Khoảng tiền khớp giá gói demo. */
+const paymentAccounts: PaymentAccount[] = [
+  {
+    id: "pa-mbbank",
+    name: "Thu gói ngắn",
+    bank: "MBBank",
+    accountNumber: "0901234001",
+    accountHolder: "EDU DANCE",
+    active: true,
+    isDefault: true,
+  },
+  {
+    id: "pa-acb",
+    name: "Thu gói 3 tháng",
+    bank: "ACB",
+    accountNumber: "0901234002",
+    accountHolder: "EDU DANCE",
+    active: true,
+    isDefault: false,
+  },
+  {
+    id: "pa-vcb",
+    name: "Thu gói dài",
+    bank: "Vietcombank",
+    accountNumber: "0901234003",
+    accountHolder: "EDU DANCE",
+    active: true,
+    isDefault: false,
+  },
+];
+
+const paymentRoutes: PaymentRoute[] = [
+  { id: "pr-short", accountId: "pa-mbbank", minAmount: 0, maxAmount: 1_500_000, priority: 1 },
+  { id: "pr-mid", accountId: "pa-acb", minAmount: 1_500_001, maxAmount: 5_000_000, priority: 2 },
+  { id: "pr-long", accountId: "pa-vcb", minAmount: 5_000_001, maxAmount: null, priority: 3 },
+];
 
 export async function ensureSeed(id: VerticalId) {
   const current = await db.meta.get(SEED_KEY);
@@ -398,6 +437,8 @@ export async function ensureSeed(id: VerticalId) {
       db.leads,
       db.subscriptions,
       db.payments,
+      db.paymentAccounts,
+      db.paymentRoutes,
       db.installments,
       db.tasks,
       db.taskParents,
@@ -423,6 +464,8 @@ export async function ensureSeed(id: VerticalId) {
       await db.leads.clear();
       await db.subscriptions.clear();
       await db.payments.clear();
+      await db.paymentAccounts.clear();
+      await db.paymentRoutes.clear();
       await db.installments.clear();
       await db.tasks.clear();
       await db.taskParents.clear();
@@ -450,6 +493,8 @@ export async function ensureSeed(id: VerticalId) {
       await db.leads.bulkAdd(leadRows);
       await db.subscriptions.bulkAdd(subscriptionRows);
       await db.payments.bulkAdd(paymentRows);
+      await db.paymentAccounts.bulkAdd(paymentAccounts);
+      await db.paymentRoutes.bulkAdd(paymentRoutes);
       await db.installments.bulkAdd(installmentRows);
       await db.tasks.bulkAdd(taskRows);
       await db.taskParents.bulkAdd(taskParentRows);

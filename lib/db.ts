@@ -11,6 +11,8 @@ import type {
   Lead,
   Meta,
   Payment,
+  PaymentAccount,
+  PaymentRoute,
   Promotion,
   Room,
   RoomBooking,
@@ -42,6 +44,8 @@ export class DolphinCrmDB extends Dexie {
   subscriptions!: EntityTable<Subscription, "id">;
   installments!: EntityTable<Installment, "id">;
   payments!: EntityTable<Payment, "id">;
+  paymentAccounts!: EntityTable<PaymentAccount, "id">;
+  paymentRoutes!: EntityTable<PaymentRoute, "id">;
   tasks!: EntityTable<StudioTask, "id">;
   taskParents!: EntityTable<TaskParent, "id">;
   courses!: EntityTable<Course, "id">;
@@ -124,6 +128,10 @@ export class DolphinCrmDB extends Dexie {
       packages: null,
       enrollments: null,
       receivables: null,
+    });
+    this.version(8).stores({
+      paymentAccounts: "id, active, isDefault",
+      paymentRoutes: "id, accountId, priority",
     });
   }
 }

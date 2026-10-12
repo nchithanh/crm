@@ -2,6 +2,16 @@
 
 ## 2026-10-12
 
+- Thu học phí: nút Chia sẻ trên QR chuyển khoản mở share sheet ngay (QR demo kèm ảnh; QR SePay kèm link trong nội dung). Không share được thì copy. Gửi Zalo vẫn là nút riêng.
+- Vận hành hôm nay: nút Nhắc Zalo trên thẻ Học phí chờ thu, kèm số học viên. Tin nhóm theo tài khoản nhận. Chia sẻ theo kiểu POS (share sheet, không được thì copy và mở Zalo).
+- Thu học phí: bỏ hình thức QR. Nút CK đổi thành Chuyển khoản. Ảnh QR SePay vẫn hiện khi chọn Chuyển khoản.
+- Header desktop: nút Thu học phí (brand) đứng trước Điểm danh, mở `/collect-fees`. Giáo viên không thấy.
+- Seed 14d: ba tài khoản SePay mẫu (MBBank, ACB, Vietcombank) và luật theo giá gói 1 tháng, 3 tháng, 6–12 tháng. Số tài khoản là số giả.
+- Bỏ nút sáng/tối. Sidebar desktop và menu Thêm trên mobile nền `#1c1c2a`. Trang và thanh dưới vẫn sáng.
+- Sidebar: Học viên, Khóa học, Buổi học và Giáo viên hiện số đang hoạt động bên phải, theo chi nhánh đang chọn. Buổi học đếm upcoming và ongoing.
+- Tài chính: trang Tài khoản thanh toán. Owner cấu hình tài khoản SePay và luật theo số tiền. Thu chuyển khoản / QR dùng tài khoản khớp số tiền; chưa có tài khoản thì QR demo. Đối soát webhook: TODO.
+- Tổng quan: bỏ dropdown kỳ trên khối Doanh thu. Thẻ doanh thu cố định theo tháng này. Nút 7 ngày / 30 ngày của biểu đồ vẫn giữ.
+- Header bỏ nút Ask Dolphin. Mục sidebar và banner Tổng quan vẫn mở `/dolphin-ai`.
 - Tab hồ sơ học viên, giáo viên và khóa: chữ đen, hàng có gạch dưới, tab đang chọn gạch màu brand. Icon Gọi / Zalo / Thu phí / Thêm nền trắng có viền.
 - Lịch mobile: select lọc thành lưới 2 cột; Tuần trước/sau một hàng, Theo phòng/giáo viên/chi nhánh một hàng. Nút ngày khi đang nhóm thì kéo ngang riêng.
 - Thẻ số `--panel` là `#f7f7f8a1`. Thanh cuộn dày 4px, màu brand pha 35%.

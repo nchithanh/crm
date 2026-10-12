@@ -20,6 +20,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/follow-up` | Pipeline lead / chăm sóc |
 | `/finance` | Tài chính — tổng quan |
 | `/collect-fees` | Thu học phí (POS). Mobile tab giữa = Học phí |
+| `/payment-accounts` | Tài khoản SePay nhận tiền theo khoảng subscription. Owner sửa; lễ tân xem |
 | `/receivables` | Công nợ HV |
 | `/revenue` | Doanh thu |
 | `/collections` | Lịch sử thu |

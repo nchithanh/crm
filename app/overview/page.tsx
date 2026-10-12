@@ -25,6 +25,7 @@ import {
   YAxis,
 } from "recharts";
 import { ctaOutline } from "@/components/ui";
+import { FeeRemindButton } from "@/components/finance/fee-reminders";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { debtRemaining } from "@/lib/metrics";
@@ -128,7 +129,6 @@ export default function DashboardPage() {
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
-  const [period, setPeriod] = useState<Period>("month");
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
   const [homeQ, setHomeQ] = useState("");
   const router = useRouter();
@@ -179,8 +179,8 @@ export default function DashboardPage() {
     };
     const paySum = (key: Period, shift: 0 | 1) =>
       payments.filter((p) => inBranch(p.branchId) && inWindow(p.day, key, shift)).reduce((s, p) => s + p.amount, 0);
-    const revenue = paySum(period, 0);
-    const revenuePrev = paySum(period, 1);
+    const revenue = paySum("month", 0);
+    const revenuePrev = paySum("month", 1);
     const revenueTrend = trend(revenue, revenuePrev);
 
     const debtRows = receivables.filter((r) => inBranch(r.branchId) && debtRemaining(r) > 0);
@@ -189,11 +189,11 @@ export default function DashboardPage() {
 
     const marks = attendance.filter((a) => {
       const student = students.find((s) => s.id === (a.personId));
-      return student && inBranch(student.branchId) && inWindow(a.day, period, 0);
+      return student && inBranch(student.branchId) && inWindow(a.day, "month", 0);
     });
     const prevMarks = attendance.filter((a) => {
       const student = students.find((s) => s.id === (a.personId));
-      return student && inBranch(student.branchId) && inWindow(a.day, period, 1);
+      return student && inBranch(student.branchId) && inWindow(a.day, "month", 1);
     });
     const rateOf = (rows: typeof marks) => {
       if (rows.length === 0) return 0;
@@ -356,7 +356,7 @@ export default function DashboardPage() {
       ranking,
       activity,
     };
-  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, classStudents, audits, branchId, period, chartSpan, showMoney, t]);
+  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, classStudents, audits, branchId, chartSpan, showMoney, t]);
 
   const q = branchId === "all" ? "" : `?branch=${branchId}`;
 
@@ -409,7 +409,7 @@ export default function DashboardPage() {
       icon: CalendarDays,
     },
     {
-      label: period === "month" ? t.dash.revenueMonth : t.dash.revenuePeriod,
+      label: t.dash.revenueMonth,
       value: showMoney ? formatVnd(model.revenue) : "—",
       hint: showMoney
         ? fill(t.dash.revenueHint, { arrow: model.revenueTrend >= 0 ? "↑" : "↓", pct: Math.abs(model.revenueTrend), prev: formatVnd(model.revenuePrev) })
@@ -591,6 +591,7 @@ export default function DashboardPage() {
               </div>
               <p className={`mt-1 text-xl font-extrabold tabular-nums leading-tight ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
               <p className="mt-1 text-xs text-slate-400">{card.hint || t.dash.opsNone}</p>
+              {card.id === "fees" ? <FeeRemindButton /> : null}
             </Link>
             );
           })}
@@ -654,12 +655,6 @@ export default function DashboardPage() {
         <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
-            <select className="h-10 rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm" value={period} onChange={(e) => setPeriod(e.target.value as Period)}>
-              <option value="today">{t.common.today}</option>
-              <option value="d7">{t.dash.days7}</option>
-              <option value="d30">{t.dash.days30}</option>
-              <option value="month">{t.dash.thisMonth}</option>
-            </select>
             <div className="flex gap-1">
               {([7, 30] as const).map((n) => (
                 <button key={n} type="button" className={`h-10 rounded-[5px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>

@@ -11,17 +11,16 @@ import {
   ClipboardCheck,
   DoorOpen,
   GraduationCap,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Ellipsis,
   Menu,
-  Moon,
   Package,
   QrCode,
   Receipt,
   Search,
   Sparkles,
-  Sun,
   Tags,
   UserRound,
   Users,
@@ -38,10 +37,9 @@ import { AppBreadcrumb } from "@/components/breadcrumb";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
 import { SupportIcon } from "@/components/support-icon";
-import { canAccessPath, canSeeMoney, canSeeNavHref } from "@/lib/access";
+import { canAccessPath, canCollect, canSeeMoney, canSeeNavHref } from "@/lib/access";
 import { db } from "@/lib/db";
 import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
-import { applyDocumentTheme, readStoredTheme, writeStoredTheme, type CrmTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
@@ -82,6 +80,7 @@ const groups = [
       { href: "/receivables", key: "debts" as const, icon: Receipt },
       { href: "/revenue", key: "revenue" as const, icon: LineChart },
       { href: "/collections", key: "ledger" as const, icon: ArrowLeftRight },
+      { href: "/payment-accounts", key: "payAccounts" as const, icon: Landmark },
     ],
   },
   {
@@ -126,7 +125,7 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
 function active(href: string, path: string) {
   if (href === "/overview") return path === "/overview" || path === "/";
   if (href === "/finance") {
-    return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections");
+    return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections") || path.startsWith("/payment-accounts");
   }
   if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/") || path.startsWith("/qr-attendance");
   return path === href || path.startsWith(`${href}/`);
@@ -141,29 +140,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { branchId, setBranchId } = useStudioBranch();
   const seeReport = canSeeMoney(user?.role);
   const canEnroll = user?.role === "owner" || user?.role === "reception";
+  const collect = canCollect(user?.role);
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [open, setOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [theme, setTheme] = useState<CrmTheme>("light");
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const leads = useLiveQuery(() => db.leads.toArray(), []) ?? [];
   const roster = useLiveQuery(() => db.students.toArray(), []) ?? [];
+  const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const sessions = useLiveQuery(() => db.classes.toArray(), []) ?? [];
+  const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const studio = settings?.name || "Edu Dance";
+  const inBranch = (id: string | undefined) => branchId === "all" || id === branchId;
   const openLeads = leads.filter((lead) => lead.stage !== "won" && lead.stage !== "lost").length;
-  const owing = roster.filter((student) => student.debt > 0 && (branchId === "all" || student.branchId === branchId)).length;
+  const owing = roster.filter((student) => student.debt > 0 && inBranch(student.branchId)).length;
   const navBadges: Partial<Record<string, number>> = {
+    "/students": roster.filter((student) => student.status === "active" && inBranch(student.branchId)).length,
+    "/courses": courses.filter((course) => course.active && inBranch(course.branchId)).length,
+    "/classes": sessions.filter((session) => (session.status === "upcoming" || session.status === "ongoing") && inBranch(session.branchId)).length,
+    "/teachers": users.filter((person) => person.role === "teacher" && person.teacherStatus === "active" && inBranch(person.branchId)).length,
     "/follow-up": openLeads,
     "/collect-fees": owing,
   };
   const { lang, t, setLang } = useI18n();
-
-  useEffect(() => {
-    const stored = readStoredTheme();
-    setTheme(stored);
-    applyDocumentTheme(stored);
-  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -182,13 +183,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [user?.role, path, router]);
 
-  function toggleTheme() {
-    const next: CrmTheme = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    writeStoredTheme(next);
-    applyDocumentTheme(next);
-  }
-
   const visibleGroups = useMemo(
     () =>
       groups
@@ -202,6 +196,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const ctas = (extra: string) => (
     <>
+      {collect ? (
+        <Link href={`/collect-fees${branchQuery}`} className={cn(ctaPrimary, extra)}>
+          <Wallet size={16} /> {t.header.collect}
+        </Link>
+      ) : null}
       <Link href={`/attendance${branchQuery}`} className={cn(ctaPrimary, extra)}>
         <Receipt size={16} /> {t.header.attend}
       </Link>
@@ -233,7 +232,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           "relative flex min-h-11 items-center gap-3 rounded-[5px] px-3 py-2.5 text-[14px] font-medium leading-snug",
           on
             ? "bg-[var(--brand-50)] text-[var(--brand-600)]"
-            : "text-[var(--foreground)]/80 hover:bg-[var(--brand-50)]/70",
+            : "text-white/80 hover:bg-white/10",
         )}
       >
         <Icon size={18} strokeWidth={on ? 2.25 : 1.75} />
@@ -247,12 +246,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[var(--foreground)]";
+  const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[#a1a1b5]";
 
   function NavPanel({ showBrand }: { showBrand: boolean }) {
     const close = () => setOpen(false);
     return (
-      <div className="flex h-full flex-col bg-[var(--card)]">
+      <div className="flex h-full flex-col bg-[#1c1c2a] text-[#f8fafc]" style={{ colorScheme: "dark" }}>
         {showBrand ? (
           <Link href="/" onClick={close} className="flex shrink-0 items-center gap-2.5 px-5 py-5">
             <BrandMark className="h-10 w-10" />
@@ -265,7 +264,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-3 pb-3">
           <p className={groupLabelClass}>{t.common.branch}</p>
           <select
-            className="h-11 w-full rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-3 text-base font-normal text-[var(--foreground)]"
+            className="h-11 w-full rounded-[5px] border border-[#2e2e44] bg-[#12121c] px-3 text-base font-normal text-[#f8fafc]"
             aria-label={t.common.branch}
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
@@ -283,7 +282,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               .map((item) => renderNavLink(item, close))}
           </div>
           {visibleGroups.map((group) => (
-            <div key={group.title} className="border-t border-[var(--border)] pt-3">
+            <div key={group.title} className="border-t border-[#2e2e44] pt-3">
               <p className={groupLabelClass}>{t.nav[group.title]}</p>
               <div className="space-y-0.5">
                 {group.items.map((item) => renderNavLink(item, close))}
@@ -293,7 +292,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {canSeeNavHref(user?.role, ai.href) ? renderNavLink(ai, close) : null}
         </nav>
         {user ? (
-          <div className="shrink-0 border-t border-[var(--border)] p-3">
+          <div className="shrink-0 border-t border-[#2e2e44] p-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -303,7 +302,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {user.name.trim().charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold leading-tight text-[var(--foreground)]">{user.name}</p>
+                <p className="truncate text-sm font-semibold leading-tight text-[#f8fafc]">{user.name}</p>
                 <p className="truncate text-xs text-slate-400">{roleLabel(user.role, lang)}</p>
               </div>
             </div>
@@ -315,19 +314,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh overflow-hidden bg-[var(--background)]">
-      <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)] lg:flex">
+      <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-[#2e2e44] bg-[#1c1c2a] lg:flex">
         <NavPanel showBrand />
       </aside>
       {open ? (
         <>
           <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[var(--card)] lg:hidden">
+          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-2">
                 <BrandMark className="h-8 w-8" />
                 <p className="font-bold text-[var(--brand-600)]">{t.shell.product}</p>
               </div>
-              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)]" onClick={() => setOpen(false)} aria-label={t.common.close}>
+              <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:bg-white/10" onClick={() => setOpen(false)} aria-label={t.common.close}>
                 <X size={18} />
               </button>
             </div>
@@ -366,21 +365,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <Link
-              href="/dolphin-ai"
-              className="hidden h-10 items-center gap-1.5 rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)] xl:inline-flex"
-            >
-              <Sparkles size={16} className="text-[var(--brand-600)]" />
-              {t.shell.askDolphin}
-            </Link>
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-[var(--brand-50)]"
-              aria-label={theme === "light" ? t.shell.themeDark : t.shell.themeLight}
-              onClick={toggleTheme}
-            >
-              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
             <div
               role="group"
               aria-label={t.common.language}

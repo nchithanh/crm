@@ -28,6 +28,7 @@ const NAV: { href: string; titleVi: string; titleEn: string; hintVi: string; hin
   { href: "/receivables", titleVi: "Công nợ", titleEn: "Receivables", hintVi: "Nợ", hintEn: "Debt" },
   { href: "/revenue", titleVi: "Doanh thu", titleEn: "Revenue", hintVi: "Báo cáo", hintEn: "Report" },
   { href: "/collections", titleVi: "Lịch sử thu", titleEn: "Collections", hintVi: "Thu", hintEn: "Ledger" },
+  { href: "/payment-accounts", titleVi: "Tài khoản thanh toán", titleEn: "Payment accounts", hintVi: "SePay", hintEn: "SePay" },
   { href: "/attendance", titleVi: "Điểm danh", titleEn: "Attendance", hintVi: "Tay", hintEn: "Manual" },
   { href: "/tasks", titleVi: "Tác vụ", titleEn: "Tasks", hintVi: "Việc", hintEn: "Work" },
   { href: "/dolphin-ai", titleVi: "Dolphin AI", titleEn: "Dolphin AI", hintVi: "Ask", hintEn: "Ask" },

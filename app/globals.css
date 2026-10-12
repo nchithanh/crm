@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-:root,
-html[data-theme="light"] {
+:root {
   --background: #ffffff;
   --foreground: #1a1a2e;
   --card: #ffffff;
@@ -22,34 +21,6 @@ html[data-theme="light"] {
   --radius-card: 5px;
   --nav-active: #fff7ed;
   --nav-active-text: #ea580c;
-}
-
-html[data-theme="dark"] {
-  --background: #12121c;
-  --foreground: #f8fafc;
-  --card: #1c1c2a;
-  --muted: #a1a1b5;
-  --border: #2e2e44;
-  --panel: #242433;
-  --search: #242433;
-  --shadow-card: none;
-  --shadow-btn: none;
-  --nav-active: #2a2440;
-  --nav-active-text: #c4b5fd;
-  --brand-50: #2a2440;
-  --brand-100: #3b2f66;
-  --brand-300: #8b74ff;
-  --brand-400: #a78bfa;
-  --brand-500: #8b74ff;
-  --brand-600: #c4b5fd;
-  --brand-700: #ddd6fe;
-  --brand-950: #ede9fe;
-  color-scheme: dark;
-}
-
-html[data-theme="dark"] body {
-  background: var(--background);
-  color: var(--foreground);
 }
 
 html[data-vertical="nhay"] {
@@ -95,47 +66,6 @@ html[data-vertical="boi"] {
   --brand-700: #155e75;
   --nav-active: #ecfeff;
   --nav-active-text: #0e7490;
-}
-
-html[data-theme="dark"][data-vertical="nhay"] {
-  --brand-50: #3b2414;
-  --brand-100: #4a2c12;
-  --brand-300: #fb923c;
-  --brand-500: #fb923c;
-  --brand-600: #fdba74;
-  --brand-700: #ffedd5;
-  --nav-active: #3b2414;
-  --nav-active-text: #fdba74;
-}
-html[data-theme="dark"][data-vertical="anh"] {
-  --brand-50: #172554;
-  --brand-100: #1e3a8a;
-  --brand-300: #60a5fa;
-  --brand-500: #60a5fa;
-  --brand-600: #93c5fd;
-  --brand-700: #dbeafe;
-  --nav-active: #172554;
-  --nav-active-text: #93c5fd;
-}
-html[data-theme="dark"][data-vertical="nhac"] {
-  --brand-50: #2e1065;
-  --brand-100: #4c1d95;
-  --brand-300: #a78bfa;
-  --brand-500: #a78bfa;
-  --brand-600: #c4b5fd;
-  --brand-700: #ede9fe;
-  --nav-active: #2e1065;
-  --nav-active-text: #c4b5fd;
-}
-html[data-theme="dark"][data-vertical="boi"] {
-  --brand-50: #083344;
-  --brand-100: #164e63;
-  --brand-300: #22d3ee;
-  --brand-500: #22d3ee;
-  --brand-600: #67e8f9;
-  --brand-700: #cffafe;
-  --nav-active: #083344;
-  --nav-active-text: #67e8f9;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }

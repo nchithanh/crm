@@ -262,6 +262,26 @@ export type Payment = {
   billImage?: string;
 };
 
+/** Tài khoản nhận CK. `bank` là mã SePay (vd. MBBank). */
+export type PaymentAccount = {
+  id: string;
+  name: string;
+  bank: string;
+  accountNumber: string;
+  accountHolder: string;
+  active: boolean;
+  isDefault: boolean;
+};
+
+/** Khoảng tiền subscription → tài khoản. `maxAmount` null = không trần. Priority cao hơn thắng khi chồng nhau. */
+export type PaymentRoute = {
+  id: string;
+  accountId: string;
+  minAmount: number;
+  maxAmount: number | null;
+  priority: number;
+};
+
 export type Promotion = {
   id: string;
   name: string;
