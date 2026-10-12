@@ -1,0 +1,23 @@
+{
+  "name": "Dolphin Edu CRM",
+  "short_name": "Dolphin CRM",
+  "description": "CRM vận hành trung tâm giáo dục — Dolphin Software",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F97316",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

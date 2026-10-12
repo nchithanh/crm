@@ -7,6 +7,7 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 export const metadata: Metadata = {
   title: "Dolphin Edu CRM",
   description: "CRM vận hành trung tâm giáo dục — Dolphin Software",
+  manifest: `${basePath}/manifest.webmanifest`,
   icons: {
     icon: [
       { url: `${basePath}/favicon.ico`, sizes: "32x32", type: "image/png" },
@@ -16,18 +17,24 @@ export const metadata: Metadata = {
     apple: [{ url: `${basePath}/icon-192.png`, sizes: "192x192", type: "image/png" }],
     shortcut: `${basePath}/favicon.ico`,
   },
+  appleWebApp: {
+    capable: true,
+    title: "Dolphin CRM",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#F97316",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" data-vertical="nhay" suppressHydrationWarning>
       <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <script
           dangerouslySetInnerHTML={{
             __html:

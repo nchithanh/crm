@@ -2,6 +2,7 @@
 
 ## 2026-10-12
 
+- PWA giống POS: `manifest.webmanifest` (`display: standalone`) và `appleWebApp`. Mở từ icon Màn hình chính thì không còn thanh Safari. Không gắn service worker — POS cũng tắt plugin đó khi build Pages.
 - Thu học phí: nút Chia sẻ trên QR chuyển khoản mở share sheet ngay (QR demo kèm ảnh; QR SePay kèm link trong nội dung). Không share được thì copy. Gửi Zalo vẫn là nút riêng.
 - Vận hành hôm nay: nút Nhắc Zalo trên thẻ Học phí chờ thu, kèm số học viên. Tin nhóm theo tài khoản nhận. Chia sẻ theo kiểu POS (share sheet, không được thì copy và mở Zalo).
 - Thu học phí: bỏ hình thức QR. Nút CK đổi thành Chuyển khoản. Ảnh QR SePay vẫn hiện khi chọn Chuyển khoản.
