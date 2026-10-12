@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronRight } from "lucide-react";
 import { CourseCreateDrawer } from "@/components/course-create-drawer";
 import { Badge, Button } from "@/components/ui";
 import { canManageCatalog } from "@/lib/access";
@@ -76,7 +75,7 @@ export default function CoursesPage() {
           const cap = course.capacity ?? 12;
           return (
             <li key={course.id}>
-              <Link href={`/courses/${course.id}`} className="flex items-center gap-3 px-4 py-4 hover:bg-black/5 lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3">
+              <Link href={`/courses/${course.id}`} className="grid grid-cols-[minmax(0,1fr)_5.25rem_5.75rem] items-center gap-x-2 px-3 py-4 hover:bg-black/5 lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3 lg:px-4">
                 <span className="flex min-w-0 items-center gap-3">
                   <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: main?.avatarColor ?? "#111111" }}>
                     {initials(main?.name ?? course.name)}
@@ -96,12 +95,8 @@ export default function CoursesPage() {
                 <span className="hidden truncate text-sm lg:block">{room?.name ?? "—"}</span>
                 <span className="hidden tabular-nums text-sm lg:block">{studentCount}/{cap}</span>
                 <span className="hidden tabular-nums text-sm lg:block">{classCount}</span>
-                <span className="hidden lg:block"><Badge tone="info">{levelLabel(course.level)}</Badge></span>
-                <span className="mt-2 flex flex-wrap gap-1 lg:mt-0">
-                  <span className="lg:hidden"><Badge tone="info">{levelLabel(course.level)}</Badge></span>
-                  <Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge>
-                </span>
-                <ChevronRight size={18} className="shrink-0 text-[var(--muted)] lg:hidden" />
+                <span><Badge tone="info">{levelLabel(course.level)}</Badge></span>
+                <span><Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge></span>
               </Link>
             </li>
           );

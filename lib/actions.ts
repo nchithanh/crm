@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { isSubscriptionValid } from "@/lib/subscription";
-import { localDayKey, uid, weekdayShort } from "@/lib/utils";
+import { isMinor, localDayKey, uid, weekdayShort } from "@/lib/utils";
 import type { AttendStatus, LeadStage, Level, PayMethod, Role, TaskPriority, TaskStatus, TeacherStatus, User } from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
@@ -423,6 +423,38 @@ export async function createStudent(input: { name: string; phone: string; branch
     notes: [],
   });
   return { id, error: "" };
+}
+
+export async function updateStudentProfile(input: {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  birthDay: string;
+  parentName: string;
+  parentPhone: string;
+}) {
+  const student = await db.students.get(input.id);
+  if (!student) return "missing";
+  const name = input.name.trim();
+  const phone = input.phone.trim();
+  const email = input.email.trim();
+  const birthDay = input.birthDay.trim();
+  const parentName = input.parentName.trim();
+  const parentPhone = input.parentPhone.trim();
+  if (!name) return "name";
+  if (!phone) return "phone";
+  if (birthDay && !/^\d{4}-\d{2}-\d{2}$/.test(birthDay)) return "birth";
+  if (isMinor(birthDay) && (!parentName || !parentPhone)) return "parent";
+  await db.students.update(student.id, {
+    name,
+    phone,
+    email,
+    birthDay,
+    parentName,
+    parentPhone,
+  });
+  return "";
 }
 
 export async function enrollMidCourse(input: {

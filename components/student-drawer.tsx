@@ -6,7 +6,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { CalendarDays, Check, Clock, MessageCircle, MoreHorizontal, Phone, Wallet, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canApproveHold, canSeeContact, canSeeMoney } from "@/lib/access";
-import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag } from "@/lib/actions";
+import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag, updateStudentProfile } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
@@ -60,6 +60,15 @@ export function StudentDrawer({
   const [holdMsg, setHoldMsg] = useState("");
   const [holdBusy, setHoldBusy] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profileBirth, setProfileBirth] = useState("");
+  const [profileParent, setProfileParent] = useState("");
+  const [profileParentPhone, setProfileParentPhone] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileBusy, setProfileBusy] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [leaving, setLeaving] = useState(false);
   const leavingRef = useRef(false);
@@ -88,6 +97,8 @@ export function StudentDrawer({
 
   useEffect(() => {
     setTab("overview");
+    setEditingProfile(false);
+    setProfileError("");
   }, [studentId]);
 
   const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
@@ -169,6 +180,50 @@ export function StudentDrawer({
   async function saveNote() {
     await addStudentNote(studentId, note);
     setNote("");
+  }
+
+  function startProfileEdit() {
+    if (!student) return;
+    setProfileName(student.name);
+    setProfilePhone(student.phone);
+    setProfileEmail(student.email);
+    setProfileBirth(student.birthDay);
+    setProfileParent(student.parentName);
+    setProfileParentPhone(student.parentPhone);
+    setProfileError("");
+    setEditingProfile(true);
+  }
+
+  async function saveProfile() {
+    setProfileBusy(true);
+    setProfileError("");
+    const code = await updateStudentProfile({
+      id: studentId,
+      name: profileName,
+      phone: profilePhone,
+      email: profileEmail,
+      birthDay: profileBirth,
+      parentName: profileParent,
+      parentPhone: profileParentPhone,
+    });
+    setProfileBusy(false);
+    if (code === "name") {
+      setProfileError(t.drawer.errName);
+      return;
+    }
+    if (code === "phone") {
+      setProfileError(t.drawer.errPhone);
+      return;
+    }
+    if (code === "parent") {
+      setProfileError(t.drawer.errParent);
+      return;
+    }
+    if (code) {
+      setProfileError(t.drawer.errSave);
+      return;
+    }
+    setEditingProfile(false);
   }
 
   async function changeClass() {
@@ -351,17 +406,73 @@ export function StudentDrawer({
                 <p className="text-slate-500">{levelLabel(student.level)} · {teacher?.name ?? "—"} · {branch?.name ?? "—"}</p>
                 <p className="mt-1 text-slate-500">{t.drawer.package} {pack?.name ?? "—"}</p>
               </section>
-              <section className="rounded-[5px] bg-slate-50 p-3">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.contact}</h3>
-                <p className="mt-1 font-semibold">{seeContact ? student.phone || "—" : t.drawer.phoneHidden}</p>
-                <p className="text-slate-500">{seeContact ? student.email || "—" : "—"}</p>
-                {(kid || student.parentName) ? (
-                  <div className="mt-2 border-t border-slate-200 pt-2">
-                    <p className="text-xs text-slate-400">{t.drawer.parent}{kid ? ` · ${t.drawer.parentRequired}` : ""}</p>
-                    <p className="font-semibold">{student.parentName || "—"}</p>
-                    <p className="text-slate-500">{seeContact ? student.parentPhone || "—" : "—"}</p>
-                  </div>
-                ) : null}
+              <section className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.personal}</h3>
+                  {seeContact && !editingProfile ? (
+                    <button type="button" className="text-sm font-semibold text-[var(--brand-600)]" onClick={startProfileEdit}>
+                      {t.drawer.editPersonal}
+                    </button>
+                  ) : null}
+                </div>
+                {editingProfile ? (
+                  <form
+                    className="mt-3 space-y-3"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void saveProfile();
+                    }}
+                  >
+                    <Field label={t.drawer.fullName}>
+                      <input className={inputClass} value={profileName} onChange={(e) => setProfileName(e.target.value)} />
+                    </Field>
+                    <Field label={t.drawer.birthDay}>
+                      <input className={inputClass} type="date" value={profileBirth} onChange={(e) => setProfileBirth(e.target.value)} />
+                    </Field>
+                    <Field label={t.students.phone}>
+                      <input className={inputClass} value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} inputMode="tel" />
+                    </Field>
+                    <Field label={t.drawer.email}>
+                      <input className={inputClass} type="email" value={profileEmail} onChange={(e) => setProfileEmail(e.target.value)} />
+                    </Field>
+                    <Field label={t.drawer.parentName}>
+                      <input className={inputClass} value={profileParent} onChange={(e) => setProfileParent(e.target.value)} />
+                      <p className="mt-1 text-xs text-slate-400">{t.drawer.parentRequired}</p>
+                    </Field>
+                    <Field label={t.drawer.parentPhone}>
+                      <input className={inputClass} value={profileParentPhone} onChange={(e) => setProfileParentPhone(e.target.value)} inputMode="tel" />
+                    </Field>
+                    {profileError ? <p className="text-sm text-rose-600">{profileError}</p> : null}
+                    <div className="flex gap-2">
+                      <Button type="submit" className="h-10 min-h-10 px-4" disabled={profileBusy}>{t.common.save}</Button>
+                      <Button type="button" variant="outline" className="h-10 min-h-10 px-4" onClick={() => { setEditingProfile(false); setProfileError(""); }}>{t.common.cancel}</Button>
+                    </div>
+                  </form>
+                ) : (
+                  <dl className="mt-2 space-y-2">
+                    <div>
+                      <dt className="text-xs text-slate-400">{t.drawer.fullName}</dt>
+                      <dd className="font-semibold">{student.name}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-400">{t.drawer.birthDay}</dt>
+                      <dd>{student.birthDay || "—"}{age !== null ? ` · ${fill(t.drawer.ageLine, { n: age })}` : ""}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-400">{t.students.phone}</dt>
+                      <dd className="font-semibold">{seeContact ? student.phone || "—" : t.drawer.phoneHidden}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-slate-400">{t.drawer.email}</dt>
+                      <dd>{seeContact ? student.email || "—" : "—"}</dd>
+                    </div>
+                    <div className="border-t border-slate-200 pt-2">
+                      <dt className="text-xs text-slate-400">{t.drawer.parent}{kid ? ` · ${t.drawer.parentRequired}` : ""}</dt>
+                      <dd className="font-semibold">{student.parentName || "—"}</dd>
+                      <dd className="text-slate-500">{seeContact ? student.parentPhone || "—" : "—"}</dd>
+                    </div>
+                  </dl>
+                )}
               </section>
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.recent}</h3>

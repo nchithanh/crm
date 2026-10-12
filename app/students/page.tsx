@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronRight, Plus, Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
+import { Plus, Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
 import { StudentDrawer } from "@/components/student-drawer";
 import { Badge, Button, ctaPrimary, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
@@ -395,7 +395,7 @@ export default function StudentsPage() {
         })}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="crm-x-scroll flex gap-2 pb-1">
         {chips.map((item) => (
           <button
             key={item.id}
@@ -512,7 +512,7 @@ export default function StudentsPage() {
                     return (
                       <li key={st.id}>
                         <div
-                          className={cn("flex cursor-pointer items-center gap-2 px-3 py-3 lg:grid lg:gap-x-3", listCols, on && "bg-[var(--brand-50)]")}
+                          className={cn("grid cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_5.75rem] items-center gap-x-2 px-3 py-3 lg:gap-x-3", listCols, on && "bg-[var(--brand-50)]")}
                           onClick={() => pick(st.id)}
                         >
                           <input
@@ -522,13 +522,17 @@ export default function StudentsPage() {
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => setSelected((cur) => e.target.checked ? [...cur, st.id] : cur.filter((id) => id !== st.id))}
                           />
-                          <span className="flex min-w-0 flex-1 items-center gap-3">
+                          <span className="flex min-w-0 items-center gap-3">
                             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: st.avatarColor }}>{initials(st.name)}</span>
                             <span className="min-w-0">
                               <span className="block truncate font-semibold text-[var(--foreground)]">{st.name}</span>
                               <span className="block truncate text-xs text-[var(--muted)] lg:hidden">{label.primary} · {fill(t.drawer.sessionsLeft, { n: st.remainingSessions })}</span>
                             </span>
-                            {pill ? <span className="lg:hidden"><Badge tone={pill.tone}>{pill.label}</Badge></span> : null}
+                          </span>
+                          <span className="flex flex-col items-start gap-1 lg:hidden">
+                            {badges.map((badge) => (
+                              <Badge key={badge.label} tone={badge.tone}>{badge.label}</Badge>
+                            ))}
                           </span>
                           <span className="hidden text-sm leading-snug lg:line-clamp-2">{label.names}</span>
                           <span className="hidden min-w-0 items-center gap-2 lg:flex">
@@ -551,7 +555,6 @@ export default function StudentsPage() {
                           >
                             {t.drawer.fullProfile}
                           </button>
-                          <ChevronRight size={16} className="shrink-0 text-[var(--muted)] lg:hidden" />
                         </div>
                       </li>
                     );

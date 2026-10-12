@@ -130,6 +130,7 @@ export default function DashboardPage() {
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
+  const [funnelOpen, setFunnelOpen] = useState(false);
   const [homeQ, setHomeQ] = useState("");
   const router = useRouter();
 
@@ -685,8 +686,20 @@ export default function DashboardPage() {
             <p className="mt-6 text-sm text-slate-500">{t.dash.teacherNoRevenue}</p>
           )}
         </section>
-        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-2">
-          <h2 className="text-base font-semibold">{t.dash.funnel}</h2>
+        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-2" aria-labelledby="home-funnel-heading">
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="home-funnel-heading" className="text-base font-semibold">{t.dash.funnel}</h2>
+            <button
+              type="button"
+              className="h-8 rounded-[5px] px-2 text-xs font-semibold text-[var(--brand-600)] lg:hidden"
+              aria-expanded={funnelOpen}
+              aria-controls="home-funnel"
+              onClick={() => setFunnelOpen((v) => !v)}
+            >
+              {funnelOpen ? t.dash.funnelHide : t.dash.funnelShow}
+            </button>
+          </div>
+          <div id="home-funnel" className={funnelOpen ? "" : "max-lg:hidden"}>
           <p className="mt-1 text-xs text-slate-400">{t.dash.funnelNote}</p>
           {model.staleLeads > 0 ? (
             <p className="mt-2 rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -713,6 +726,7 @@ export default function DashboardPage() {
               );
             })}
           </ul>
+          </div>
         </section>
       </div>
 

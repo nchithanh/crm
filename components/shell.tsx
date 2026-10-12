@@ -31,7 +31,6 @@ import {
   BookOpen,
   HeartHandshake,
   LineChart,
-  Plus,
 } from "lucide-react";
 import { AppBreadcrumb } from "@/components/breadcrumb";
 import { BrandMark } from "@/components/brand-mark";
@@ -39,7 +38,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { SupportIcon } from "@/components/support-icon";
 import { canAccessPath, canCollect, canSeeMoney, canSeeNavHref } from "@/lib/access";
 import { db } from "@/lib/db";
-import { ctaGhost, ctaOutline, ctaPrimary } from "@/components/ui";
+import { ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
@@ -143,6 +142,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const collect = canCollect(user?.role);
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [open, setOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [headerMore, setHeaderMore] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
@@ -204,16 +205,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Link href={`/attendance${branchQuery}`} className={cn(ctaPrimary, extra)}>
         <Receipt size={16} /> {t.header.attend}
       </Link>
-      {canEnroll ? (
-        <Link href={`/mid-course-enroll${branchQuery}`} className={cn(ctaOutline, extra)}>
-          <Plus size={16} /> {t.header.enroll}
-        </Link>
-      ) : null}
-      {seeReport ? (
-        <Link href={`/revenue${branchQuery}`} className={cn(ctaGhost, extra)}>
-          <LineChart size={16} /> {t.header.report}
-        </Link>
-      ) : null}
     </>
   );
 
@@ -231,8 +222,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className={cn(
           "relative flex min-h-11 items-center gap-3 rounded-[5px] px-3 py-2.5 text-[14px] font-medium leading-snug",
           on
-            ? "bg-[var(--brand-50)] text-[var(--brand-600)]"
-            : "text-white/80 hover:bg-white/10",
+            ? "border-l-[3px] border-[var(--brand-500)] bg-white font-bold text-[var(--brand-700)]"
+            : "border-l-[3px] border-transparent font-medium text-white/80 hover:bg-white/10",
         )}
       >
         <Icon size={18} strokeWidth={on ? 2.25 : 1.75} />
@@ -246,10 +237,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[#a1a1b5]";
+  const groupLabelClass = "mb-1.5 px-3 text-xs font-semibold text-[#d4d4e2]";
 
   function NavPanel({ showBrand }: { showBrand: boolean }) {
-    const close = () => setOpen(false);
+    const close = () => {
+      setOpen(false);
+      setSheetOpen(false);
+    };
     return (
       <div className="flex h-full flex-col bg-[#1c1c2a] text-[#f8fafc]" style={{ colorScheme: "dark" }}>
         {showBrand ? (
@@ -305,6 +299,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="truncate text-sm font-semibold leading-tight text-[#f8fafc]">{user.name}</p>
                 <p className="truncate text-xs text-slate-400">{roleLabel(user.role, lang)}</p>
               </div>
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10"
+                aria-label={t.common.logout}
+                onClick={() => {
+                  close();
+                  logout();
+                  router.replace("/login");
+                }}
+              >
+                <LogOut size={18} />
+              </button>
             </div>
           </div>
         ) : null}
@@ -320,7 +326,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {open ? (
         <>
           <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <div className="fixed top-0 left-0 z-[51] flex h-full w-[min(86vw,320px)] flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
+          <div className="fixed inset-0 z-[51] flex h-full w-full flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-2">
                 <BrandMark className="h-8 w-8" />
@@ -337,20 +343,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </>
       ) : null}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className={cn("z-30 flex shrink-0 flex-wrap items-center gap-2 px-3 py-2.5 sm:px-5", path === "/overview" ? "bg-white" : "bg-[var(--background)]")}>
+        <header className="sticky top-0 z-30 flex h-[56px] max-h-[56px] shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white px-3 lg:hidden">
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] lg:hidden"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--foreground)]"
             onClick={() => setOpen(true)}
             aria-label={t.common.menu}
           >
-            <Menu size={18} />
+            <Menu size={20} />
           </button>
-          <div className="hidden min-w-0 sm:block lg:hidden">
-            <p className="truncate text-sm font-semibold text-[var(--foreground)]">{studio}</p>
-            <p className="truncate text-xs text-slate-500">{user ? roleLabel(user.role, lang) : ""}</p>
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-[5px] border border-transparent bg-[var(--search)] px-3 text-left text-sm text-[var(--muted)]"
+            aria-label={t.shell.search}
+          >
+            <Search size={16} className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{t.shell.searchShort}</span>
+          </button>
+          <div
+            role="group"
+            aria-label={t.common.language}
+            className="inline-flex h-8 shrink-0 items-center rounded-[5px] border border-[var(--border)] p-0.5 text-[11px] font-bold"
+          >
+            {(["vi", "en"] as const).map((code) => (
+              <button
+                key={code}
+                type="button"
+                aria-pressed={lang === code}
+                onClick={() => setLang(code)}
+                className={cn(
+                  "h-7 rounded-[5px] px-1.5",
+                  lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500",
+                )}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
           </div>
-
+        </header>
+        <header className={cn("z-30 hidden shrink-0 flex-wrap items-center gap-2 px-5 py-2.5 lg:flex", path === "/overview" ? "bg-white" : "bg-[var(--background)]")}>
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
@@ -359,12 +391,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Search size={16} className="shrink-0" />
             <span className="min-w-0 flex-1 truncate">{t.shell.search}</span>
-            <kbd className="hidden shrink-0 rounded-[5px] border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 sm:inline">
+            <kbd className="shrink-0 rounded-[5px] border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
               {t.shell.searchHint}
             </kbd>
           </button>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <div
               role="group"
               aria-label={t.common.language}
@@ -392,7 +424,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Bell size={18} />
             </button>
-            <div className="hidden items-center gap-2 lg:flex">{ctas("")}</div>
+            <div className="hidden items-center gap-2 lg:flex">
+              {ctas("")}
+              {canEnroll || seeReport ? (
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] text-slate-600 hover:bg-slate-50"
+                    aria-label={t.nav.more}
+                    aria-expanded={headerMore}
+                    onClick={() => setHeaderMore((v) => !v)}
+                  >
+                    <Ellipsis size={18} />
+                  </button>
+                  {headerMore ? (
+                    <div className="absolute right-0 z-40 mt-1 w-44 rounded-[5px] border border-[var(--border)] bg-white p-1">
+                      {canEnroll ? (
+                        <Link
+                          href={`/mid-course-enroll${branchQuery}`}
+                          className="block rounded-[5px] px-3 py-2 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)]"
+                          onClick={() => setHeaderMore(false)}
+                        >
+                          {t.header.enroll}
+                        </Link>
+                      ) : null}
+                      {seeReport ? (
+                        <Link
+                          href={`/revenue${branchQuery}`}
+                          className="block rounded-[5px] px-3 py-2 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)]"
+                          onClick={() => setHeaderMore(false)}
+                        >
+                          {t.header.report}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
             {user ? (
               <div className="hidden items-center gap-2 xl:flex">
                 <span
@@ -417,9 +486,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className={cn("min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-24 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
-          <AppBreadcrumb />
-          {children}
+        <main className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-24 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
+          <div className="shrink-0">
+            <AppBreadcrumb />
+            {children}
+          </div>
+          <footer className="mt-auto shrink-0 border-t border-[var(--border)] pt-4 text-center text-xs text-[var(--muted)]">
+            <p className="font-semibold text-[var(--foreground)]">{t.shell.footerBrand}</p>
+            <p className="mt-1">{t.shell.footerMotto}</p>
+            <a href="https://dolphin-software.io.vn/" target="_blank" rel="noreferrer" className="mt-1 inline-block text-[var(--brand-600)] hover:underline">
+              {t.shell.footerSite}
+            </a>
+          </footer>
         </main>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] lg:hidden">
@@ -428,33 +506,58 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const Icon = item.icon;
             const on = active(item.href, path);
             const label = item.key === "attendShort" ? t.nav.attendShort : t.nav[item.key];
+            const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : item.href === "/finance" ? navBadges["/collect-fees"] ?? 0 : 0;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-semibold leading-tight",
-                  on ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
+                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] leading-tight",
+                  on ? "bg-[var(--brand-50)] font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
                 )}
               >
-                <Icon size={20} strokeWidth={on ? 2.25 : 1.75} />
+                <span className="relative">
+                  <Icon size={20} strokeWidth={on ? 2.25 : 1.75} />
+                  {badge > 0 ? (
+                    <span className="absolute -top-1.5 -right-2.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[9px] font-bold leading-4 text-white tabular-nums">
+                      {badge > 99 ? "99" : badge}
+                    </span>
+                  ) : null}
+                </span>
                 {label}
               </Link>
             );
           })}
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={() => setSheetOpen(true)}
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-semibold leading-tight",
-              open ? "text-[var(--brand-600)]" : "text-[var(--muted)]",
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] leading-tight",
+              sheetOpen ? "bg-[var(--brand-50)] font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
             )}
           >
-            <Ellipsis size={20} strokeWidth={open ? 2.25 : 1.75} />
+            <Ellipsis size={20} strokeWidth={sheetOpen ? 2.25 : 1.75} />
             {t.nav.more}
           </button>
         </div>
       </nav>
+      {sheetOpen ? (
+        <div className="lg:hidden">
+          <button type="button" className="fixed inset-0 z-50 bg-slate-900/40" onClick={() => setSheetOpen(false)} aria-label={t.common.close} />
+          <div
+            role="dialog"
+            aria-label={t.nav.more}
+            className="fixed inset-x-0 bottom-0 z-[51] flex h-[min(80vh,640px)] flex-col overflow-hidden rounded-t-[5px] bg-[#1c1c2a] pb-[env(safe-area-inset-bottom)]"
+          >
+            <div className="flex shrink-0 justify-center pt-2">
+              <span className="h-1 w-10 rounded-full bg-white/30" aria-hidden />
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <NavPanel showBrand={false} />
+            </div>
+          </div>
+        </div>
+      ) : null}
       <a
         href={ZALO_FOUNDER}
         target="_blank"

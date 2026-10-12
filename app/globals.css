@@ -193,6 +193,10 @@ a { text-decoration: none; }
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+*::-webkit-scrollbar:horizontal {
+  display: none;
+  height: 0;
+}
 
 .crm-x-scroll {
   overflow-x: auto;

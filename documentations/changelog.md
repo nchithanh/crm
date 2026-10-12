@@ -2,6 +2,17 @@
 
 ## 2026-10-12
 
+- Hồ sơ học viên: khối Thông tin cá nhân trên tab Tổng quan. Quản lý và lễ tân sửa họ tên, ngày sinh, điện thoại, email, phụ huynh. Giáo viên không thấy số và không sửa.
+- Ẩn thanh cuộn ngang. Thanh dọc vẫn 4px, màu brand pha 35%.
+- Footer căn giữa. Menu hamburger trên mobile rộng hết màn hình.
+- Footer đi sau hết nội dung trang, không còn nằm giữa danh sách khi cuộn.
+- Thanh dưới: tab đang chọn nền brand nhạt. Badge Học viên và Tài chính. Tab Thêm mở sheet từ dưới.
+- Sidebar: mục đang chọn nền trắng, viền trái brand. Nhãn nhóm sáng hơn.
+- Header desktop: chỉ Thu học phí và Điểm danh. Đăng ký và Báo cáo vào menu ⋯.
+- Tổng quan mobile: phễu tuyển sinh thu gọn, bấm để mở.
+- Học viên trống: “Chưa có học viên nào” và nút Thêm học viên.
+- Header mobile một hàng 56px: hamburger, ô tìm “Tìm học viên, buổi…”, pill VI/EN. Đăng xuất chuyển vào menu. Desktop giữ CTA và nút đăng xuất trên header.
+- Footer cuối vùng cuộn: Dolphin Software, motto tiếng Anh, link dolphin-software.io.vn. Thanh dưới mobile vẫn giữ. Màn đăng nhập không có footer.
 - PWA giống POS: `manifest.webmanifest` (`display: standalone`) và `appleWebApp`. Mở từ icon Màn hình chính thì không còn thanh Safari. Không gắn service worker — POS cũng tắt plugin đó khi build Pages.
 - Thu học phí: nút Chia sẻ trên QR chuyển khoản mở share sheet ngay (QR demo kèm ảnh; QR SePay kèm link trong nội dung). Không share được thì copy. Gửi Zalo vẫn là nút riêng.
 - Vận hành hôm nay: nút Nhắc Zalo trên thẻ Học phí chờ thu, kèm số học viên. Tin nhóm theo tài khoản nhận. Chia sẻ theo kiểu POS (share sheet, không được thì copy và mở Zalo).

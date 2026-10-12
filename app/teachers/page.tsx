@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { TeacherDrawer } from "@/components/teacher-drawer";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canManageCatalog, canSeeContact } from "@/lib/access";
@@ -179,9 +179,9 @@ export default function TeachersPage() {
                 <button
                   type="button"
                   onClick={() => setOpenId(teacher.id)}
-                  className={cn("flex w-full flex-wrap items-center gap-3 px-4 py-4 text-left hover:bg-black/5 lg:grid lg:gap-x-3", seeContact ? "lg:grid-cols-[minmax(8rem,1.2fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.8fr)_minmax(6rem,0.9fr)_4.5rem_5.5rem_4.5rem_5.5rem]" : "lg:grid-cols-[minmax(8rem,1.3fr)_minmax(6rem,0.8fr)_minmax(6rem,1fr)_4.5rem_5.5rem_4.5rem_5.5rem]")}
+                  className={cn("grid w-full grid-cols-[minmax(0,1fr)_6rem] items-center gap-x-2 px-3 py-4 text-left hover:bg-black/5 lg:gap-x-3 lg:px-4", seeContact ? "lg:grid-cols-[minmax(8rem,1.2fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.8fr)_minmax(6rem,0.9fr)_4.5rem_5.5rem_4.5rem_5.5rem]" : "lg:grid-cols-[minmax(8rem,1.3fr)_minmax(6rem,0.8fr)_minmax(6rem,1fr)_4.5rem_5.5rem_4.5rem_5.5rem]")}
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-3">
+                  <span className="flex min-w-0 items-center gap-3">
                     <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: teacher.avatarColor }}>
                       {initials(teacher.name)}
                     </span>
@@ -190,12 +190,17 @@ export default function TeachersPage() {
                       <span className="mt-0.5 block truncate text-sm text-[var(--muted)] lg:hidden">
                         {branches.find((b) => b.id === teacher.branchId)?.name ?? "—"} · {weekCount} {t.teachers.perWeek} · {studentCount} {t.nav.students}
                       </span>
-                      <span className="mt-1 inline-flex lg:hidden"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></span>
+                      {(teacher.styles ?? []).length > 0 ? (
+                        <span className="mt-1 flex flex-wrap gap-1 lg:hidden">
+                          {(teacher.styles ?? []).slice(0, 2).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
+                        </span>
+                      ) : null}
                     </span>
                   </span>
+                  <span className="lg:hidden"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></span>
                   <span className="hidden truncate text-sm lg:block">{branches.find((b) => b.id === teacher.branchId)?.name ?? "—"}</span>
                   {seeContact ? <span className="hidden truncate text-sm tabular-nums lg:block">{teacher.phone || "—"}</span> : null}
-                  <span className="mt-2 flex w-full flex-wrap gap-1 lg:mt-0 lg:w-auto">
+                  <span className="hidden flex-wrap gap-1 lg:flex">
                     {(teacher.styles ?? []).slice(0, 2).map((s) => <Badge key={s} tone="info">{s}</Badge>)}
                     {(teacher.styles ?? []).length === 0 ? <span className="text-sm text-[var(--muted)]">—</span> : null}
                   </span>
@@ -203,7 +208,6 @@ export default function TeachersPage() {
                   <span className="hidden tabular-nums text-sm lg:block">{weekCount}</span>
                   <span className="hidden tabular-nums text-sm lg:block">{studentCount}</span>
                   <span className="hidden lg:block"><Badge tone={statusTone(st)}>{t.teachers.status[st]}</Badge></span>
-                  <ChevronRight size={18} className="shrink-0 text-[var(--muted)] lg:hidden" />
                 </button>
               </li>
             );
