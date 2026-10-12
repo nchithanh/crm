@@ -6,13 +6,15 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { Button, Card, ctaGhost, inputClass, inputClassInline } from "@/components/ui";
 import { TransferQr } from "@/components/finance/transfer-qr";
-import { payReceivable } from "@/lib/actions";
+import { PromotionPicker } from "@/components/promotion-picker";
+import { applyPromotionToInstallment, payReceivable } from "@/lib/actions";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { usePageQuery } from "@/lib/page-query";
 import { debtRemaining } from "@/lib/metrics";
 import { pickPaymentAccount, transferMemo } from "@/lib/payment-accounts";
+import { splitCodes } from "@/lib/promotions";
 import { cn, formatVnd } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
@@ -46,6 +48,8 @@ export default function FinanceCollectPage() {
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const paymentAccounts = useLiveQuery(() => db.paymentAccounts.toArray(), []) ?? [];
   const paymentRoutes = useLiveQuery(() => db.paymentRoutes.toArray(), []) ?? [];
+  const promotions = useLiveQuery(() => db.promotions.toArray(), []) ?? [];
+  const subscriptions = useLiveQuery(() => db.subscriptions.toArray(), []) ?? [];
   const [q, setQ] = useState("");
   const [studentId, setStudentId] = useState("");
   const [receivableId, setReceivableId] = useState("");
@@ -63,6 +67,8 @@ export default function FinanceCollectPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [busy, setBusy] = useState(false);
+  const [promotionId, setPromotionId] = useState("");
+  const [promoCodes, setPromoCodes] = useState("");
 
   useEffect(() => {
     if (!studentFromQuery || students.length === 0) return;
@@ -87,6 +93,13 @@ export default function FinanceCollectPage() {
   const pack = packages.find((p) => p.id === student?.subscriptionId);
   const course = courses.find((c) => c.id === student?.courseId);
   const target = debts.find((r) => r.id === receivableId) ?? debts.find((r) => debtRemaining(r) > 0);
+  const targetSub = subscriptions.find((row) => row.id === target?.subscriptionId);
+  const feeCourse = courses.find((row) => row.id === targetSub?.courseId) ?? course;
+  useEffect(() => {
+    if (!target) return;
+    setAmount(String(debtRemaining(target)));
+  }, [target?.id, target?.amount, target?.paid]);
+
   const payAmount = Number(amount) || 0;
   const payAccount = useMemo(
     () => pickPaymentAccount(payAmount, paymentAccounts, paymentRoutes),
@@ -128,6 +141,24 @@ export default function FinanceCollectPage() {
     }
     setError("");
     setCheckoutOpen(true);
+  }
+
+  async function applyPromo() {
+    if (!target || !promotionId) return;
+    setBusy(true);
+    const err = await applyPromotionToInstallment({
+      installmentId: target.id,
+      promotionId,
+      codes: splitCodes(promoCodes),
+    });
+    setBusy(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setError("");
+    setPromotionId("");
+    setPromoCodes("");
   }
 
   async function confirmPay() {
@@ -229,6 +260,23 @@ export default function FinanceCollectPage() {
                   {debts.filter((r) => debtRemaining(r) > 0).map((r) => <option key={r.id} value={r.id}>{r.title} · {t.pages.remain} {formatVnd(debtRemaining(r))}</option>)}
                 </select>
               </label>
+
+              {target && target.paid === 0 ? (
+                <PromotionPicker
+                  promotions={promotions}
+                  tuition={target.amount}
+                  course={feeCourse}
+                  usedIds={subscriptions.filter((row) => row.studentId === student.id && row.promotionId && row.id !== targetSub?.id).map((row) => row.promotionId as string)}
+                  selectedId={promotionId}
+                  codes={promoCodes}
+                  onSelect={setPromotionId}
+                  onCodes={setPromoCodes}
+                  lockedName={targetSub?.promotionName || undefined}
+                />
+              ) : null}
+              {target && target.paid === 0 && !targetSub?.promotionId && promotionId ? (
+                <Button type="button" variant="outline" className="min-h-10" disabled={busy} onClick={() => void applyPromo()}>{t.promo.apply}</Button>
+              ) : null}
 
               {target ? (
                 <div className="rounded-[5px] border border-slate-200 p-3">

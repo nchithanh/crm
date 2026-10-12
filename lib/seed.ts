@@ -29,7 +29,7 @@ import type {
 } from "@/types";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "14d";
+const SEED_VERSION = "14f";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -418,9 +418,21 @@ export async function ensureSeed(id: VerticalId) {
   const promotionRows: Promotion[] = raw.promotions.map((p) => ({
     id: p.id,
     name: p.name,
-    discountLabel: p.discountLabel,
     startDay: dayFromOffset(p.startOffset),
     endDay: dayFromOffset(p.endOffset),
+    weekdays: [...p.weekdays],
+    branchIds: [...p.branchIds],
+    courseIds: [...p.courseIds],
+    minTuition: p.minTuition,
+    benefit: p.benefit as Promotion["benefit"],
+    benefitValue: p.benefitValue,
+    codeMode: p.codeMode as Promotion["codeMode"],
+    codes: p.codes.map((code) => ({
+      code: code.code,
+      maxUses: code.maxUses,
+      used: code.used,
+    })),
+    oncePerStudent: p.oncePerStudent,
     active: p.active,
     note: p.note,
   }));

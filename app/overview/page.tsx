@@ -131,6 +131,7 @@ export default function DashboardPage() {
   const { branchId } = useStudioBranch();
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
   const [funnelOpen, setFunnelOpen] = useState(false);
+  const [chartOpen, setChartOpen] = useState(false);
   const [homeQ, setHomeQ] = useState("");
   const router = useRouter();
 
@@ -599,7 +600,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="order-7 grid grid-cols-2 gap-3">
+      <div className="order-4 grid grid-cols-2 gap-3 lg:order-7">
         <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5">
           <h2 className="crm-section-title">{t.dash.workToday}</h2>
           {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
@@ -652,18 +653,30 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="order-4 grid gap-3 lg:grid-cols-5">
+      <div className="order-7 grid gap-3 lg:order-4 lg:grid-cols-5">
         <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
             <div className="flex gap-1">
+              <button
+                type="button"
+                className="h-8 rounded-[5px] px-2 text-xs font-semibold text-[var(--brand-600)] lg:hidden"
+                aria-expanded={chartOpen}
+                aria-controls="home-revenue"
+                onClick={() => setChartOpen((v) => !v)}
+              >
+                {chartOpen ? t.dash.funnelHide : t.dash.funnelShow}
+              </button>
+              <div className={chartOpen ? "flex gap-1" : "hidden gap-1 lg:flex"}>
               {([7, 30] as const).map((n) => (
                 <button key={n} type="button" className={`h-10 rounded-[5px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
                   {n} {t.dash.dayUnit}
                 </button>
               ))}
+              </div>
             </div>
           </div>
+          <div id="home-revenue" className={chartOpen ? "" : "max-lg:hidden"}>
           {showMoney ? (
             <>
               <div className="mt-3 h-52">
@@ -685,6 +698,7 @@ export default function DashboardPage() {
           ) : (
             <p className="mt-6 text-sm text-slate-500">{t.dash.teacherNoRevenue}</p>
           )}
+          </div>
         </section>
         <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-2" aria-labelledby="home-funnel-heading">
           <div className="flex items-center justify-between gap-2">

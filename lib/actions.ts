@@ -2,8 +2,9 @@ import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { isSubscriptionValid } from "@/lib/subscription";
+import { quotePromotion } from "@/lib/promotions";
 import { isMinor, localDayKey, uid, weekdayShort } from "@/lib/utils";
-import type { AttendStatus, LeadStage, Level, PayMethod, Role, TaskPriority, TaskStatus, TeacherStatus, User } from "@/types";
+import type { AttendStatus, LeadStage, Level, PayMethod, Promotion, PromotionBenefit, PromotionCodeMode, Role, TaskPriority, TaskStatus, TeacherStatus, User } from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
   const lead = await db.leads.get(id);
@@ -304,14 +305,16 @@ export async function payReceivable(input: {
 export async function addPackage(input: {
   name: string;
   sessions: number;
+  months: number;
   price: number;
   note: string;
 }) {
+  const months = Math.max(1, Math.round(input.months));
   await db.subscriptionPlans.add({
     id: uid("pkg"),
     name: input.name.trim(),
     sessions: input.sessions,
-    months: Math.max(1, Math.round(input.sessions / 8)),
+    months,
     price: input.price,
     note: input.note.trim(),
     kind: "course",
@@ -326,6 +329,8 @@ export async function enrollStudent(input: {
   /** @deprecated */
   packageId?: string;
   classId?: string;
+  promotionId?: string;
+  codes?: string[];
 }) {
   const planId = input.planId || input.packageId || "";
   const pack = await db.subscriptionPlans.get(planId);
@@ -353,7 +358,33 @@ export async function enrollStudent(input: {
   const endDay = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
   const subId = uid("sub");
   const debtId = uid("debt");
-  await db.transaction("rw", [db.subscriptions, db.students, db.installments, db.classStudents, db.classes], async () => {
+  let payable = pack.price;
+  let discount = 0;
+  let extraSessions = 0;
+  let promoName = "";
+  let promoPatch: Promotion | null = null;
+  let usedCodes: string[] = [];
+  if (input.promotionId) {
+    const promo = await db.promotions.get(input.promotionId);
+    if (!promo) return "Không thấy chương trình.";
+    const prior = await db.subscriptions.filter((row) => row.studentId === student.id && row.promotionId === promo.id).count();
+    const quoted = quotePromotion({
+      promotion: promo,
+      tuition: pack.price,
+      course,
+      today: day,
+      codes: input.codes ?? [],
+      alreadyUsed: prior > 0,
+    });
+    if (!quoted.quote) return quoted.error;
+    payable = quoted.quote.payable;
+    discount = quoted.quote.discount;
+    extraSessions = quoted.quote.extraSessions;
+    promoName = promo.name;
+    usedCodes = quoted.quote.usedCodes;
+    promoPatch = promo;
+  }
+  await db.transaction("rw", [db.subscriptions, db.students, db.installments, db.classStudents, db.classes, db.promotions], async () => {
     await db.subscriptions.add({
       id: subId,
       studentId: input.studentId,
@@ -361,17 +392,21 @@ export async function enrollStudent(input: {
       planId: pack.id,
       day,
       endDay,
-      sessions: pack.sessions,
-      remainingSessions: pack.sessions,
+      sessions: pack.sessions + extraSessions,
+      remainingSessions: pack.sessions + extraSessions,
       status: "active",
+      promotionId: input.promotionId || "",
+      promotionName: promoName,
+      listPrice: pack.price,
+      discountAmount: discount,
     });
     await db.students.update(student.id, {
       subscriptionId: subId,
       courseId: course.id,
       branchId: course.branchId,
       level: course.level,
-      remainingSessions: student.remainingSessions + pack.sessions,
-      debt: student.debt + pack.price,
+      remainingSessions: student.remainingSessions + pack.sessions + extraSessions,
+      debt: student.debt + payable,
       status: student.status === "paused" ? "active" : student.status,
     });
     await db.installments.add({
@@ -380,10 +415,17 @@ export async function enrollStudent(input: {
       studentId: student.id,
       branchId: course.branchId,
       title: pack.name,
-      amount: pack.price,
+      amount: payable,
       paid: 0,
       dueDay: day,
     });
+    if (promoPatch && usedCodes.length > 0) {
+      await db.promotions.update(promoPatch.id, {
+        codes: promoPatch.codes.map((code) => (
+          usedCodes.includes(code.code.trim().toUpperCase()) ? { ...code, used: code.used + 1 } : code
+        )),
+      });
+    }
     for (const klass of classes.filter((c) => c.status !== "cancelled" && c.day >= today)) {
       const csId = `${klass.id}_${student.id}`;
       const exists = await db.classStudents.get(csId);
@@ -465,6 +507,8 @@ export async function enrollMidCourse(input: {
   classId?: string;
   payNow?: number;
   method?: PayMethod;
+  promotionId?: string;
+  codes?: string[];
 }) {
   return enrollStudent({
     studentId: input.studentId,
@@ -472,7 +516,123 @@ export async function enrollMidCourse(input: {
     courseId: input.courseId || "",
     classId: input.classId,
     packageId: input.packageId,
+    promotionId: input.promotionId,
+    codes: input.codes,
   });
+}
+
+export async function savePromotion(input: {
+  id?: string;
+  role: Role | undefined;
+  name: string;
+  startDay: string;
+  endDay: string;
+  weekdays: number[];
+  branchIds: string[];
+  courseIds: string[];
+  minTuition: number | null;
+  benefit: PromotionBenefit;
+  benefitValue: number;
+  codeMode: PromotionCodeMode;
+  codes: { code: string; maxUses: number | null }[];
+  oncePerStudent: boolean;
+  active: boolean;
+  note: string;
+}) {
+  if (input.role !== "owner") return "owner";
+  const name = input.name.trim();
+  if (!name) return "name";
+  if (!input.startDay || !input.endDay || input.endDay < input.startDay) return "date";
+  const benefitValue = Math.round(input.benefitValue);
+  if (benefitValue <= 0) return "value";
+  if (input.benefit === "percent" && benefitValue > 100) return "percent";
+  const codes = input.codes
+    .map((code) => ({
+      code: code.code.trim().toUpperCase(),
+      maxUses: code.maxUses != null && code.maxUses > 0 ? Math.round(code.maxUses) : null,
+      used: 0,
+    }))
+    .filter((code) => code.code);
+  if (input.codeMode !== "none" && codes.length === 0) return "codes";
+  if (input.codeMode === "and" && codes.length < 2) return "and";
+  const unique = new Set(codes.map((code) => code.code));
+  if (unique.size !== codes.length) return "dup";
+  const existing = input.id ? await db.promotions.get(input.id) : undefined;
+  const kept = codes.map((code) => {
+    const prev = existing?.codes.find((row) => row.code.trim().toUpperCase() === code.code);
+    return { ...code, used: prev?.used ?? 0 };
+  });
+  const row: Promotion = {
+    id: input.id || uid("pr"),
+    name,
+    startDay: input.startDay,
+    endDay: input.endDay,
+    weekdays: [...new Set(input.weekdays)],
+    branchIds: input.branchIds,
+    courseIds: input.courseIds,
+    minTuition: input.minTuition != null && input.minTuition > 0 ? Math.round(input.minTuition) : null,
+    benefit: input.benefit,
+    benefitValue,
+    codeMode: input.codeMode,
+    codes: input.codeMode === "none" ? [] : kept,
+    oncePerStudent: input.oncePerStudent,
+    active: input.active,
+    note: input.note.trim(),
+  };
+  await db.promotions.put(row);
+  return "";
+}
+
+export async function applyPromotionToInstallment(input: {
+  installmentId: string;
+  promotionId: string;
+  codes: string[];
+}) {
+  const row = await db.installments.get(input.installmentId);
+  if (!row) return "Không thấy khoản phải thu.";
+  if (row.paid > 0) return "Kỳ đã thu không tính lại.";
+  const sub = row.subscriptionId ? await db.subscriptions.get(row.subscriptionId) : undefined;
+  if (!sub) return "Không thấy subscription.";
+  if (sub.promotionId) return "Subscription đã gắn chương trình.";
+  const promo = await db.promotions.get(input.promotionId);
+  if (!promo) return "Không thấy chương trình.";
+  const course = await db.courses.get(sub.courseId);
+  const prior = await db.subscriptions.filter((item) => item.studentId === row.studentId && item.promotionId === promo.id).count();
+  const quoted = quotePromotion({
+    promotion: promo,
+    tuition: row.amount,
+    course,
+    codes: input.codes,
+    alreadyUsed: prior > 0,
+  });
+  if (!quoted.quote) return quoted.error;
+  const student = await db.students.get(row.studentId);
+  const { discount, payable, extraSessions, usedCodes } = quoted.quote;
+  await db.transaction("rw", [db.installments, db.subscriptions, db.students, db.promotions], async () => {
+    await db.installments.update(row.id, { amount: payable });
+    await db.subscriptions.update(sub.id, {
+      promotionId: promo.id,
+      promotionName: promo.name,
+      listPrice: row.amount,
+      discountAmount: discount,
+      sessions: sub.sessions + extraSessions,
+      remainingSessions: sub.remainingSessions + extraSessions,
+    });
+    if (student) {
+      await db.students.update(student.id, {
+        debt: Math.max(0, student.debt - discount),
+        remainingSessions: student.remainingSessions + extraSessions,
+      });
+    }
+    if (usedCodes.length > 0) {
+      await db.promotions.update(promo.id, {
+        codes: promo.codes.map((code) => (
+          usedCodes.includes(code.code.trim().toUpperCase()) ? { ...code, used: code.used + 1 } : code
+        )),
+      });
+    }
+  });
+  return "";
 }
 
 export async function requestHold(input: {

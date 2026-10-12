@@ -605,6 +605,9 @@ export function StudentDrawer({
                 <div className="rounded-[5px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
                 <div className="rounded-[5px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
+              {enrollments.filter((row) => row.promotionName).map((row) => (
+                <p key={row.id} className="text-sm text-slate-600">{t.promo.usedName}: {row.promotionName}</p>
+              ))}
               <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
               <div className="overflow-auto rounded-[5px] border border-[var(--border)]">
                 <table className="w-full min-w-[320px] text-sm">

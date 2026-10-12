@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-13
+
+- SKU: plan mẫu đổi tên thành SKU. Form tạo có thời lượng (tháng) và số buổi trong thời lượng đó. Tháng không còn tự tính từ số buổi.
+- Promotion seed: đủ case tự áp dụng (phần trăm, số tiền, buổi, thứ, ngưỡng), mã OR, mã AND, sắp tới và đã tắt. Học phí trong mẫu là của studio.
+- Promotion: danh sách và form chương trình. Điều kiện cùng lúc. Mã không, mã OR, hoặc mã AND. Ghi danh và thu phí chọn một chương trình, hiện học phí gốc và số còn lại. Kỳ đã thu không tính lại.
+- Tổng quan mobile: Việc hôm nay lên trước biểu đồ doanh thu. Biểu đồ thu gọn, bấm Hiện để mở. Desktop giữ thứ tự cũ và biểu đồ mở.
+- Học viên mobile: vuốt trái một hàng để Gọi, Zalo hoặc Điểm danh. Giáo viên chỉ thấy Điểm danh.
+
 ## 2026-10-12
 
 - Nhóm Tài chính: mục Tổng quan chỉ sáng khi đang ở trang Tổng quan. Lịch sử thu, Doanh thu và các trang khác không kéo theo mục đó.

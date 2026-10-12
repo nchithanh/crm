@@ -16,7 +16,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/rooms` | Phòng — tab **Lịch phòng** + **Danh sách** CRUD |
 | `/subscriptions` | Plan mẫu + list Subscription. Gate điểm danh |
 | `/mid-course-enroll` | Ghi danh giữa khóa → Sub + installment + roster |
-| `/promotion` | Promotion mẫu |
+| `/promotion` | Chương trình giảm học phí. Điều kiện AND. Mã không / OR / AND. Áp lúc ghi danh và thu phí |
 | `/follow-up` | Pipeline lead / chăm sóc |
 | `/finance` | Tài chính — tổng quan |
 | `/collect-fees` | Thu học phí (POS). Mobile tab giữa = Học phí |

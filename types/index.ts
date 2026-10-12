@@ -231,6 +231,10 @@ export type Subscription = {
   sessions: number;
   remainingSessions: number;
   status: SubscriptionStatus;
+  promotionId?: string;
+  promotionName?: string;
+  listPrice?: number;
+  discountAmount?: number;
   /** @deprecated use planId */
   packageId?: string;
   /** @deprecated */
@@ -282,12 +286,35 @@ export type PaymentRoute = {
   priority: number;
 };
 
+export type PromotionBenefit = "percent" | "amount" | "sessions";
+
+export type PromotionCodeMode = "none" | "or" | "and";
+
+export type PromotionCode = {
+  code: string;
+  /** null = không giới hạn */
+  maxUses: number | null;
+  used: number;
+};
+
 export type Promotion = {
   id: string;
   name: string;
-  discountLabel: string;
   startDay: string;
   endDay: string;
+  /** 0 = CN … 6 = T7. Rỗng = mọi ngày. */
+  weekdays: number[];
+  /** Rỗng = mọi chi nhánh. */
+  branchIds: string[];
+  /** Rỗng = mọi khóa. */
+  courseIds: string[];
+  /** null = không ngưỡng học phí. */
+  minTuition: number | null;
+  benefit: PromotionBenefit;
+  benefitValue: number;
+  codeMode: PromotionCodeMode;
+  codes: PromotionCode[];
+  oncePerStudent: boolean;
   active: boolean;
   note: string;
 };

@@ -32,6 +32,10 @@ export function canManagePaymentAccounts(role: Role | undefined) {
   return role === "owner";
 }
 
+export function canManagePromotions(role: Role | undefined) {
+  return role === "owner";
+}
+
 /** Paths giáo viên được vào (prefix match). Owner / lễ tân: mọi path app. */
 const TEACHER_PATHS = [
   "/",

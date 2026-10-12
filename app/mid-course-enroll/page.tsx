@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import { PromotionPicker } from "@/components/promotion-picker";
 import { Button, ctaOutline, ctaPrimary, inputClass } from "@/components/ui";
 import { canSeeMoney } from "@/lib/access";
 import { createStudent, enrollMidCourse } from "@/lib/actions";
@@ -10,6 +11,7 @@ import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { canJoinAtSession, levelLabel } from "@/lib/rules";
+import { quotePromotion, splitCodes } from "@/lib/promotions";
 import { nextJoinSession, proratedFee, sessionsLeftInCourse } from "@/lib/schedule";
 import { formatVnd } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -22,6 +24,8 @@ export default function MidEnrollPage() {
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
   const packages = useLiveQuery(() => db.subscriptionPlans.filter((p) => p.kind === "course").toArray(), []) ?? [];
   const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const promotions = useLiveQuery(() => db.promotions.toArray(), []) ?? [];
+  const subscriptions = useLiveQuery(() => db.subscriptions.toArray(), []) ?? [];
   const sessions = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const [step, setStep] = useState(1);
@@ -31,6 +35,8 @@ export default function MidEnrollPage() {
   const [draft, setDraft] = useState({ name: "", phone: "", branchId: "" });
   const [classId, setClassId] = useState("");
   const [packageId, setPackageId] = useState("");
+  const [promotionId, setPromotionId] = useState("");
+  const [promoCodes, setPromoCodes] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,6 +63,17 @@ export default function MidEnrollPage() {
   const picked = offers.find((o) => o.course.id === classId);
   const pack = packages.find((p) => p.id === packageId);
   const price = pack && picked ? proratedFee(pack.price, pack.sessions, picked.granted) : 0;
+  const usedPromoIds = subscriptions.filter((row) => row.studentId === studentId && row.promotionId).map((row) => row.promotionId as string);
+  const selectedPromo = promotions.find((row) => row.id === promotionId);
+  const promoQuote = selectedPromo && pack && picked
+    ? quotePromotion({
+        promotion: selectedPromo,
+        tuition: pack.price,
+        course: picked.course,
+        codes: splitCodes(promoCodes),
+        alreadyUsed: usedPromoIds.includes(promotionId),
+      }).quote
+    : null;
   const matches = students.filter((s) => {
     if (studioBranch !== "all" && s.branchId !== studioBranch) return false;
     return `${s.name} ${s.phone}`.toLowerCase().includes(q.trim().toLowerCase());
@@ -110,6 +127,8 @@ export default function MidEnrollPage() {
       studentId,
       packageId,
       courseId: classId,
+      promotionId: promotionId || undefined,
+      codes: splitCodes(promoCodes),
     });
     setBusy(false);
     if (err) {
@@ -211,10 +230,10 @@ export default function MidEnrollPage() {
           <p className="mt-2 text-4xl font-bold tabular-nums">{picked.granted}</p>
           <p className="text-sm text-slate-500">Buổi còn lại của khóa, không tính buổi đã hủy</p>
           <label className="mt-4 block text-sm">
-            <span className="text-slate-500">Gói sẽ trừ vào</span>
+            <span className="text-slate-500">{t.pages.pack}</span>
             <select className={`${inputClass} mt-1`} value={packageId} onChange={(e) => setPackageId(e.target.value)}>
-              <option value="">Chọn gói</option>
-              {packages.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.sessions} buổi</option>)}
+              <option value="">{t.common.choose}</option>
+              {packages.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.sessions} {t.pages.sessions} · {p.months} {t.pages.monthUnit}</option>)}
             </select>
           </label>
           {pack && seeMoney ? (
@@ -234,8 +253,22 @@ export default function MidEnrollPage() {
             <div><dt className="text-slate-500">{t.enroll.course}</dt><dd className="font-semibold">{picked.course.name}</dd></div>
             <div><dt className="text-slate-500">{t.enroll.extra}</dt><dd className="font-semibold">{picked.granted}</dd></div>
             <div><dt className="text-slate-500">{t.enroll.pack}</dt><dd className="font-semibold">{pack?.name}</dd></div>
-            {seeMoney ? <div><dt className="text-slate-500">{t.enroll.due}</dt><dd className="font-semibold tabular-nums">{formatVnd(price)}</dd></div> : null}
+            {seeMoney ? <div><dt className="text-slate-500">{t.enroll.due}</dt><dd className="font-semibold tabular-nums">{formatVnd(promoQuote?.payable ?? pack?.price ?? price)}</dd></div> : null}
           </dl>
+          {seeMoney && pack && picked ? (
+            <div className="mt-3">
+              <PromotionPicker
+                promotions={promotions}
+                tuition={pack.price}
+                course={picked.course}
+                usedIds={usedPromoIds}
+                selectedId={promotionId}
+                codes={promoCodes}
+                onSelect={setPromotionId}
+                onCodes={setPromoCodes}
+              />
+            </div>
+          ) : null}
           <p className="mt-3 text-slate-600">{t.enroll.debtOk}</p>
           {seeMoney ? <p className="mt-2 text-sm text-slate-500">{t.enroll.collectAfter}</p> : null}
         </section>
@@ -260,6 +293,8 @@ export default function MidEnrollPage() {
               setStudentId("");
               setClassId("");
               setPackageId("");
+              setPromotionId("");
+              setPromoCodes("");
               setQ("");
               setError("");
             }}

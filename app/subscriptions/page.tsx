@@ -37,7 +37,7 @@ export default function SubscriptionsPage() {
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {plans.map((p) => (
             <Card key={p.id} className="p-4">
-              <p className="text-sm text-slate-500">{p.sessions} {t.pages.sessions} · {p.months} mo</p>
+              <p className="text-sm text-slate-500">{p.sessions} {t.pages.sessions} · {p.months} {t.pages.monthUnit}</p>
               <h3 className="text-lg font-bold">{p.name}</h3>
               <p className="mt-2 text-2xl font-bold text-[var(--brand-600)]">{formatVnd(p.price)}</p>
               <p className="mt-1 text-xs text-slate-400">{p.note}</p>
@@ -150,6 +150,7 @@ function CreatePlanForm() {
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [sessions, setSessions] = useState("8");
+  const [months, setMonths] = useState("1");
   const [price, setPrice] = useState("");
   const [note, setNote] = useState("");
   return (
@@ -158,17 +159,21 @@ function CreatePlanForm() {
       onSubmit={(e) => {
         e.preventDefault();
         const n = Number(sessions) || 0;
+        const m = Number(months) || 0;
         const p = Number(price) || 0;
-        if (!name.trim() || n <= 0 || p <= 0) return;
-        void addPackage({ name, sessions: n, price: p, note }).then(() => {
+        if (!name.trim() || n <= 0 || m <= 0 || p <= 0) return;
+        void addPackage({ name, sessions: n, months: m, price: p, note }).then(() => {
           setName("");
+          setSessions("8");
+          setMonths("1");
           setPrice("");
           setNote("");
         });
       }}
     >
       <Field label={t.pages.packageName}><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <Field label={t.pages.sessionCount}><input className={inputClass} type="number" value={sessions} onChange={(e) => setSessions(e.target.value)} /></Field>
+      <Field label={t.pages.duration}><input className={inputClass} type="number" min={1} value={months} onChange={(e) => setMonths(e.target.value)} /></Field>
+      <Field label={t.pages.skuSessions}><input className={inputClass} type="number" min={1} value={sessions} onChange={(e) => setSessions(e.target.value)} /></Field>
       <Field label={t.pages.fee}><input className={inputClass} type="number" value={price} onChange={(e) => setPrice(e.target.value)} /></Field>
       <Field label={t.money.note}><input className={inputClass} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
       <div className="md:col-span-4">

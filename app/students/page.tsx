@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus, Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
 import { StudentDrawer } from "@/components/student-drawer";
@@ -111,6 +111,9 @@ export default function StudentsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selected, setSelected] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [swipeId, setSwipeId] = useState<string | null>(null);
+  const touchX = useRef(0);
+  const touchMoved = useRef(false);
   const [page, setPage] = useState(0);
   const [bulkMsg, setBulkMsg] = useState("");
   const { student } = usePageQuery();
@@ -509,11 +512,45 @@ export default function StudentsPage() {
                     const course = courses.find((c) => c.id === st.courseId);
                     const teacher = users.find((u) => u.id === course?.teacherId);
                     const rate = rateOf(marksByStudent.get(st.id) ?? []);
+                    const phone = seeContact ? st.phone.trim() : "";
+                    const swipeShift = phone ? "-13.5rem" : "-4.5rem";
                     return (
-                      <li key={st.id}>
+                      <li key={st.id} className="relative overflow-hidden">
+                        <div className="absolute inset-y-0 right-0 flex lg:hidden">
+                          {phone ? (
+                            <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex w-[4.5rem] items-center justify-center bg-green-600 px-1 text-center text-[11px] font-semibold text-white">{t.task.call}</a>
+                          ) : null}
+                          {phone ? (
+                            <a href={zaloHref(phone) || "#"} target="_blank" rel="noreferrer" className="flex w-[4.5rem] items-center justify-center bg-sky-600 px-1 text-center text-[11px] font-semibold text-white">{t.task.zalo}</a>
+                          ) : null}
+                          <Link href="/attendance" className="flex w-[4.5rem] items-center justify-center bg-[var(--brand-600)] px-1 text-center text-[11px] font-semibold text-white">{t.header.attend}</Link>
+                        </div>
                         <div
-                          className={cn("grid cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_5.75rem] items-center gap-x-2 px-3 py-3 lg:gap-x-3", listCols, on && "bg-[var(--brand-50)]")}
-                          onClick={() => pick(st.id)}
+                          data-swipe={swipeId === st.id ? "open" : "closed"}
+                          style={{ "--swipe": swipeShift } as CSSProperties}
+                          className={cn("relative grid cursor-pointer grid-cols-[1.75rem_minmax(0,1fr)_5.75rem] items-center gap-x-2 bg-[var(--card)] px-3 py-3 transition-transform max-lg:touch-pan-y max-lg:data-[swipe=open]:translate-x-[var(--swipe)] lg:gap-x-3", listCols, on && "bg-[var(--brand-50)]")}
+                          onTouchStart={(e) => {
+                            touchX.current = e.changedTouches[0]?.clientX ?? 0;
+                            touchMoved.current = false;
+                          }}
+                          onTouchEnd={(e) => {
+                            const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
+                            if (dx < -48) {
+                              touchMoved.current = true;
+                              setSwipeId(st.id);
+                            } else if (dx > 48) {
+                              touchMoved.current = true;
+                              setSwipeId((cur) => (cur === st.id ? null : cur));
+                            }
+                          }}
+                          onClick={() => {
+                            if (touchMoved.current) {
+                              touchMoved.current = false;
+                              return;
+                            }
+                            setSwipeId(null);
+                            pick(st.id);
+                          }}
                         >
                           <input
                             type="checkbox"
