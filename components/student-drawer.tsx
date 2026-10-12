@@ -346,7 +346,10 @@ export function StudentDrawer({
                 role="tab"
                 aria-selected={tab === id}
                 onClick={() => setTab(id)}
-                className={tab === id ? "shrink-0 -mb-px whitespace-nowrap border-b-2 border-[var(--brand-500)] px-3.5 py-2 text-sm font-semibold text-[var(--foreground)]" : "shrink-0 -mb-px whitespace-nowrap border-b-2 border-transparent px-3.5 py-2 text-sm text-[var(--foreground)]"}
+                className={cn(
+                  "shrink-0 -mb-px whitespace-nowrap border-b-2 px-3.5 py-2 text-sm font-semibold text-[var(--foreground)]",
+                  tab === id ? "border-[var(--brand-500)]" : "border-transparent",
+                )}
               >
                 {tabLabel[id]}
               </button>
@@ -355,6 +358,7 @@ export function StudentDrawer({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          <div key={tab} className="crm-tab-panel">
           {tab === "overview" ? (
             <div className="space-y-4 text-sm">
               <section>
@@ -690,6 +694,7 @@ export function StudentDrawer({
               </ul>
             </section>
           ) : null}
+          </div>
         </div>
       </aside>
   );

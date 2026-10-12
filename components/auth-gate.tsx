@@ -53,7 +53,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [hydrated, user, path, router, vertical]);
 
   useEffect(() => {
-    if (!vertical || path === "/choose-vertical") {
+    if (!vertical) {
       setReady(true);
       return;
     }
@@ -66,7 +66,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [vertical, path]);
+  }, [vertical]);
 
   if (!hydrated || vertical === undefined || !ready) {
     return (

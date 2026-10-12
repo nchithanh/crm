@@ -2,6 +2,10 @@
 
 ## 2026-10-12
 
+- Nhóm Tài chính: mục Tổng quan chỉ sáng khi đang ở trang Tổng quan. Lịch sử thu, Doanh thu và các trang khác không kéo theo mục đó.
+- Menu hamburger trên mobile rộng 80% màn hình, bám trái. Bấm vùng mờ bên phải để đóng.
+- Đổi trang: menu, header và thanh dưới đứng yên. Chỉ vùng nội dung hiện dần. Không còn màn “Đang mở studio…” mỗi lần bấm menu.
+- Đổi tab: hàng tab đứng yên. Chỉ nội dung hiện dần và nhích lên nhẹ. Áp cho hồ sơ học viên, hồ sơ giáo viên, chi tiết khóa, phòng và bảo lưu.
 - Hồ sơ học viên: khối Thông tin cá nhân trên tab Tổng quan. Quản lý và lễ tân sửa họ tên, ngày sinh, điện thoại, email, phụ huynh. Giáo viên không thấy số và không sửa.
 - Ẩn thanh cuộn ngang. Thanh dọc vẫn 4px, màu brand pha 35%.
 - Footer căn giữa. Menu hamburger trên mobile rộng hết màn hình.

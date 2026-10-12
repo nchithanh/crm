@@ -101,8 +101,8 @@ export default function CourseDetailPage() {
             aria-selected={tab === idTab}
             onClick={() => setTab(idTab)}
             className={cn(
-              "shrink-0 -mb-px border-b-2 px-3 py-2.5 text-sm text-[var(--foreground)]",
-              tab === idTab ? "border-[var(--brand-500)] font-semibold" : "border-transparent",
+              "shrink-0 -mb-px border-b-2 px-3 py-2.5 text-sm font-semibold text-[var(--foreground)]",
+              tab === idTab ? "border-[var(--brand-500)]" : "border-transparent",
             )}
           >
             {tabLabel[idTab]}
@@ -110,7 +110,7 @@ export default function CourseDetailPage() {
         ))}
       </div>
 
-      <div className={cn("mt-4", tab === "overview" && "space-y-8")}>
+      <div key={tab} className={cn("crm-tab-panel mt-4", tab === "overview" && "space-y-8")}>
         {tab === "overview" ? (
           <div className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

@@ -67,6 +67,7 @@ export default function RoomsPage() {
         ))}
       </div>
 
+      <div key={tab} className="crm-tab-panel">
       {tab === "calendar" ? (
         <RoomCalendar
           rooms={rooms}
@@ -115,6 +116,7 @@ export default function RoomsPage() {
           </div>
         </>
       ) : null}
+      </div>
     </div>
   );
 }

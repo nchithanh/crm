@@ -93,15 +93,15 @@ export default function HoldsPage() {
             key={item.id}
             type="button"
             className={tab === item.id
-              ? "h-9 shrink-0 rounded-[5px] bg-[var(--brand-50)] px-4 text-sm font-semibold text-[var(--brand-600)]"
-              : "h-9 shrink-0 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-medium text-[var(--muted)]"}
+              ? "h-9 shrink-0 rounded-[5px] border border-transparent bg-[var(--brand-50)] px-4 text-sm font-semibold text-[var(--brand-600)]"
+              : "h-9 shrink-0 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]"}
             onClick={() => setTab(item.id)}
           >
             {item.label}
           </button>
         ))}
       </div>
-      <ul className="mt-4 space-y-3">
+      <ul key={tab} className="crm-tab-panel mt-4 space-y-3">
         {rows.length === 0 ? <li className="rounded-[5px] bg-white px-4 py-8 text-center text-sm text-[var(--muted)]">{t.hold.empty}</li> : null}
         {rows.map((h) => {
           const student = students.find((s) => s.id === h.studentId);

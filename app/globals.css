@@ -224,13 +224,22 @@ a { text-decoration: none; }
   from { opacity: 1; }
   to { opacity: 0; }
 }
+@keyframes crm-tab-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .crm-drawer-panel { animation: crm-drawer-in 200ms ease-out; }
 .crm-drawer-panel.is-leaving { animation: crm-drawer-out 200ms ease-in forwards; }
 .crm-drawer-backdrop { animation: crm-fade-in 200ms ease-out; }
 .crm-drawer-backdrop.is-leaving { animation: crm-fade-out 200ms ease-in forwards; }
+.crm-tab-panel {
+  overflow-anchor: none;
+  animation: crm-tab-in 180ms ease-out;
+}
 @media (prefers-reduced-motion: reduce) {
   .crm-drawer-panel,
-  .crm-drawer-backdrop { animation: none; }
+  .crm-drawer-backdrop,
+  .crm-tab-panel { animation: none; }
 }
 
 button.bg-emerald-500,

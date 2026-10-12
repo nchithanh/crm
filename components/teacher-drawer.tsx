@@ -166,7 +166,7 @@ export function TeacherDrawer({
                 role="tab"
                 aria-selected={tab === id}
                 onClick={() => setTab(id)}
-                className={tab === id ? "shrink-0 -mb-px border-b-2 border-[var(--brand-500)] px-2.5 py-2 text-sm font-semibold text-[var(--foreground)]" : "shrink-0 -mb-px border-b-2 border-transparent px-2.5 py-2 text-sm text-[var(--foreground)]"}
+                className={tab === id ? "shrink-0 -mb-px border-b-2 border-[var(--brand-500)] px-2.5 py-2 text-sm font-semibold text-[var(--foreground)]" : "shrink-0 -mb-px border-b-2 border-transparent px-2.5 py-2 text-sm font-semibold text-[var(--foreground)]"}
               >
                 {t.teachers.tabs[id]}
               </button>
@@ -174,7 +174,8 @@ export function TeacherDrawer({
           </div>
         </header>
 
-        <div className={`min-h-0 flex-1 overflow-y-auto px-5 py-4${tab === "overview" ? " space-y-8" : ""}`}>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          <div key={tab} className={`crm-tab-panel${tab === "overview" ? " space-y-8" : ""}`}>
           {show("info") ? (
             <section className="space-y-4 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.info}</h2> : null}
@@ -341,6 +342,7 @@ export function TeacherDrawer({
               ) : null}
             </section>
           ) : null}
+          </div>
         </div>
       </aside>
     </div>

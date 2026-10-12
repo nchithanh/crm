@@ -121,11 +121,13 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
   ];
 }
 
+function financeSection(path: string) {
+  return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections") || path.startsWith("/payment-accounts");
+}
+
 function active(href: string, path: string) {
   if (href === "/overview") return path === "/overview" || path === "/";
-  if (href === "/finance") {
-    return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections") || path.startsWith("/payment-accounts");
-  }
+  if (href === "/finance") return path === "/finance";
   if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/") || path.startsWith("/qr-attendance");
   return path === href || path.startsWith(`${href}/`);
 }
@@ -326,7 +328,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {open ? (
         <>
           <button type="button" className="fixed inset-0 z-50 bg-slate-900/40 lg:hidden" onClick={() => setOpen(false)} aria-label={t.common.close} />
-          <div className="fixed inset-0 z-[51] flex h-full w-full flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
+          <div className="fixed inset-y-0 left-0 z-[51] flex h-full w-[80%] flex-col bg-[#1c1c2a] text-[#f8fafc] lg:hidden">
             <div className="flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-2">
                 <BrandMark className="h-8 w-8" />
@@ -487,7 +489,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-24 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
-          <div className="shrink-0">
+          <div key={path} className="crm-tab-panel shrink-0">
             <AppBreadcrumb />
             {children}
           </div>
@@ -504,7 +506,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="grid grid-cols-5 gap-0.5">
           {mobile.map((item) => {
             const Icon = item.icon;
-            const on = active(item.href, path);
+            const on = item.href === "/finance" ? financeSection(path) : active(item.href, path);
             const label = item.key === "attendShort" ? t.nav.attendShort : t.nav[item.key];
             const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : item.href === "/finance" ? navBadges["/collect-fees"] ?? 0 : 0;
             return (
