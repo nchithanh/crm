@@ -837,12 +837,12 @@ export async function moveStudentClass(studentId: string, classId: string) {
   return "";
 }
 
-export async function addStudentNote(studentId: string, text: string) {
+export async function addStudentNote(studentId: string, text: string, author = "") {
   const student = await db.students.get(studentId);
   const note = text.trim();
   if (!student || !note) return;
   await db.students.update(studentId, {
-    notes: [...student.notes, { day: localDayKey(), text: note }],
+    notes: [...student.notes, { day: localDayKey(), text: note, author: author.trim() }],
   });
 }
 

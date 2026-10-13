@@ -314,11 +314,35 @@ export default function DashboardPage() {
     const busyTeachers = new Set(todaySessions.map((s) => s.teacherId).filter(Boolean));
     const teacherBusy = [...teacherIds].filter((id) => busyTeachers.has(id)).length;
     const teacherFree = Math.max(0, teacherIds.size - teacherBusy);
+    const overloaded = [...teacherIds]
+      .map((id) => ({
+        id,
+        name: users.find((u) => u.id === id)?.name ?? "",
+        count: todaySessions.filter((s) => s.teacherId === id).length,
+      }))
+      .filter((row) => row.count >= 3)
+      .sort((a, b) => b.count - a.count);
 
     const usedRooms = new Set(todaySessions.map((s) => s.roomId).filter(Boolean));
     const branchRooms = rooms.filter((r) => inBranch(r.branchId));
     const freeRooms = branchRooms.filter((r) => !usedRooms.has(r.id)).length;
 
+    const branchOf = new Map(students.map((s) => [s.id, s.branchId]));
+    const branchRows = branches.map((b) => {
+      const revenueB = payments.filter((p) => p.branchId === b.id && p.day.startsWith(month)).reduce((s, p) => s + p.amount, 0);
+      const debtB = receivables.filter((r) => r.branchId === b.id).reduce((s, r) => s + debtRemaining(r), 0);
+      const marks = attendance.filter((a) => a.subject === "student" && !a.waived && a.day.startsWith(month) && branchOf.get(a.personId) === b.id);
+      const present = marks.filter((a) => a.status === "present").length;
+      const sessionsB = sessions.filter((s) => s.branchId === b.id && s.day === today && s.status !== "cancelled").length;
+      return {
+        id: b.id,
+        name: b.name,
+        revenue: revenueB,
+        debt: debtB,
+        rate: marks.length === 0 ? 0 : Math.round((present / marks.length) * 100),
+        sessions: sessionsB,
+      };
+    });
     const q = branchId === "all" ? "" : `?branch=${branchId}`;
     const urgent = [
       pendingHolds.length ? { id: "hold", label: t.dash.urgentHold, count: pendingHolds.length, href: "/holds" } : null,
@@ -354,9 +378,12 @@ export default function DashboardPage() {
       attendSpark,
       ending7: ending7.length,
       lowAttend: lowAttendSessions.length,
+      lowAttendSessions,
+      overloaded,
       teacherBusy,
       teacherFree,
       freeRooms,
+      branchRows,
       groups: [
         urgent.length ? { title: t.dash.urgent, tone: "danger" as const, items: urgent } : null,
         watch.length ? { title: t.dash.watch, tone: "warn" as const, items: watch } : null,
@@ -613,6 +640,41 @@ export default function DashboardPage() {
       </section>
 
       <div className="order-4 grid grid-cols-2 gap-3 lg:order-7">
+        {model.branchRows.length > 1 ? (
+          <section className="col-span-2 overflow-x-auto rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5" aria-labelledby="home-branches-heading">
+            <h2 id="home-branches-heading" className="crm-section-title">{t.dash.branches}</h2>
+            <table className="mt-3 w-full min-w-[32rem] text-sm">
+              <thead className="text-left text-xs text-slate-500">
+                <tr>
+                  <th className="py-2 font-semibold">{t.common.branch}</th>
+                  <th className="py-2 font-semibold">{t.dash.branchSessions}</th>
+                  <th className="py-2 font-semibold">{t.dash.branchRate}</th>
+                  {showMoney ? <th className="py-2 font-semibold">{t.dash.branchRevenue}</th> : null}
+                  {showMoney ? <th className="py-2 font-semibold">{t.dash.branchDebt}</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {model.branchRows.map((row) => (
+                  <tr key={row.id} className={branchId === row.id ? "bg-[var(--brand-50)]" : undefined}>
+                    <td className="py-2 font-semibold">{row.name}</td>
+                    <td className="py-2 tabular-nums">{row.sessions}</td>
+                    <td className="py-2 tabular-nums">{row.rate}%</td>
+                    {showMoney ? (
+                      <td className="py-2 tabular-nums">
+                        <Link href={`/revenue?branch=${row.id}`} className="font-semibold text-[var(--brand-600)]">{formatVnd(row.revenue)}</Link>
+                      </td>
+                    ) : null}
+                    {showMoney ? (
+                      <td className="py-2 tabular-nums">
+                        <Link href={`/receivables?branch=${row.id}`} className="font-semibold text-[var(--brand-600)]">{formatVnd(row.debt)}</Link>
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        ) : null}
         <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5">
           <h2 className="crm-section-title">{t.dash.workToday}</h2>
           {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
@@ -837,6 +899,49 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          )}
+        </section>
+      </div>
+
+      <div className="order-6 grid gap-3 lg:grid-cols-2">
+        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="text-base font-semibold">{t.dash.opsLowAttend}</h2>
+          {model.lowAttendSessions.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">{t.dash.opsNone}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {model.lowAttendSessions.slice(0, 8).map((s) => {
+                const marks = (attendance ?? []).filter((a) => a.classId === s.id && a.subject === "student");
+                const present = marks.filter((a) => a.status === "present").length;
+                const rate = marks.length === 0 ? 0 : Math.round((present / marks.length) * 100);
+                const course = courses?.find((c) => c.id === s.courseId);
+                return (
+                  <li key={s.id}>
+                    <Link href={`/attendance?class=${s.id}`} className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 text-sm hover:bg-slate-50">
+                      <span className="min-w-0 truncate">{s.day.slice(5)} · {s.start} · {course?.name ?? s.name}</span>
+                      <span className="shrink-0 font-semibold tabular-nums text-rose-600">{rate}%</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="text-base font-semibold">{t.dash.overloadTitle}</h2>
+          {model.overloaded.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">{t.dash.noOverload}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {model.overloaded.map((row) => (
+                <li key={row.id}>
+                  <Link href={`/teachers?teacher=${row.id}`} className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 text-sm hover:bg-slate-50">
+                    <span className="min-w-0 truncate font-semibold">{row.name}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-amber-700">{fill(t.dash.overloadLine, { n: row.count })}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       </div>

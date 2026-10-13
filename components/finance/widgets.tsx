@@ -287,7 +287,7 @@ export function AgingCard({
                 <div
                   className={cn(
                     "h-full rounded-full",
-                    l.key === "60+" || l.key === "31-60" ? "bg-rose-400" : l.key === "8-30" ? "bg-amber-400" : "bg-emerald-400",
+                    l.key === "90+" || l.key === "61-90" ? "bg-rose-400" : l.key === "31-60" ? "bg-amber-400" : "bg-emerald-400",
                   )}
                   style={{ width: `${Math.round((amount / max) * 100)}%` }}
                 />

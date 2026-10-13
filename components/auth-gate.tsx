@@ -5,8 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell";
 import { BootSplash } from "@/components/boot-splash";
 import { I18nProvider } from "@/lib/i18n";
-import { reopenDb } from "@/lib/db";
-import { ensureSeed } from "@/lib/seed";
+import { bootStudio, resetBoot } from "@/lib/seed";
 import { applyVerticalTheme, getStoredVertical, type VerticalId } from "@/lib/vertical";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -24,10 +23,17 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const setHydrated = useAuthStore((s) => s.setHydrated);
   const [vertical, setVertical] = useState<VerticalId | null | undefined>(undefined);
   const [ready, setReady] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (useAuthStore.persist.hasHydrated()) setHydrated(true);
-    return useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    const stop = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    const timer = window.setTimeout(() => setHydrated(true), 3000);
+    return () => {
+      stop();
+      window.clearTimeout(timer);
+    };
   }, [setHydrated]);
 
   useEffect(() => {
@@ -39,7 +45,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
     if (!vertical) {
-      setReady(false);
       if (path !== "/choose-vertical") router.replace("/choose-vertical");
       return;
     }
@@ -53,25 +58,52 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [hydrated, user, path, router, vertical]);
 
   useEffect(() => {
+    if (!hydrated || vertical === undefined) return;
     if (!vertical) {
       setReady(true);
+      setSlow(false);
       return;
     }
     let cancelled = false;
-    setReady(false);
-    reopenDb(vertical);
-    void ensureSeed(vertical).then(() => {
+    if (!user) setReady(true);
+    else setReady(false);
+    setSlow(false);
+    const slowTimer = window.setTimeout(() => {
+      if (!cancelled) setSlow(true);
+    }, 3000);
+    const cap = window.setTimeout(() => {
       if (!cancelled) setReady(true);
-    });
+    }, 5000);
+    void bootStudio(vertical)
+      .then(() => {
+        if (!cancelled) setReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setReady(true);
+      });
     return () => {
       cancelled = true;
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(cap);
     };
-  }, [vertical]);
+  }, [hydrated, vertical, user, attempt]);
 
   if (!hydrated || vertical === undefined || !ready) {
     return (
       <I18nProvider>
-        <BootSplash />
+        <BootSplash
+          slow={slow}
+          onRetry={() => {
+            resetBoot();
+            setSlow(false);
+            setReady(false);
+            setAttempt((n) => n + 1);
+          }}
+          onLogin={() => {
+            setReady(true);
+            router.replace(vertical ? "/login" : "/choose-vertical");
+          }}
+        />
       </I18nProvider>
     );
   }

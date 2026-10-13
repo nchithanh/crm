@@ -5,7 +5,7 @@ import type { Course, Installment, Payment, Student } from "@/types";
 
 export type DebtUiStatus = "paid" | "ok" | "due_soon" | "overdue";
 
-export type AgeBucket = "0-7" | "8-30" | "31-60" | "60+";
+export type AgeBucket = "0-30" | "31-60" | "61-90" | "90+";
 
 export function debtUiStatus(row: Installment, today = localDayKey()): DebtUiStatus {
   if (debtRemaining(row) <= 0) return "paid";
@@ -17,19 +17,19 @@ export function debtUiStatus(row: Installment, today = localDayKey()): DebtUiSta
 }
 
 export function debtAgeBucket(row: Installment, today = localDayKey()): AgeBucket {
-  if (row.dueDay >= today) return "0-7";
+  if (row.dueDay >= today) return "0-30";
   const due = new Date(`${row.dueDay}T12:00:00`).getTime();
   const now = new Date(`${today}T12:00:00`).getTime();
   const days = Math.floor((now - due) / 86400000);
-  if (days <= 7) return "0-7";
-  if (days <= 30) return "8-30";
+  if (days <= 30) return "0-30";
   if (days <= 60) return "31-60";
-  return "60+";
+  if (days <= 90) return "61-90";
+  return "90+";
 }
 
 export function agingSums(rows: Installment[], today = localDayKey()) {
   const open = rows.filter((r) => debtRemaining(r) > 0);
-  const buckets: Record<AgeBucket, number> = { "0-7": 0, "8-30": 0, "31-60": 0, "60+": 0 };
+  const buckets: Record<AgeBucket, number> = { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 };
   for (const r of open) {
     buckets[debtAgeBucket(r, today)] += debtRemaining(r);
   }

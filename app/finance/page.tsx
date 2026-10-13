@@ -129,10 +129,10 @@ export default function FinanceOverviewPage() {
           total={view.aging.total}
           buckets={view.aging.buckets}
           labels={[
-            { key: "0-7", label: t.finance.age07 },
-            { key: "8-30", label: t.finance.age830 },
+            { key: "0-30", label: t.finance.age030 },
             { key: "31-60", label: t.finance.age3160 },
-            { key: "60+", label: t.finance.age60 },
+            { key: "61-90", label: t.finance.age6190 },
+            { key: "90+", label: t.finance.age90 },
           ]}
         />
       </section>
@@ -155,7 +155,7 @@ export default function FinanceOverviewPage() {
                     </span>
                   </span>
                   <span className="font-bold tabular-nums">{formatVnd(debtRemaining(row))}</span>
-                  <Link href={`/collect-fees?student=${row.studentId}`} className="text-sm font-semibold text-[var(--brand-600)]">
+                  <Link href={`/students?student=${row.studentId}&tab=money`} className="text-sm font-semibold text-[var(--brand-600)]">
                     {st === "overdue" ? t.finance.remind : t.finance.pay}
                   </Link>
                 </li>

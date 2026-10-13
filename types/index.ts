@@ -80,6 +80,7 @@ export type Lead = {
 export type StudentNote = {
   day: string;
   text: string;
+  author?: string;
 };
 
 export type Student = {

@@ -3,7 +3,15 @@
 import { BrandMark } from "@/components/brand-mark";
 import { useI18n } from "@/lib/i18n";
 
-export function BootSplash() {
+export function BootSplash({
+  slow = false,
+  onRetry,
+  onLogin,
+}: {
+  slow?: boolean;
+  onRetry?: () => void;
+  onLogin?: () => void;
+}) {
   const { t } = useI18n();
   return (
     <div
@@ -19,11 +27,22 @@ export function BootSplash() {
           <span className="crm-boot__ring absolute -inset-2 rounded-full bg-[var(--brand-500)]/15" aria-hidden />
         </span>
         <p className="text-base font-semibold tracking-tight text-[var(--foreground)]">{t.shell.product}</p>
-        <p className="text-sm text-slate-500">{t.shell.booting}</p>
+        <p className="text-sm text-slate-500">{slow ? t.shell.bootSlow : t.shell.booting}</p>
       </div>
-      <div className="h-1 w-36 overflow-hidden rounded-full bg-slate-200">
-        <div className="crm-boot__bar h-full w-1/2 rounded-full bg-[var(--brand-500)]" />
-      </div>
+      {slow ? (
+        <div className="flex gap-2">
+          <button type="button" className="h-10 rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" onClick={onRetry}>
+            {t.shell.bootRetry}
+          </button>
+          <button type="button" className="h-10 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold" onClick={onLogin}>
+            {t.shell.bootLogin}
+          </button>
+        </div>
+      ) : (
+        <div className="h-1 w-36 overflow-hidden rounded-full bg-slate-200">
+          <div className="crm-boot__bar h-full w-1/2 rounded-full bg-[var(--brand-500)]" />
+        </div>
+      )}
     </div>
   );
 }

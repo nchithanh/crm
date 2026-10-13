@@ -14,7 +14,6 @@ import {
   Landmark,
   LayoutDashboard,
   LogOut,
-  Ellipsis,
   Menu,
   Package,
   QrCode,
@@ -38,7 +37,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { SupportIcon } from "@/components/support-icon";
 import { canAccessPath, canCollect, canSeeMoney, canSeeNavHref } from "@/lib/access";
 import { db } from "@/lib/db";
-import { ctaPrimary } from "@/components/ui";
+import { ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
@@ -166,7 +165,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       menuTimer.current = null;
     }, 200);
   }
-  const [headerMore, setHeaderMore] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
@@ -458,41 +456,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Bell size={18} />
             </button>
             <div className="hidden items-center gap-2 lg:flex">
-              {ctas("")}
-              {canEnroll || seeReport ? (
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] text-slate-600 hover:bg-slate-50"
-                    aria-label={t.nav.more}
-                    aria-expanded={headerMore}
-                    onClick={() => setHeaderMore((v) => !v)}
-                  >
-                    <Ellipsis size={18} />
-                  </button>
-                  {headerMore ? (
-                    <div className="absolute right-0 z-40 mt-1 w-44 rounded-[5px] border border-[var(--border)] bg-white p-1">
-                      {canEnroll ? (
-                        <Link
-                          href={`/mid-course-enroll${branchQuery}`}
-                          className="block rounded-[5px] px-3 py-2 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)]"
-                          onClick={() => setHeaderMore(false)}
-                        >
-                          {t.header.enroll}
-                        </Link>
-                      ) : null}
-                      {seeReport ? (
-                        <Link
-                          href={`/revenue${branchQuery}`}
-                          className="block rounded-[5px] px-3 py-2 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--brand-50)]"
-                          onClick={() => setHeaderMore(false)}
-                        >
-                          {t.header.report}
-                        </Link>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
+              {ctas("h-10 min-h-10 px-4")}
+              {canEnroll ? (
+                <Link href={`/mid-course-enroll${branchQuery}`} className={cn(ctaOutline, "h-10 min-h-10 px-4")}>
+                  {t.header.enroll}
+                </Link>
+              ) : null}
+              {seeReport ? (
+                <Link href={`/revenue${branchQuery}`} className={cn(ctaOutline, "h-10 min-h-10 px-4")}>
+                  {t.header.report}
+                </Link>
               ) : null}
             </div>
             {user ? (

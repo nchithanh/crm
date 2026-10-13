@@ -58,6 +58,10 @@ export default function TeachersPage() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [openId, setOpenId] = useState<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("teacher");
+    if (id) setOpenId(id);
+  }, []);
   const [formMode, setFormMode] = useState<"create" | "edit" | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 

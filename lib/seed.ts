@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db, reopenDb } from "@/lib/db";
 import { loadSeed } from "@/lib/seed-data";
 import { classStatus, sessionDates } from "@/lib/schedule";
 import { dayFromOffset, localDayKey } from "@/lib/utils";
@@ -80,6 +80,27 @@ const paymentRoutes: PaymentRoute[] = [
   { id: "pr-mid", accountId: "pa-acb", minAmount: 1_500_001, maxAmount: 5_000_000, priority: 2 },
   { id: "pr-long", accountId: "pa-vcb", minAmount: 5_000_001, maxAmount: null, priority: 3 },
 ];
+
+let bootPromise: Promise<void> | null = null;
+let bootVertical: VerticalId | null = null;
+
+/** Mở DB và seed. Lần gọi sau cùng lĩnh vực dùng lại promise đang chạy. */
+export function bootStudio(id: VerticalId) {
+  if (bootPromise && bootVertical === id) return bootPromise;
+  bootVertical = id;
+  reopenDb(id);
+  const run = ensureSeed(id).catch((error) => {
+    bootPromise = null;
+    throw error;
+  });
+  bootPromise = run;
+  return run;
+}
+
+export function resetBoot() {
+  bootPromise = null;
+  bootVertical = null;
+}
 
 export async function ensureSeed(id: VerticalId) {
   const current = await db.meta.get(SEED_KEY);

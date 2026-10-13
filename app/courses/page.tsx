@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { CourseCreateDrawer } from "@/components/course-create-drawer";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, inputClass } from "@/components/ui";
 import { canManageCatalog } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
-import { cn, initials } from "@/lib/utils";
+import { fill } from "@/lib/copy";
+import { initials } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
@@ -25,6 +26,9 @@ export default function CoursesPage() {
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const { branchId } = useStudioBranch();
   const [creating, setCreating] = useState(false);
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
 
   const rows = useMemo(() => {
     return courses
@@ -38,12 +42,21 @@ export default function CoursesPage() {
       }));
   }, [courses, classes, students, teachers, users, branchId]);
 
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
+    return rows.filter(({ course, main }) => `${course.name} ${main?.name ?? ""} ${course.level}`.toLowerCase().includes(s));
+  }, [rows, q]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = filtered.slice(pageSafe * pageSize, pageSafe * pageSize + pageSize);
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="crm-page-title">{t.pages.courses}</h1>
-          <p className="crm-lead mt-1">{rows.length} · {t.nav.courses}</p>
+          <p className="crm-lead mt-1">{filtered.length} · {t.nav.courses}</p>
         </div>
         {canEdit ? <Button type="button" onClick={() => setCreating(true)}>{t.catalog.createCourse}</Button> : null}
       </div>
@@ -58,6 +71,8 @@ export default function CoursesPage() {
         />
       ) : null}
 
+      <input className={`${inputClass} mt-4 max-w-md`} placeholder={t.common.search} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
+
       <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
         <li className="hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem]">
           <span>{t.common.course}</span>
@@ -69,7 +84,7 @@ export default function CoursesPage() {
           <span>{t.common.level}</span>
           <span>{t.common.status}</span>
         </li>
-        {rows.map(({ course, classCount, studentCount, main }) => {
+        {paged.map(({ course, classCount, studentCount, main }) => {
           const room = rooms.find((r) => r.id === course.roomId);
           const branch = branches.find((b) => b.id === course.branchId)?.name ?? "—";
           const cap = course.capacity ?? 12;
@@ -102,6 +117,19 @@ export default function CoursesPage() {
           );
         })}
       </ul>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <p className="text-xs text-slate-500">{fill(t.students.range, { from: filtered.length === 0 ? 0 : pageSafe * pageSize + 1, to: Math.min(filtered.length, pageSafe * pageSize + paged.length), total: filtered.length })}</p>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-xs text-slate-500">
+            {t.students.pageSize}
+            <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
+              {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
+          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Layers, ListFilter, Search, UserRound } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
 import { canManageTasks } from "@/lib/access";
@@ -15,6 +16,7 @@ import { useStudioBranch } from "@/stores/branch-store";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type Mode = "list" | "board";
+type GroupBy = "status" | "assignee" | "parent";
 
 function addDays(base: string, delta: number) {
   const d = new Date(`${base}T12:00:00`);
@@ -51,13 +53,29 @@ export default function TasksPage() {
   const priorities = taskPriorities(lang);
 
   const [mode, setMode] = useState<Mode>("board");
-  const [assigneeFilter, setAssigneeFilter] = useState("all");
+  const [q, setQ] = useState("");
+  const [assignees, setAssignees] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">("all");
   const [parentFilter, setParentFilter] = useState("all");
   const [overdueOnly, setOverdueOnly] = useState(false);
+  const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [groupOpen, setGroupOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(event: MouseEvent) {
+      if (!barRef.current?.contains(event.target as Node)) {
+        setFilterOpen(false);
+        setGroupOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
   const parentMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -66,10 +84,11 @@ export default function TasksPage() {
   }, [parents]);
 
   const visible = useMemo(() => {
+    const needle = q.trim().toLowerCase();
     return tasks
       .filter((task) => {
-        if (assigneeFilter === "mine" && me?.id && task.assigneeId !== me.id) return false;
-        if (assigneeFilter !== "all" && assigneeFilter !== "mine" && task.assigneeId !== assigneeFilter) return false;
+        if (assignees.length > 0 && !assignees.includes(task.assigneeId)) return false;
+        if (needle && !task.title.toLowerCase().includes(needle)) return false;
         if (statusFilter !== "all" && task.status !== statusFilter) return false;
         if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
         if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
@@ -82,13 +101,12 @@ export default function TasksPage() {
         if (a.dueDay !== b.dueDay) return a.dueDay.localeCompare(b.dueDay);
         return a.title.localeCompare(b.title);
       });
-  }, [tasks, me?.id, assigneeFilter, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
+  }, [tasks, q, assignees, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
 
   const parentProgress = useMemo(() => {
     const source = tasks.filter((task) => {
       if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
-      if (assigneeFilter === "mine" && me?.id && task.assigneeId !== me.id) return false;
-      if (assigneeFilter !== "all" && assigneeFilter !== "mine" && task.assigneeId !== assigneeFilter) return false;
+      if (assignees.length > 0 && !assignees.includes(task.assigneeId)) return false;
       return Boolean(task.parentId);
     });
     return parents
@@ -101,7 +119,32 @@ export default function TasksPage() {
         return { id: parent.id, name: parent.name, total: rows.length, done, earliest };
       })
       .filter((group) => (parentFilter === "all" ? group.total > 0 : group.id === parentFilter));
-  }, [tasks, parents, studioBranch, assigneeFilter, me?.id, parentFilter]);
+  }, [tasks, parents, studioBranch, assignees, parentFilter]);
+
+  const filterCount = (statusFilter !== "all" ? 1 : 0) + (priorityFilter !== "all" ? 1 : 0) + (parentFilter !== "all" ? 1 : 0) + (overdueOnly ? 1 : 0);
+
+  const columns = useMemo(() => {
+    if (groupBy === "status") return statuses.map((col) => ({ id: col.id, label: col.label }));
+    if (groupBy === "assignee") {
+      const ids = new Set(visible.map((task) => task.assigneeId || ""));
+      for (const id of assignees) ids.add(id);
+      const people = staff.filter((person) => ids.has(person.id)).map((person) => ({ id: person.id, label: person.name }));
+      return ids.has("") ? [...people, { id: "", label: t.task.unassigned }] : people;
+    }
+    const ids = new Set(visible.map((task) => task.parentId || ""));
+    const groups = parents.filter((parent) => ids.has(parent.id)).map((parent) => ({ id: parent.id, label: parent.name }));
+    return ids.has("") ? [...groups, { id: "", label: t.task.noParent }] : groups;
+  }, [groupBy, statuses, visible, assignees, staff, parents, t.task.unassigned, t.task.noParent]);
+
+  function columnMatch(task: StudioTask, columnId: string) {
+    if (groupBy === "assignee") return (task.assigneeId || "") === columnId;
+    if (groupBy === "parent") return (task.parentId || "") === columnId;
+    return task.status === columnId;
+  }
+
+  function toggleAssignee(id: string) {
+    setAssignees((cur) => (cur.includes(id) ? cur.filter((item) => item !== id) : [...cur, id]));
+  }
 
   const open = tasks.find((task) => task.id === openId) ?? null;
 
@@ -150,49 +193,143 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex items-end gap-2 overflow-x-auto pb-1">
-        <select className={`${inputClass} max-w-[11rem] shrink-0`} aria-label={t.task.parent} value={parentFilter} onChange={(e) => setParentFilter(e.target.value)}>
-          <option value="all">{t.task.allParents}</option>
-          <option value="none">{t.task.noParent}</option>
-          {parents.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-        <label className="block min-w-[14rem] max-w-[18rem] shrink-0">
-          <span className="mb-1 block text-xs font-semibold text-slate-500">{t.task.assignee}</span>
-          <select className={`${inputClass} w-full`} aria-label={t.task.assignee} value={assigneeFilter} onChange={(e) => setAssigneeFilter(e.target.value)}>
-            <option value="all">{t.task.allStaff}</option>
-            <option value="mine">{t.task.mine}</option>
-            {staff.map((u) => (
-              <option key={u.id} value={u.id}>{u.name} · {t.role[u.role]}</option>
-            ))}
-          </select>
+      <div ref={barRef} className="mt-4 flex flex-wrap items-center gap-2">
+        <label className="flex h-10 min-w-[12rem] flex-1 items-center gap-2 rounded-[5px] border border-[var(--border)] bg-white px-3 sm:max-w-xs sm:flex-none">
+          <Search size={16} className="shrink-0 text-slate-400" aria-hidden />
+          <input
+            className="h-9 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
+            placeholder={t.task.search}
+            aria-label={t.task.search}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
         </label>
-        <select className={`${inputClass} max-w-[9rem] shrink-0`} aria-label={t.task.status} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "all")}>
-          <option value="all">{t.task.status}</option>
-          {statuses.map((s) => (
-            <option key={s.id} value={s.id}>{s.label}</option>
-          ))}
-        </select>
-        <select className={`${inputClass} max-w-[9rem] shrink-0`} aria-label={t.task.priority} value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "all")}>
-          <option value="all">{t.task.priority}</option>
-          {priorities.map((p) => (
-            <option key={p.id} value={p.id}>{p.label}</option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={() => setOverdueOnly((v) => !v)}
-          className={cn(
-            "h-10 shrink-0 rounded-[5px] border px-3 text-sm font-semibold",
-            overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-600",
-          )}
-        >
-          {t.task.overdueOnly}
-        </button>
+        <div className="flex min-w-0 items-center" role="group" aria-label={t.task.assignee}>
+          <button
+            type="button"
+            title={t.task.allStaff}
+            aria-pressed={assignees.length === 0}
+            onClick={() => setAssignees([])}
+            className={cn(
+              "relative z-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white bg-slate-200 text-slate-500",
+              assignees.length === 0 && "z-10 ring-2 ring-[var(--brand-500)]",
+            )}
+          >
+            <UserRound size={16} />
+          </button>
+          {staff.map((person, index) => {
+            const on = assignees.includes(person.id);
+            return (
+              <button
+                key={person.id}
+                type="button"
+                title={person.name}
+                aria-pressed={on}
+                onClick={() => toggleAssignee(person.id)}
+                className={cn(
+                  "relative -ml-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white text-[10px] font-bold text-white",
+                  on && "z-10 ring-2 ring-[var(--brand-500)]",
+                )}
+                style={{ background: person.avatarColor, zIndex: on ? 10 : index }}
+              >
+                {initials(person.name)}
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative">
+          <button
+            type="button"
+            aria-expanded={filterOpen}
+            onClick={() => { setFilterOpen((v) => !v); setGroupOpen(false); }}
+            className={cn(
+              "inline-flex h-10 items-center gap-2 rounded-[5px] border bg-white px-3 text-sm font-semibold",
+              filterOpen || filterCount > 0 ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
+            )}
+          >
+            <ListFilter size={16} />
+            {t.task.filter}
+            {filterCount > 0 ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[11px] font-bold text-white tabular-nums">{filterCount}</span>
+            ) : null}
+          </button>
+          {filterOpen ? (
+            <div className="absolute left-0 z-30 mt-1 w-64 rounded-[5px] border border-[var(--border)] bg-white p-3">
+              <label className="block text-xs font-semibold text-slate-500">
+                {t.task.status}
+                <select className={`${inputClass} mt-1`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "all")}>
+                  <option value="all">{t.task.status}</option>
+                  {statuses.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </label>
+              <label className="mt-2 block text-xs font-semibold text-slate-500">
+                {t.task.priority}
+                <select className={`${inputClass} mt-1`} value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "all")}>
+                  <option value="all">{t.task.priority}</option>
+                  {priorities.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
+              </label>
+              <label className="mt-2 block text-xs font-semibold text-slate-500">
+                {t.task.parent}
+                <select className={`${inputClass} mt-1`} value={parentFilter} onChange={(e) => setParentFilter(e.target.value)}>
+                  <option value="all">{t.task.allParents}</option>
+                  <option value="none">{t.task.noParent}</option>
+                  {parents.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => setOverdueOnly((v) => !v)}
+                className={cn(
+                  "mt-3 h-10 w-full rounded-[5px] border text-sm font-semibold",
+                  overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-600",
+                )}
+              >
+                {t.task.overdueOnly}
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <div className="relative">
+          <button
+            type="button"
+            aria-expanded={groupOpen}
+            onClick={() => { setGroupOpen((v) => !v); setFilterOpen(false); }}
+            className={cn(
+              "inline-flex h-10 items-center gap-2 rounded-[5px] border bg-white px-3 text-sm font-semibold",
+              groupOpen ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
+            )}
+          >
+            <Layers size={16} />
+            {t.task.group}
+          </button>
+          {groupOpen ? (
+            <div className="absolute left-0 z-30 mt-1 w-52 rounded-[5px] border border-[var(--border)] bg-white p-1" role="menu">
+              {([
+                ["status", t.task.groupStatus],
+                ["assignee", t.task.groupAssignee],
+                ["parent", t.task.groupParent],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={groupBy === id}
+                  onClick={() => { setGroupBy(id); setGroupOpen(false); }}
+                  className={cn(
+                    "block w-full rounded-[5px] px-3 py-2 text-left text-sm font-semibold",
+                    groupBy === id ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "text-slate-700 hover:bg-slate-50",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      {parentFilter !== "none" && parentProgress.length > 0 ? (
+      {(groupBy === "parent" || (parentFilter !== "all" && parentFilter !== "none")) && parentProgress.length > 0 ? (
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {parentProgress.map((group) => {
             const pct = group.total === 0 ? 0 : Math.round((group.done / group.total) * 100);
@@ -233,12 +370,23 @@ export default function TasksPage() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((task) => {
+              {columns.map((col) => {
+                const rows = visible.filter((task) => columnMatch(task, col.id));
+                if (rows.length === 0) return null;
+                return (
+                <Fragment key={col.id}>
+                {rows.map((task, index) => {
                 const overdue = task.status !== "done" && task.dueDay < today;
                 const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                 const group = parentName(task.parentId);
                 return (
-                  <tr key={task.id} className="border-t border-slate-100 hover:bg-slate-50">
+                  <Fragment key={task.id}>
+                  {index === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">{col.label}</td>
+                    </tr>
+                  ) : null}
+                  <tr className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-3 py-3">
                       <select
                         className="h-9 rounded-[5px] border border-[var(--border)] bg-white px-2 text-sm"
@@ -281,6 +429,10 @@ export default function TasksPage() {
                     </td>
                     <td className="px-3 py-3 text-slate-500">{branchName(task.branchId)}</td>
                   </tr>
+                  </Fragment>
+                );
+              })}
+                </Fragment>
                 );
               })}
             </tbody>
@@ -288,17 +440,18 @@ export default function TasksPage() {
         </Card>
       ) : (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-          {statuses.map((col) => {
-            const rows = visible.filter((task) => task.status === col.id);
+          {columns.map((col) => {
+            const rows = visible.filter((task) => columnMatch(task, col.id));
             return (
               <section
                 key={col.id}
                 className="w-[272px] shrink-0 rounded-[5px] border border-[var(--border)] bg-slate-50 p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
+                  if (groupBy !== "status") return;
                   e.preventDefault();
                   const id = e.dataTransfer.getData("text/task");
-                  if (id) void onDrop(col.id, id);
+                  if (id) void onDrop(col.id as TaskStatus, id);
                 }}
               >
                 <div className="flex items-center justify-between px-2 py-2">
@@ -310,7 +463,7 @@ export default function TasksPage() {
                     const overdue = task.status !== "done" && task.dueDay < today;
                     const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                     const assignee = users.find((u) => u.id === task.assigneeId);
-                    const movable = canEdit || task.assigneeId === me?.id;
+                    const movable = groupBy === "status" && (canEdit || task.assigneeId === me?.id);
                     const group = parentName(task.parentId);
                     return (
                       <li key={task.id}>

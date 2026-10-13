@@ -24,7 +24,7 @@ type KpiFilter = "all" | "new" | "active" | "follow" | "unpaid";
 type RemainFilter = "all" | "le3" | "le5" | "zero";
 type SortKey = "name" | "remain" | "debt" | "attend";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZES = [20, 50, 100] as const;
 
 function addDays(base: string, delta: number) {
   const d = new Date(`${base}T12:00:00`);
@@ -115,8 +115,9 @@ export default function StudentsPage() {
   const touchX = useRef(0);
   const touchMoved = useRef(false);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZES)[number]>(20);
   const [bulkMsg, setBulkMsg] = useState("");
-  const { student } = usePageQuery();
+  const { student, tab: tabQuery } = usePageQuery();
   const today = localDayKey();
 
   useEffect(() => {
@@ -219,17 +220,17 @@ export default function StudentsPage() {
 
   useEffect(() => {
     setPage(0);
-  }, [q, status, courseFilter, branchId, branchPick, level, debt, remain, kpi, teacherId, attendBand, flaggedOnly, holdOnly]);
+  }, [q, status, courseFilter, branchId, branchPick, level, debt, remain, kpi, teacherId, attendBand, flaggedOnly, holdOnly, pageSize]);
 
   useEffect(() => {
     if (openId && rows.length && !rows.some((r) => r.id === openId)) setOpenId(null);
   }, [rows, openId]);
 
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const pageSafe = Math.min(page, pageCount - 1);
-  const paged = rows.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
-  const fromN = rows.length === 0 ? 0 : pageSafe * PAGE_SIZE + 1;
-  const toN = Math.min(rows.length, pageSafe * PAGE_SIZE + paged.length);
+  const paged = rows.slice(pageSafe * pageSize, pageSafe * pageSize + pageSize);
+  const fromN = rows.length === 0 ? 0 : pageSafe * pageSize + 1;
+  const toN = Math.min(rows.length, pageSafe * pageSize + paged.length);
   const picked = rows.filter((st) => selected.includes(st.id));
   const teachers = users.filter((u) => u.role === "teacher");
 
@@ -592,6 +593,12 @@ export default function StudentsPage() {
               </div>
               <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
                 <p className="text-xs text-slate-500">{fill(t.students.range, { from: fromN, to: toN, total: rows.length })}</p>
+                <label className="flex items-center gap-1 text-xs text-slate-500">
+                  {t.students.pageSize}
+                  <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value) as (typeof PAGE_SIZES)[number])}>
+                    {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </label>
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</Button>
                   <Button type="button" variant="outline" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</Button>
@@ -603,7 +610,12 @@ export default function StudentsPage() {
       </div>
 
       {openId ? (
-        <StudentDrawer key={openId} studentId={openId} onClose={closePanel} />
+        <StudentDrawer
+          key={openId}
+          studentId={openId}
+          onClose={closePanel}
+          initialTab={tabQuery === "money" || tabQuery === "payments" ? "money" : tabQuery === "courses" || tabQuery === "attendance" || tabQuery === "hold" || tabQuery === "notes" ? tabQuery : "overview"}
+        />
       ) : null}
       {canEnroll ? (
         <Link

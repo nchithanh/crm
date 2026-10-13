@@ -196,6 +196,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
             <section className="space-y-2 rounded-[5px] border border-rose-100 bg-rose-50/50 p-3">
               <h3 className="text-xs font-semibold tracking-wide text-rose-700 uppercase">{t.status.cancelled}</h3>
               <input className={inputClass} placeholder={t.schedule.cancelReason} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+              <p className="text-xs text-rose-700">{t.schedule.cancelKeep}</p>
               <Button type="button" variant="outline" disabled={busy} className="border-rose-300 text-rose-700" onClick={() => void doCancel()}>
                 {t.schedule.cancel}
               </Button>

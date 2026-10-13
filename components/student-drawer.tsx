@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { CalendarDays, Check, Clock, MessageCircle, MoreHorizontal, Phone, Wallet, X } from "lucide-react";
+import { CalendarDays, Check, Clock, MoreHorizontal, Wallet, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
 import { canApproveHold, canSeeContact, canSeeMoney } from "@/lib/access";
 import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag, updateStudentProfile } from "@/lib/actions";
@@ -24,11 +24,13 @@ export function StudentDrawer({
   studentId,
   onClose,
   variant = "drawer",
+  initialTab = "overview",
 }: {
   studentId: string;
   onClose: () => void;
   /** drawer = mobile overlay; panel = Edu-style right column */
   variant?: "drawer" | "panel";
+  initialTab?: TabId;
 }) {
   const { lang, t } = useI18n();
   const user = useAuthStore((s) => s.user);
@@ -96,10 +98,10 @@ export function StudentDrawer({
   }, [variant]);
 
   useEffect(() => {
-    setTab("overview");
+    setTab(initialTab === "money" && !seeMoney ? "overview" : initialTab);
     setEditingProfile(false);
     setProfileError("");
-  }, [studentId]);
+  }, [studentId, initialTab, seeMoney]);
 
   const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
   const show = (id: TabId) => tab === id;
@@ -178,7 +180,7 @@ export function StudentDrawer({
     : 0;
 
   async function saveNote() {
-    await addStudentNote(studentId, note);
+    await addStudentNote(studentId, note, user?.name ?? "");
     setNote("");
   }
 
@@ -271,7 +273,7 @@ export function StudentDrawer({
         className={
           variant === "panel"
             ? "flex h-full max-h-[calc(100dvh-7rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]"
-            : cn("crm-drawer-panel relative flex h-full w-full max-w-xl flex-col overflow-x-hidden bg-[var(--background)]", leaving && "is-leaving")
+            : cn("crm-drawer-panel relative flex h-full w-full flex-col overflow-x-hidden bg-[var(--background)] sm:w-[420px] sm:max-w-[420px]", leaving && "is-leaving")
         }
       >
         <header className="shrink-0 bg-white px-5 pt-5 pb-3">
@@ -285,38 +287,36 @@ export function StudentDrawer({
               {initials(student.name)}
             </span>
             <h2 className="mt-3 text-2xl font-bold text-[var(--foreground)]">{student.name}</h2>
+            <p className="mt-1 text-xs font-semibold tracking-wide text-slate-400">{student.id}</p>
+            {seeContact && phone ? (
+              <button type="button" className="mt-1 text-sm font-semibold text-[var(--brand-600)]" onClick={() => void copyPhone()}>
+                {copied ? t.students.copied : phone}
+              </button>
+            ) : null}
             <p className="mt-1 text-sm text-[var(--muted)]">{course?.name ?? t.drawer.noCourse} · {levelLabel(student.level)}</p>
             <div className="mt-3 flex flex-wrap justify-center gap-1.5">
               {badges.map((b) => <Badge key={b.label + b.tone} tone={b.tone}>{b.label}</Badge>)}
               {student.flagged ? <Badge tone="warn">{t.students.flagged}</Badge> : null}
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-4 gap-2">
-            {seeContact ? (
-              <a href={phone ? `tel:${phone}` : undefined} className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-white"><Phone size={18} /></span>
-                {t.task.call}
-              </a>
-            ) : <span />}
-            {seeContact ? (
-              <a href={zaloHref(phone) || "#"} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-white"><MessageCircle size={18} /></span>
-                {t.task.zalo}
-              </a>
-            ) : <span />}
+          <div className="mt-4 flex items-center gap-2">
             {seeMoney ? (
-              <Link href={`/collect-fees?student=${student.id}`} className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-white"><Wallet size={18} /></span>
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[5px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
                 {t.drawer.collect}
               </Link>
-            ) : <span />}
-            <div className="relative flex flex-col items-center">
-              <button type="button" className="flex flex-col items-center gap-1 text-[11px] font-semibold text-[var(--brand-600)]" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-white"><MoreHorizontal size={18} /></span>
-                {t.drawer.moreActions}
+            ) : null}
+            <Link href="/mid-course-enroll" className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold text-[var(--foreground)]">
+              {t.drawer.enrollMore}
+            </Link>
+            <div className="relative">
+              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--border)] bg-white" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+                <MoreHorizontal size={18} />
               </button>
               {menu ? (
-                <div className="absolute top-16 right-0 z-20 w-52 rounded-[5px] border border-[var(--border)] bg-[var(--card)] py-1 text-left text-sm">
+                <div className="absolute top-12 right-0 z-20 w-52 rounded-[5px] border border-[var(--border)] bg-[var(--card)] py-1 text-left text-sm">
+                  {seeContact && phone ? (
+                    <a className="block px-3 py-2 hover:bg-[var(--brand-50)]" href={zaloHref(phone) || "#"} target="_blank" rel="noreferrer">{t.task.zalo}</a>
+                  ) : null}
                   {seeContact && kid && student.parentPhone ? (
                     <a className="block px-3 py-2 hover:bg-[var(--brand-50)]" href={zaloHref(student.parentPhone) || "#"} target="_blank" rel="noreferrer">{t.drawer.messageParent}</a>
                   ) : null}
@@ -502,7 +502,7 @@ export function StudentDrawer({
                 {student.notes.map((n, i) => (
                   <li key={i} className="rounded-[5px] border border-[var(--border)] px-3 py-2">
                     <p>{n.text}</p>
-                    <p className="mt-1 text-xs text-slate-400">{relativeDayLabel(n.day, lang)} · {n.day}</p>
+                    <p className="mt-1 text-xs text-slate-400">{n.author || "—"} · {relativeDayLabel(n.day, lang)}</p>
                   </li>
                 ))}
               </ul>

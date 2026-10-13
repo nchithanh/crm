@@ -2,6 +2,14 @@
 
 ## 2026-10-13
 
+- Tác vụ: thanh lọc gồm ô tìm, avatar người nhận, nút Lọc (có số điều kiện) và nút Nhóm. List và board theo trạng thái, người nhận hoặc nhóm việc.
+- Header desktop hiện Điểm danh, Đăng ký và Báo cáo. Tổng quan thêm danh sách buổi chuyên cần thấp và giáo viên dạy từ 3 buổi hôm nay.
+- Buổi học hiện giáo viên phụ. Khóa và buổi học phân trang 20/50/100. Ghi chú học viên lưu tên người viết.
+- Cổng vào không kẹt “Đang mở studio…”. Chưa đăng nhập thì vào chọn lĩnh vực hoặc đăng nhập ngay. Quá 3 giây có Thử lại và Về đăng nhập. Quá 5 giây vẫn vào app.
+- Tổng quan: bảng so sánh cơ sở (buổi hôm nay, chuyên cần, doanh thu, còn nợ).
+- Học viên: drawer rộng 420px. Header có mã, số bấm để copy, Thu phí, Ghi danh lại và menu. Công nợ mở đúng tab Thanh toán.
+- Công nợ: tuổi nợ 0–30, 31–60, 61–90, trên 90 ngày.
+- Danh sách học viên chọn 20 / 50 / 100 mỗi trang. Hủy buổi không trừ buổi.
 - Tổng quan mobile: biểu đồ doanh thu luôn hiện, mặc định 7 ngày, có vùng tô dưới đường. Phễu tuyển sinh vẫn bấm Hiện để mở.
 - Thanh dưới mobile: bỏ Thêm. Ô thứ năm là Support, mở Zalo founder. Menu đầy đủ vẫn ở hamburger.
 - Menu hamburger trên mobile trượt từ mép trái ra khi mở và trượt vào khi đóng.

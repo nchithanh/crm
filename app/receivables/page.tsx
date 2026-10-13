@@ -96,10 +96,10 @@ export default function FinanceDebtsPage() {
             total={aging.total}
             buckets={aging.buckets}
             labels={[
-              { key: "0-7", label: t.finance.age07 },
-              { key: "8-30", label: t.finance.age830 },
+              { key: "0-30", label: t.finance.age030 },
               { key: "31-60", label: t.finance.age3160 },
-              { key: "60+", label: t.finance.age60 },
+              { key: "61-90", label: t.finance.age6190 },
+              { key: "90+", label: t.finance.age90 },
             ]}
           />
         </div>
@@ -136,7 +136,9 @@ export default function FinanceDebtsPage() {
                     const student = students.find((s) => s.id === r.studentId);
                     return (
                       <tr key={r.id} className="border-t border-slate-100">
-                        <td className="px-3 py-3 font-medium">{student?.name}</td>
+                        <td className="px-3 py-3 font-medium">
+                          <Link href={`/students?student=${r.studentId}&tab=money`} className="hover:underline">{student?.name}</Link>
+                        </td>
                         <td className="px-3 py-3">{r.title}</td>
                         <td className="px-3 py-3 tabular-nums">{r.dueDay}</td>
                         <td className="px-3 py-3 font-semibold tabular-nums">{formatVnd(debtRemaining(r))}</td>

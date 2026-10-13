@@ -20,6 +20,7 @@ export default function ClassesPage() {
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const classStudents = useLiveQuery(() => db.classStudents.toArray(), []) ?? [];
+  const courseTeachers = useLiveQuery(() => db.courseTeachers.toArray(), []) ?? [];
   const { branchId } = useStudioBranch();
   const [q, setQ] = useState("");
   const [courseId, setCourseId] = useState("all");
@@ -29,6 +30,8 @@ export default function ClassesPage() {
   const [fromDay, setFromDay] = useState("");
   const [toDay, setToDay] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const today = localDayKey();
 
   const teachers = useMemo(() => users.filter((u) => u.role === "teacher"), [users]);
@@ -52,6 +55,10 @@ export default function ClassesPage() {
       })
       .sort((a, b) => a.day.localeCompare(b.day) || a.start.localeCompare(b.start));
   }, [classes, courses, users, rooms, q, courseId, teacherId, roomId, status, fromDay, toDay, branchId]);
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+  const pageSafe = Math.min(page, pageCount - 1);
+  const paged = rows.slice(pageSafe * pageSize, pageSafe * pageSize + pageSize);
 
   return (
     <div>
@@ -105,9 +112,13 @@ export default function ClassesPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((c) => {
+            {paged.map((c) => {
               const course = courses.find((k) => k.id === c.courseId);
               const teacher = users.find((u) => u.id === c.teacherId);
+              const assistants = courseTeachers
+                .filter((row) => row.courseId === c.courseId && row.role === "assistant" && row.teacherId !== c.teacherId)
+                .map((row) => users.find((u) => u.id === row.teacherId)?.name)
+                .filter((name): name is string => Boolean(name));
               const room = rooms.find((r) => r.id === c.roomId);
               const seated = classStudents.filter((cs) => cs.classId === c.id).length;
               return (
@@ -129,6 +140,7 @@ export default function ClassesPage() {
                     {teacher ? (
                       <Link href={`/teachers/${teacher.id}`} className="text-[var(--brand-600)] hover:underline">{teacher.name}</Link>
                     ) : "—"}
+                    {assistants.length > 0 ? <p className="text-xs text-slate-500">{assistants.join(", ")}</p> : null}
                   </td>
                   <td className="px-3 py-3 text-slate-600">{room ? <Link href="/rooms" className="hover:underline" onClick={(e) => e.stopPropagation()}>{room.name}</Link> : "—"}</td>
                   <td className="px-3 py-3">
@@ -150,6 +162,19 @@ export default function ClassesPage() {
             })}
           </tbody>
         </table>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <p className="text-xs text-slate-500">{fill(t.students.range, { from: rows.length === 0 ? 0 : pageSafe * pageSize + 1, to: Math.min(rows.length, pageSafe * pageSize + paged.length), total: rows.length })}</p>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-xs text-slate-500">
+            {t.students.pageSize}
+            <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
+              {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </label>
+          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
+          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
+        </div>
       </div>
     </div>
   );
