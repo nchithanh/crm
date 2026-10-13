@@ -2,6 +2,7 @@
 
 ## 2026-10-14
 
+- Tổng quan desktop: popup Nhắc Zalo phủ cả màn, không còn kẹt trong thẻ học phí. Link QR xuống dòng.
 - Đăng nhập: popup hướng dẫn tải app mở sẵn. Đóng được; vào lại trang thì mở lại.
 - Tổng quan mobile: lời chào và ô tìm đứng đầu, biểu đồ doanh thu nằm ngay dưới.
 - Tổng quan mobile: biểu đồ doanh thu đứng đầu và mở sẵn. Phễu vẫn thu gọn.

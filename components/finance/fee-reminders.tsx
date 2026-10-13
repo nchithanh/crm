@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui";
@@ -101,9 +102,10 @@ export function FeeRemindButton() {
       >
         {t.dash.remindZalo} · {count}
       </button>
-      {open ? (
+      {open && typeof document !== "undefined"
+        ? createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center" onClick={(event) => event.stopPropagation()}>
-          <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-[5px] bg-white p-5 text-left" role="dialog" aria-labelledby="fee-remind-title">
+          <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-[5px] bg-white p-5 text-left" role="dialog" aria-modal="true" aria-labelledby="fee-remind-title">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 id="fee-remind-title" className="text-lg font-bold text-[var(--foreground)]">{t.dash.remindTitle}</h2>
@@ -118,7 +120,7 @@ export function FeeRemindButton() {
                 <section key={group.id} className="rounded-[5px] border border-[var(--border)] p-3">
                   <p className="font-semibold text-[var(--foreground)]">{group.title}</p>
                   <p className="mt-1 text-sm tabular-nums text-slate-500">{fill(t.dash.remindCount, { n: group.people.length })}</p>
-                  <pre className="mt-2 whitespace-pre-wrap rounded-[5px] bg-[var(--search)] p-3 text-xs text-[var(--foreground)]">{group.preview}</pre>
+                  <pre className="mt-2 overflow-x-hidden rounded-[5px] bg-[var(--search)] p-3 text-xs break-all whitespace-pre-wrap text-[var(--foreground)]">{group.preview}</pre>
                   <ul className="mt-3 divide-y divide-[var(--border)]">
                     {group.people.map((person) => (
                       <li key={person.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
@@ -144,7 +146,8 @@ export function FeeRemindButton() {
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
