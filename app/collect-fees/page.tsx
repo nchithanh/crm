@@ -217,10 +217,10 @@ export default function FinanceCollectPage() {
           <Link href="/receivables" className={ctaGhost}>{t.nav.debts}</Link>
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <input className={inputClassInline} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label={t.pages.fromDay} />
-        <input className={inputClassInline} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.pages.toDay} />
-        <select className={inputClassInline} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
+      <div className="mt-3 grid grid-cols-1 gap-2 lg:flex lg:flex-wrap">
+        <input className={`${inputClassInline} w-full lg:w-auto`} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label={t.pages.fromDay} />
+        <input className={`${inputClassInline} w-full lg:w-auto`} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.pages.toDay} />
+        <select className={`${inputClassInline} w-full lg:w-auto`} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
           <option value="all">{t.money.method}</option>
           <option value="cash">{t.common.cash}</option>
           <option value="transfer">{t.common.transfer}</option>

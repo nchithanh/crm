@@ -153,9 +153,29 @@ textarea {
 input[type="time"],
 input[type="date"],
 input[type="datetime-local"] {
-  min-width: 0;
+  min-width: 11.5rem;
   max-width: 100%;
   box-sizing: border-box;
+  color-scheme: light;
+}
+input[type="time"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 0;
+  color: var(--foreground);
+}
+@media (max-width: 1023px) {
+  input[type="time"],
+  input[type="date"],
+  input[type="datetime-local"] {
+    width: 100%;
+  }
 }
 
 a { text-decoration: none; }
