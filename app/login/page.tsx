@@ -30,7 +30,7 @@ export default function LoginPage() {
   const loginWithPin = useAuthStore((s) => s.loginWithPin);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(true);
   const { lang, t } = useI18n();
   const [vertical, setVertical] = useState<VerticalId>("nhay");
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 ## 2026-10-14
 
+- Đăng nhập: popup hướng dẫn tải app mở sẵn. Đóng được; vào lại trang thì mở lại.
 - Tổng quan mobile: lời chào và ô tìm đứng đầu, biểu đồ doanh thu nằm ngay dưới.
 - Tổng quan mobile: biểu đồ doanh thu đứng đầu và mở sẵn. Phễu vẫn thu gọn.
 - Học viên mobile: nút tròn cam ghi danh, phía trên thanh dưới. Chỉ quản lý và lễ tân. Desktop giữ nút header.
