@@ -113,30 +113,36 @@ export default function CourseDetailPage() {
       <div key={tab} className={cn("crm-tab-panel mt-4", tab === "overview" && "space-y-8")}>
         {tab === "overview" ? (
           <div className="space-y-3">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-6 gap-2 md:grid-cols-2 md:gap-3 xl:grid-cols-3">
               {(
                 [
-                  { label: t.nav.classes, n: String(sortedClasses.length), go: "classes" as Tab },
-                  { label: t.catalog.capacityCurrent, n: String(students.length), go: "students" as Tab },
-                  { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), go: null },
-                  { label: t.nav.teachers, n: String(teachers.length), go: "teachers" as Tab },
-                  { label: "Subscriptions", n: String(subscriptions.length), go: "subscriptions" as Tab },
+                  { label: t.nav.classes, n: String(sortedClasses.length), go: "classes" as Tab, wide: false },
+                  { label: t.catalog.capacityCurrent, n: String(students.length), go: "students" as Tab, wide: false },
+                  { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), go: null, wide: false },
+                  { label: t.nav.teachers, n: String(teachers.length), go: "teachers" as Tab, wide: true },
+                  { label: "Subscriptions", n: String(subscriptions.length), go: "subscriptions" as Tab, wide: true },
                 ] as const
               ).map((card) => {
-                const className =
-                  "rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4 text-left";
+                const className = cn(
+                  "rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 text-left md:col-span-1 md:p-4",
+                  card.wide ? "col-span-3" : "col-span-2",
+                );
+                const body = (
+                  <>
+                    <p className="text-xs leading-snug text-[var(--muted)] md:text-sm">{card.label}</p>
+                    <p className="mt-1 text-xl font-extrabold tabular-nums leading-none text-slate-900 md:text-[2rem]">{card.n}</p>
+                  </>
+                );
                 if (card.go) {
                   return (
                     <button key={card.label} type="button" onClick={() => setTab(card.go)} className={`${className} hover:border-[var(--brand-300)]`}>
-                      <p className="crm-lead">{card.label}</p>
-                      <p className="crm-kpi mt-1 text-slate-900">{card.n}</p>
+                      {body}
                     </button>
                   );
                 }
                 return (
                   <div key={card.label} className={className}>
-                    <p className="crm-lead">{card.label}</p>
-                    <p className="crm-kpi mt-1 text-slate-900">{card.n}</p>
+                    {body}
                   </div>
                 );
               })}

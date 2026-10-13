@@ -166,6 +166,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }, 200);
   }
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const [navHidden, setNavHidden] = useState(false);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
@@ -187,6 +189,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     "/collect-fees": owing,
   };
   const { lang, t, setLang } = useI18n();
+
+  useEffect(() => {
+    setNavHidden(false);
+    const el = mainRef.current;
+    if (!el) return;
+    let last = el.scrollTop;
+    function onScroll() {
+      if (!el) return;
+      const y = el.scrollTop;
+      const delta = y - last;
+      last = y;
+      if (y < 12) {
+        setNavHidden(false);
+        return;
+      }
+      if (delta > 8) setNavHidden(true);
+      else if (delta < -8) setNavHidden(false);
+    }
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [path]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -492,7 +515,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-24 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
+        <main ref={mainRef} className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-28 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
           <div key={path} className="crm-tab-panel shrink-0">
             <AppBreadcrumb />
             {children}
@@ -506,7 +529,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </footer>
         </main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] lg:hidden">
+      <nav className={cn("crm-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden", navHidden && "translate-y-full")}>
         <div className="grid grid-cols-5 gap-0.5">
           {mobile.map((item) => {
             const Icon = item.icon;
@@ -518,12 +541,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] leading-tight",
+                  "flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-[5px] px-1 text-[11px] leading-tight",
                   on ? "bg-[var(--brand-50)] font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
                 )}
               >
                 <span className="relative">
-                  <Icon size={20} strokeWidth={on ? 2.25 : 1.75} />
+                  <Icon size={22} strokeWidth={on ? 2.25 : 1.75} />
                   {badge > 0 ? (
                     <span className="absolute -top-1.5 -right-2.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[9px] font-bold leading-4 text-white tabular-nums">
                       {badge > 99 ? "99" : badge}
@@ -538,9 +561,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             href={ZALO_FOUNDER}
             target="_blank"
             rel="noreferrer"
-            className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-medium leading-tight text-[var(--muted)]"
+            className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-[5px] px-1 text-[11px] font-medium leading-tight text-[var(--muted)]"
           >
-            <SupportIcon className="h-5 w-5" />
+            <SupportIcon className="h-[22px] w-[22px]" />
             {t.nav.support}
           </a>
         </div>

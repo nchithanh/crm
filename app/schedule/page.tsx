@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Badge, Button, ctaOutline, inputClass, inputClassInline } from "@/components/ui";
+import { ClassDrawer } from "@/components/class-drawer";
+import { Button, inputClass, inputClassInline } from "@/components/ui";
 import { canEditSchedule } from "@/lib/access";
-import { addOneOffSession, cancelSession, moveSession, syncSessionClock, updateSession } from "@/lib/actions";
+import { addOneOffSession, moveSession, syncSessionClock } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { sessionStatusLabel } from "@/lib/labels";
 import { levelLabel } from "@/lib/rules";
@@ -68,7 +68,6 @@ export default function SchedulePage() {
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
   const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
-  const audits = useLiveQuery(() => Promise.resolve([] as { id: string; sessionId?: string; day: string; text: string }[]), []) ?? [];
   const [mode, setMode] = useState<"week" | "month">("week");
   const [group, setGroup] = useState<Group>("day");
   const [weekOffset, setWeekOffset] = useState(0);
@@ -82,7 +81,6 @@ export default function SchedulePage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState("");
-  const [reason, setReason] = useState("");
   const [draft, setDraft] = useState({ courseId: "", day: localDayKey(), start: "18:00", end: "19:30", teacherId: "", roomId: "" });
   const dragged = useRef(false);
   const today = localDayKey();
@@ -111,8 +109,6 @@ export default function SchedulePage() {
     if (status !== "all" && s.status !== status) return false;
     return true;
   });
-  const open = sessions.find((s) => s.id === openId) ?? null;
-
   const columns: Column[] = useMemo(() => {
     if (group === "room") {
       return rooms
@@ -371,7 +367,7 @@ export default function SchedulePage() {
                             onDragStart={(e) => { dragged.current = true; e.dataTransfer.setData("text/session", s.id); e.dataTransfer.effectAllowed = "move"; }}
                             onDragOver={(e) => { if (movable) e.preventDefault(); }}
                             onDragEnd={() => { window.setTimeout(() => { dragged.current = false; }, 0); }}
-                            onClick={() => { if (dragged.current) return; setOpenId(s.id); setReason(""); setNotice(""); }}
+                            onClick={() => { if (dragged.current) return; setOpenId(s.id); setNotice(""); }}
                             className={cn("mb-1 block w-full rounded-[8px] px-1 py-0.5 text-left leading-snug", tone(s.status), clash && "ring-2 ring-rose-400")}
                           >
                             <span className="block font-semibold tabular-nums">{s.start}–{s.end}</span>
@@ -400,7 +396,7 @@ export default function SchedulePage() {
                 </button>
               ) : null}
               {day ? filtered.filter((s) => s.day === day).map((s) => (
-                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[5px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => { setOpenId(s.id); setReason(""); }}>
+                <button key={s.id} type="button" className={`mt-1 w-full truncate rounded-[5px] border px-1 text-left text-[11px] ${tone(s.status)}`} onClick={() => setOpenId(s.id)}>
                   {s.start} {courses.find((c) => c.id === s.courseId)?.name}
                 </button>
               )) : null}
@@ -450,54 +446,7 @@ export default function SchedulePage() {
         </div>
       ) : null}
 
-      {open ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-          <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setOpenId(null)} />
-          <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
-            <p className="text-xs text-slate-400">{t.schedule.session} {open.index} · {open.day}</p>
-            <h2 className="crm-page-title">{courses.find((c) => c.id === open.courseId)?.name}</h2>
-            <p className="text-sm text-slate-500">{levelLabel(courses.find((c) => c.id === open.courseId)?.level ?? "")} · {open.start}–{open.end}</p>
-            <div className="mt-2 flex flex-wrap gap-1">
-              <Badge tone={open.status === "cancelled" ? "danger" : open.status === "completed" ? "neutral" : open.status === "ongoing" ? "warn" : "info"}>{sessionStatusLabel(open.status, lang)}</Badge>
-              {conflictLabel(sessions, open) ? <Badge tone="danger">{conflictLabel(sessions, open)}</Badge> : null}
-            </div>
-            {open.note ? <p className="mt-2 text-sm text-rose-600">{open.note}</p> : null}
-            <h3 className="mt-4 text-sm font-semibold">{t.schedule.roster} {seated(open.id)}/{classes.find((c) => c.id === open.id)?.capacity ?? open.capacity}</h3>
-            <ul className="mt-1 space-y-1 text-sm">
-              {students.filter((st) => st.classId === open.classId).map((st) => <li key={st.id}>{st.name}</li>)}
-              {students.filter((st) => st.classId === open.classId).length === 0 ? <li className="text-slate-400">{t.schedule.emptyClass}</li> : null}
-            </ul>
-            <Link href={`/diem-danh?branch=${open.branchId}&class=${open.classId}`} className={`${ctaOutline} mt-4`}>{t.schedule.attend}</Link>
-            {canEdit && open.status !== "cancelled" && open.status !== "completed" ? (
-              <div className="mt-4 space-y-3">
-                <label className="block text-sm">
-                  <span className="text-slate-500">{t.schedule.changeTeacher}</span>
-                  <select className={`${inputClass} mt-1`} value={open.teacherId} onChange={(e) => user && void updateSession({ sessionId: open.id, actorId: user.id, teacherId: e.target.value }).then(setNotice)}>
-                    {teachers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-                  </select>
-                </label>
-                <label className="block text-sm">
-                  <span className="text-slate-500">{t.schedule.changeRoom}</span>
-                  <select className={`${inputClass} mt-1`} value={open.roomId} onChange={(e) => user && void updateSession({ sessionId: open.id, actorId: user.id, roomId: e.target.value }).then(setNotice)}>
-                    {rooms.filter((r) => r.branchId === open.branchId).map((r) => <option key={r.id} value={r.id}>{roomWithBranch(r.name, branches.find((b) => b.id === r.branchId)?.name)}</option>)}
-                  </select>
-                </label>
-                {user?.role === "owner" ? (
-                  <div>
-                    <input className={inputClass} placeholder={t.schedule.cancelReason} value={reason} onChange={(e) => setReason(e.target.value)} />
-                    <Button className="mt-2" variant="outline" onClick={() => void cancelSession(open.id, user.id, reason || t.schedule.cancel).then(() => setOpenId(null))}>{t.schedule.cancel}</Button>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-            <h3 className="mt-5 text-sm font-semibold">{t.schedule.log}</h3>
-            <ul className="mt-2 space-y-1 text-sm text-slate-600">
-              {audits.filter((a) => a.sessionId === open.id).map((a) => <li key={a.id}>{a.day} · {a.text}</li>)}
-              {audits.filter((a) => a.sessionId === open.id).length === 0 ? <li className="text-slate-400">{t.schedule.noChanges}</li> : null}
-            </ul>
-          </aside>
-        </div>
-      ) : null}
+      {openId ? <ClassDrawer classId={openId} onClose={() => setOpenId(null)} /> : null}
     </div>
   );
 }

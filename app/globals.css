@@ -170,9 +170,13 @@ input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
   color: var(--foreground);
 }
-.crm-date-pair input[type="date"] {
+.crm-date-pair {
   min-width: 0;
-  width: 100%;
+}
+.crm-date-pair input[type="date"] {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100%;
 }
 input.crm-date-empty::-webkit-datetime-edit,
 input.crm-date-empty::-webkit-datetime-edit-fields-wrapper {
@@ -274,11 +278,15 @@ a { text-decoration: none; }
   overflow-anchor: none;
   animation: crm-tab-in 180ms ease-out;
 }
+.crm-bottom-nav {
+  transition: transform 200ms ease-out;
+}
 @media (prefers-reduced-motion: reduce) {
   .crm-menu-panel,
   .crm-drawer-panel,
   .crm-drawer-backdrop,
   .crm-tab-panel { animation: none; }
+  .crm-bottom-nav { transition: none; }
 }
 
 button.bg-emerald-500,

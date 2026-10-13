@@ -2,6 +2,7 @@
 
 ## 2026-10-13
 
+- Thu học phí mobile: hai ô ngày xếp dọc, không tràn thẻ. Lịch mở drawer buổi học đầy đủ. Thanh dưới cao hơn, ẩn khi cuộn xuống và hiện khi cuộn lên. Tổng quan khóa trên mobile: một hàng 3 thông số, một hàng 2 thông số.
 - Thu học phí: ô tìm học viên đứng trước. Lọc ngày và hình thức nằm trong Lịch sử thu. Ô ngày trống hiện `mm/dd/yyyy`.
 - Tác vụ: thanh lọc gồm ô tìm, avatar người nhận, nút Lọc (có số điều kiện) và nút Nhóm. List và board theo trạng thái, người nhận hoặc nhóm việc.
 - Header desktop hiện Điểm danh, Đăng ký và Báo cáo. Tổng quan thêm danh sách buổi chuyên cần thấp và giáo viên dạy từ 3 buổi hôm nay.

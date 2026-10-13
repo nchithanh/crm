@@ -359,7 +359,7 @@ export default function FinanceCollectPage() {
         </Card>
         <Card className="p-4">
           <h2 className="crm-section-title">{t.money.history}</h2>
-          <div className="crm-date-pair mt-3 grid grid-cols-2 gap-2">
+          <div className="crm-date-pair mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label className="block min-w-0">
               <span className="mb-1 block text-xs text-slate-500">{t.pages.fromDay}</span>
               <span className="relative block">
@@ -374,7 +374,7 @@ export default function FinanceCollectPage() {
                 {!toDay ? <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">{t.money.datePh}</span> : null}
               </span>
             </label>
-            <select className={cn(inputClass, "col-span-2")} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
+            <select className={cn(inputClass, "sm:col-span-2")} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
               <option value="all">{t.money.method}</option>
               <option value="cash">{t.common.cash}</option>
               <option value="transfer">{t.common.transfer}</option>
