@@ -277,7 +277,7 @@ export function StudentDrawer({
         }
       >
         <header className="shrink-0 bg-white px-5 pt-5 pb-3">
-          <div className="flex items-start justify-end">
+          <div className="hidden items-start justify-end min-[641px]:flex">
             <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--brand-50)]" aria-label={t.drawer.close} onClick={requestClose}>
               <X size={18} />
             </button>
@@ -286,7 +286,12 @@ export function StudentDrawer({
             <span className="inline-flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white" style={{ background: student.avatarColor }}>
               {initials(student.name)}
             </span>
-            <h2 className="mt-3 text-2xl font-bold text-[var(--foreground)]">{student.name}</h2>
+            <div className="relative mt-3 w-full">
+              <h2 className="px-12 text-2xl font-bold text-[var(--foreground)] min-[641px]:px-0">{student.name}</h2>
+              <button type="button" className="absolute top-1/2 right-0 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-white min-[641px]:hidden" aria-label={t.drawer.close} onClick={requestClose}>
+                <X size={20} />
+              </button>
+            </div>
             <p className="mt-1 text-xs font-semibold tracking-wide text-slate-400">{student.id}</p>
             {seeContact && phone ? (
               <button type="button" className="mt-1 text-sm font-semibold text-[var(--brand-600)]" onClick={() => void copyPhone()}>

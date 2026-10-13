@@ -279,7 +279,11 @@ a { text-decoration: none; }
   animation: crm-tab-in 180ms ease-out;
 }
 .crm-bottom-nav {
-  transition: transform 200ms ease-out;
+  translate: 0 0;
+  transition: translate 200ms ease-out;
+}
+.crm-bottom-nav.is-hidden {
+  translate: 0 100%;
 }
 @media (prefers-reduced-motion: reduce) {
   .crm-menu-panel,

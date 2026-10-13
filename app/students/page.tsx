@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Plus, Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
+import { Search, UserPlus, UserRound, Users, Wallet } from "lucide-react";
 import { StudentDrawer } from "@/components/student-drawer";
 import { Badge, Button, ctaPrimary, inputClass } from "@/components/ui";
 import { canSeeContact, canSeeMoney } from "@/lib/access";
@@ -350,7 +350,7 @@ export default function StudentsPage() {
           : "lg:grid-cols-[1.75rem_minmax(8rem,12rem)_minmax(8rem,14rem)_minmax(7rem,11rem)_minmax(5.5rem,1fr)_minmax(4.5rem,0.8fr)_minmax(5rem,0.9fr)]";
 
   return (
-    <div className="flex min-h-0 flex-col gap-4 pb-24">
+    <div className="flex min-h-0 flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="crm-page-title">{t.students.title}</h1>
@@ -616,15 +616,6 @@ export default function StudentsPage() {
           onClose={closePanel}
           initialTab={tabQuery === "money" || tabQuery === "payments" ? "money" : tabQuery === "courses" || tabQuery === "attendance" || tabQuery === "hold" || tabQuery === "notes" ? tabQuery : "overview"}
         />
-      ) : null}
-      {canEnroll ? (
-        <Link
-          href="/mid-course-enroll"
-          aria-label={t.students.emptyCta}
-          className="fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-500)] text-white lg:hidden"
-        >
-          <Plus size={24} />
-        </Link>
       ) : null}
     </div>
   );

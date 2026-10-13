@@ -1,7 +1,18 @@
 # Changelog
 
+## 2026-10-14
+
+- Tổng quan mobile: lời chào và ô tìm đứng đầu, biểu đồ doanh thu nằm ngay dưới.
+- Tổng quan mobile: biểu đồ doanh thu đứng đầu và mở sẵn. Phễu vẫn thu gọn.
+- Học viên mobile: nút tròn cam ghi danh, phía trên thanh dưới. Chỉ quản lý và lễ tân. Desktop giữ nút header.
+
 ## 2026-10-13
 
+- Tổng quan mobile: phòng trống, biểu đồ, phễu, top khóa và hoạt động gần đây thu gọn. Bấm tiêu đề để mở. Desktop vẫn mở.
+- Tổng quan: biểu đồ doanh thu là số cố định T1–T12, không còn nút 7 ngày / 30 ngày.
+- Tổng quan mobile: biểu đồ doanh thu lên đầu trang. Desktop giữ thứ tự cũ.
+- Tổng quan mobile: so sánh cơ sở là thẻ dọc, không kéo ngang. Desktop giữ bảng.
+- Học viên mobile: nút X cùng hàng với tên, góc phải panel. Bấm X đóng và về danh sách.
 - Thu học phí mobile: hai ô ngày xếp dọc, không tràn thẻ. Lịch mở drawer buổi học đầy đủ. Thanh dưới cao hơn, ẩn khi cuộn xuống và hiện khi cuộn lên. Tổng quan khóa trên mobile: một hàng 3 thông số, một hàng 2 thông số.
 - Thu học phí: ô tìm học viên đứng trước. Lọc ngày và hình thức nằm trong Lịch sử thu. Ô ngày trống hiện `mm/dd/yyyy`.
 - Tác vụ: thanh lọc gồm ô tìm, avatar người nhận, nút Lọc (có số điều kiện) và nút Nhóm. List và board theo trạng thái, người nhận hoặc nhóm việc.

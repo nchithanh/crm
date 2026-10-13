@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Plus,
   QrCode,
   Receipt,
   Search,
@@ -515,7 +516,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main ref={mainRef} className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-28 sm:px-5 lg:pb-6", path === "/overview" && "bg-white")}>
+        <main ref={mainRef} className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-28 sm:px-5 lg:pb-6", path === "/overview" && "bg-white", canEnroll && "max-lg:!pb-[calc(4.625rem+max(0.5rem,env(safe-area-inset-bottom))+76px)]")}>
           <div key={path} className="crm-tab-panel shrink-0">
             <AppBreadcrumb />
             {children}
@@ -529,7 +530,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </footer>
         </main>
       </div>
-      <nav className={cn("crm-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden", navHidden && "translate-y-full")}>
+      <nav className={cn("crm-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden", navHidden && "is-hidden")}>
+        {canEnroll ? (
+          <Link
+            href={`/mid-course-enroll${branchQuery}`}
+            aria-label={t.students.emptyCta}
+            className="absolute right-[16px] bottom-[calc(100%+16px)] inline-flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#F97316] text-white"
+          >
+            <Plus size={22} strokeWidth={2.25} aria-hidden />
+          </Link>
+        ) : null}
         <div className="grid grid-cols-5 gap-0.5">
           {mobile.map((item) => {
             const Icon = item.icon;

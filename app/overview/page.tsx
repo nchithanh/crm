@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   AlertTriangle,
   CalendarDays,
   Check,
   Clock,
+  ChevronDown,
   LineChart,
   Search,
   Sparkles,
@@ -30,7 +31,7 @@ import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
 import { debtRemaining } from "@/lib/metrics";
 import { levelLabel } from "@/lib/rules";
-import { formatVnd, initials, localDayKey } from "@/lib/utils";
+import { cn, formatVnd, initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
@@ -38,7 +39,12 @@ import { useStudioBranch } from "@/stores/branch-store";
 import type { LucideIcon } from "lucide-react";
 
 type Period = "today" | "d7" | "d30" | "month";
-type ChartSpan = 7 | 30;
+
+/** Doanh thu demo T1–T12, triệu đồng. Không đọc phiếu thu. */
+const YEAR_REVENUE = [18, 16, 21, 19, 24, 22, 26, 23, 28, 25, 30, 27].map((million, i) => ({
+  label: `T${i + 1}`,
+  amount: million * 1_000_000,
+}));
 
 function addDays(base: string, delta: number) {
   const d = new Date(`${base}T12:00:00`);
@@ -104,8 +110,64 @@ function ChartTip({
     <div className="rounded-[5px] border border-slate-200 bg-[var(--card)] px-3 py-2 text-xs">
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-bold tabular-nums">{formatVnd(row?.amount ?? 0)}</p>
-      <p className="tabular-nums text-slate-500">{row?.count ?? 0} {receipts}</p>
+      {typeof row?.count === "number" ? (
+        <p className="tabular-nums text-slate-500">{row.count} {receipts}</p>
+      ) : null}
     </div>
+  );
+}
+
+function useWideLayout() {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 641px)");
+    const apply = () => setWide(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  return wide;
+}
+
+/** Trên ≤640px chỉ hiện tiêu đề; từ 641px nội dung luôn mở. */
+function MobileFold({
+  title,
+  headingId,
+  panelId,
+  titleClassName = "text-base font-semibold",
+  defaultOpen = false,
+  children,
+}: {
+  title: ReactNode;
+  headingId?: string;
+  panelId: string;
+  titleClassName?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const wide = useWideLayout();
+  return (
+    <>
+      <h2 id={headingId} className={cn("w-full", titleClassName)}>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 text-left font-[inherit] text-[inherit] max-[640px]:min-h-11 min-[641px]:pointer-events-none"
+          aria-expanded={wide || open}
+          aria-controls={panelId}
+          tabIndex={wide ? -1 : 0}
+          onClick={() => {
+            if (!wide) setOpen((v) => !v);
+          }}
+        >
+          <span className="min-w-0">{title}</span>
+          <ChevronDown size={18} aria-hidden className={cn("shrink-0 text-slate-500 transition-transform duration-200 motion-reduce:transition-none min-[641px]:hidden", open && "rotate-180")} />
+        </button>
+      </h2>
+      <div id={panelId} className={open ? undefined : "max-[640px]:hidden"}>
+        {children}
+      </div>
+    </>
   );
 }
 
@@ -138,14 +200,8 @@ export default function DashboardPage() {
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
-  const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
-  const [funnelOpen, setFunnelOpen] = useState(false);
   const [homeQ, setHomeQ] = useState("");
   const router = useRouter();
-
-  useEffect(() => {
-    if (window.matchMedia("(max-width: 1023px)").matches) setChartSpan(7);
-  }, []);
 
   const ready = Boolean(
     branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && classStudents && audits,
@@ -248,15 +304,7 @@ export default function DashboardPage() {
     const staleLeads = leads.filter((l) => (l.stage === "new" || l.stage === "contacted") && l.day <= addDays(today, -3));
     const freshLeads = leads.filter((l) => l.stage === "new");
 
-    const chart = Array.from({ length: chartSpan }, (_, i) => {
-      const day = addDays(today, -(chartSpan - 1 - i));
-      const dayPays = payments.filter((p) => p.day === day && inBranch(p.branchId));
-      return {
-        label: day.slice(5),
-        amount: dayPays.reduce((s, p) => s + p.amount, 0),
-        count: dayPays.length,
-      };
-    });
+    const chart = YEAR_REVENUE;
     const chartTotal = chart.reduce((s, d) => s + d.amount, 0);
 
     const funnel = [
@@ -391,13 +439,13 @@ export default function DashboardPage() {
       ].filter((x): x is NonNullable<typeof x> => Boolean(x)),
       chart,
       chartTotal,
-      chartAvg: Math.round(chartTotal / chartSpan),
+      chartAvg: Math.round(chartTotal / chart.length),
       funnel,
       staleLeads: staleLeads.length,
       ranking,
       activity,
     };
-  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, classStudents, audits, branchId, chartSpan, showMoney, t]);
+  }, [branches, students, sessions, courses, classes, rooms, users, payments, receivables, attendance, holds, leads, classStudents, audits, branchId, showMoney, t]);
 
   const q = branchId === "all" ? "" : `?branch=${branchId}`;
 
@@ -544,7 +592,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="order-1">
+      <div className="order-first lg:order-1">
         <h1 className="crm-page-title">
           {userName
             ? fill(
@@ -641,9 +689,43 @@ export default function DashboardPage() {
 
       <div className="order-4 grid grid-cols-2 gap-3 lg:order-7">
         {model.branchRows.length > 1 ? (
-          <section className="col-span-2 overflow-x-auto rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5" aria-labelledby="home-branches-heading">
+          <section className="col-span-2 rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5" aria-labelledby="home-branches-heading">
             <h2 id="home-branches-heading" className="crm-section-title">{t.dash.branches}</h2>
-            <table className="mt-3 w-full min-w-[32rem] text-sm">
+            <ul className="mt-3 space-y-2 min-[641px]:hidden">
+              {model.branchRows.map((row) => (
+                <li key={row.id} className={cn("rounded-[5px] border border-[var(--border)] p-3", branchId === row.id && "bg-[var(--brand-50)]")}>
+                  <p className="font-bold text-[var(--foreground)]">{row.name}</p>
+                  <dl className="mt-2 space-y-1.5 text-sm">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-slate-500">{t.dash.branchSessions}</dt>
+                      <dd className="tabular-nums font-semibold">{row.sessions}</dd>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-slate-500">{t.dash.branchRate}</dt>
+                      <dd className="tabular-nums font-semibold">{row.rate}%</dd>
+                    </div>
+                    {showMoney ? (
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-slate-500">{t.dash.branchRevenue}</dt>
+                        <dd className="tabular-nums">
+                          <Link href={`/revenue?branch=${row.id}`} className="font-semibold text-[var(--brand-600)]">{formatVnd(row.revenue)}</Link>
+                        </dd>
+                      </div>
+                    ) : null}
+                    {showMoney ? (
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-slate-500">{t.dash.branchDebt}</dt>
+                        <dd className="tabular-nums">
+                          <Link href={`/receivables?branch=${row.id}`} className="font-semibold text-[var(--brand-600)]">{formatVnd(row.debt)}</Link>
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 hidden overflow-x-auto min-[641px]:block">
+            <table className="w-full min-w-[32rem] text-sm">
               <thead className="text-left text-xs text-slate-500">
                 <tr>
                   <th className="py-2 font-semibold">{t.common.branch}</th>
@@ -673,6 +755,7 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </section>
         ) : null}
         <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5">
@@ -698,7 +781,7 @@ export default function DashboardPage() {
           )}
         </section>
         <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
-          <h2 className="crm-section-title">{t.dash.freeSlots}</h2>
+          <MobileFold title={t.dash.freeSlots} panelId="home-free-rooms" titleClassName="crm-section-title">
           {(() => {
             const branchRooms = (rooms ?? []).filter((r) => branchId === "all" || r.branchId === branchId);
             const byStart = new Map<string, Set<string>>();
@@ -724,22 +807,13 @@ export default function DashboardPage() {
               </ul>
             );
           })()}
+          </MobileFold>
         </section>
       </div>
 
-      <div className="order-7 grid gap-3 lg:order-4 lg:grid-cols-5">
-        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
-            <div className="flex gap-1">
-              {([7, 30] as const).map((n) => (
-                <button key={n} type="button" className={`h-10 rounded-[5px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
-                  {n} {t.dash.dayUnit}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div id="home-revenue">
+      <div className="order-first grid gap-3 lg:order-4 lg:grid-cols-5">
+        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-3" aria-labelledby="home-revenue-heading">
+          <MobileFold title={t.dash.revenueYear} headingId="home-revenue-heading" panelId="home-revenue" defaultOpen>
           {showMoney ? (
             <>
               <div className="mt-3 h-52">
@@ -755,28 +829,16 @@ export default function DashboardPage() {
               </div>
               <p className="mt-2 text-sm text-slate-500">
                 {t.dash.total} <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartTotal)}</span>
-                {" · "}{t.dash.average} <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartAvg)}</span>{t.dash.perDay}
+                {" · "}{t.dash.average} <span className="font-semibold text-slate-800 tabular-nums">{formatVnd(model.chartAvg)}</span>{t.dash.perMonth}
               </p>
             </>
           ) : (
             <p className="mt-6 text-sm text-slate-500">{t.dash.teacherNoRevenue}</p>
           )}
-          </div>
+          </MobileFold>
         </section>
         <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-2" aria-labelledby="home-funnel-heading">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="home-funnel-heading" className="text-base font-semibold">{t.dash.funnel}</h2>
-            <button
-              type="button"
-              className="h-8 rounded-[5px] px-2 text-xs font-semibold text-[var(--brand-600)] lg:hidden"
-              aria-expanded={funnelOpen}
-              aria-controls="home-funnel"
-              onClick={() => setFunnelOpen((v) => !v)}
-            >
-              {funnelOpen ? t.dash.funnelHide : t.dash.funnelShow}
-            </button>
-          </div>
-          <div id="home-funnel" className={funnelOpen ? "" : "max-lg:hidden"}>
+          <MobileFold title={t.dash.funnel} headingId="home-funnel-heading" panelId="home-funnel">
           <p className="mt-1 text-xs text-slate-400">{t.dash.funnelNote}</p>
           {model.staleLeads > 0 ? (
             <p className="mt-2 rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -803,7 +865,7 @@ export default function DashboardPage() {
               );
             })}
           </ul>
-          </div>
+          </MobileFold>
         </section>
       </div>
 
@@ -947,8 +1009,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="order-8 grid items-stretch gap-3 lg:grid-cols-2">
-        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4">
-          <h2 className="text-base font-semibold">{t.dash.topCourses}</h2>
+        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4" aria-labelledby="home-top-courses-heading">
+          <MobileFold title={t.dash.topCourses} headingId="home-top-courses-heading" panelId="home-top-courses">
           <ol className="mt-3 space-y-2">
             {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
             {model.ranking.map((c, i) => (
@@ -960,9 +1022,14 @@ export default function DashboardPage() {
               </li>
             ))}
           </ol>
+          </MobileFold>
         </section>
-        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4">
-          <h2 className="flex items-center gap-2 text-base font-semibold"><LineChart size={16} /> {t.dash.recent}</h2>
+        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4" aria-labelledby="home-activity-heading">
+          <MobileFold
+            title={<span className="inline-flex items-center gap-2"><LineChart size={16} aria-hidden /> {t.dash.recent}</span>}
+            headingId="home-activity-heading"
+            panelId="home-activity"
+          >
           <ul className="mt-3 space-y-3">
             {model.activity.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noActivity}</li> : null}
             {model.activity.map((a) => (
@@ -973,6 +1040,7 @@ export default function DashboardPage() {
               </li>
             ))}
           </ul>
+          </MobileFold>
         </section>
       </div>
     </div>
