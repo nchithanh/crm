@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   AlertTriangle,
@@ -16,9 +16,9 @@ import {
   Wallet,
 } from "lucide-react";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart as RLineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -60,6 +60,15 @@ function relativeDay(day: string, today: string, words: { today: string; yesterd
   );
   if (Number.isNaN(n)) return day;
   return n > 0 ? words.ago.replace("{n}", String(n)) : day;
+}
+
+function compactVnd(amount: number) {
+  if (amount >= 1_000_000) {
+    const tr = amount / 1_000_000;
+    return `${Number.isInteger(tr) ? tr : tr.toFixed(1)}tr`;
+  }
+  if (amount >= 1_000) return `${Math.round(amount / 1_000)}k`;
+  return String(Math.round(amount));
 }
 
 function trend(current: number, previous: number) {
@@ -131,9 +140,12 @@ export default function DashboardPage() {
   const { branchId } = useStudioBranch();
   const [chartSpan, setChartSpan] = useState<ChartSpan>(30);
   const [funnelOpen, setFunnelOpen] = useState(false);
-  const [chartOpen, setChartOpen] = useState(false);
   const [homeQ, setHomeQ] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) setChartSpan(7);
+  }, []);
 
   const ready = Boolean(
     branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && classStudents && audits,
@@ -658,36 +670,25 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold">{fill(t.dash.revenueDays, { n: chartSpan })}</h2>
             <div className="flex gap-1">
-              <button
-                type="button"
-                className="h-8 rounded-[5px] px-2 text-xs font-semibold text-[var(--brand-600)] lg:hidden"
-                aria-expanded={chartOpen}
-                aria-controls="home-revenue"
-                onClick={() => setChartOpen((v) => !v)}
-              >
-                {chartOpen ? t.dash.funnelHide : t.dash.funnelShow}
-              </button>
-              <div className={chartOpen ? "flex gap-1" : "hidden gap-1 lg:flex"}>
               {([7, 30] as const).map((n) => (
                 <button key={n} type="button" className={`h-10 rounded-[5px] px-3 text-xs font-semibold ${chartSpan === n ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600"}`} onClick={() => setChartSpan(n)}>
                   {n} {t.dash.dayUnit}
                 </button>
               ))}
-              </div>
             </div>
           </div>
-          <div id="home-revenue" className={chartOpen ? "" : "max-lg:hidden"}>
+          <div id="home-revenue">
           {showMoney ? (
             <>
               <div className="mt-3 h-52">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RLineChart data={model.chart}>
-                    <CartesianGrid stroke="#F1F5F9" />
-                    <XAxis dataKey="label" fontSize={11} />
-                    <YAxis fontSize={11} />
+                  <AreaChart data={model.chart} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="#F1F5F9" vertical={false} />
+                    <XAxis dataKey="label" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={28} />
+                    <YAxis fontSize={11} tickLine={false} axisLine={false} width={36} tickFormatter={compactVnd} />
                     <Tooltip content={<ChartTip receipts={t.dash.receipts} />} />
-                    <Line type="monotone" dataKey="amount" stroke="var(--brand-500)" strokeWidth={2} dot={false} />
-                  </RLineChart>
+                    <Area type="monotone" dataKey="amount" stroke="var(--brand-500)" strokeWidth={2} fill="var(--brand-500)" fillOpacity={0.14} dot={false} />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
               <p className="mt-2 text-sm text-slate-500">

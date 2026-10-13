@@ -166,7 +166,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       menuTimer.current = null;
     }, 200);
   }
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [headerMore, setHeaderMore] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
@@ -266,7 +265,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function NavPanel({ showBrand, hideHrefs = [] }: { showBrand: boolean; hideHrefs?: string[] }) {
     const close = () => {
       closeMenu();
-      setSheetOpen(false);
     };
     return (
       <div className="flex h-full flex-col bg-[#1c1c2a] text-[#f8fafc]" style={{ colorScheme: "dark" }}>
@@ -563,36 +561,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] leading-tight",
-              sheetOpen ? "bg-[var(--brand-50)] font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
-            )}
+          <a
+            href={ZALO_FOUNDER}
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[5px] px-1 text-[11px] font-medium leading-tight text-[var(--muted)]"
           >
-            <Ellipsis size={20} strokeWidth={sheetOpen ? 2.25 : 1.75} />
-            {t.nav.more}
-          </button>
+            <SupportIcon className="h-5 w-5" />
+            {t.nav.support}
+          </a>
         </div>
       </nav>
-      {sheetOpen ? (
-        <div className="lg:hidden">
-          <button type="button" className="fixed inset-0 z-50 bg-slate-900/40" onClick={() => setSheetOpen(false)} aria-label={t.common.close} />
-          <div
-            role="dialog"
-            aria-label={t.nav.more}
-            className="fixed inset-x-0 bottom-0 z-[51] flex h-[min(80vh,640px)] flex-col overflow-hidden rounded-t-[5px] bg-[#1c1c2a] pb-[env(safe-area-inset-bottom)]"
-          >
-            <div className="flex shrink-0 justify-center pt-2">
-              <span className="h-1 w-10 rounded-full bg-white/30" aria-hidden />
-            </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <NavPanel showBrand={false} hideHrefs={mobile.map((item) => item.href)} />
-            </div>
-          </div>
-        </div>
-      ) : null}
       <a
         href={ZALO_FOUNDER}
         target="_blank"

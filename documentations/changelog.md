@@ -2,6 +2,8 @@
 
 ## 2026-10-13
 
+- Tổng quan mobile: biểu đồ doanh thu luôn hiện, mặc định 7 ngày, có vùng tô dưới đường. Phễu tuyển sinh vẫn bấm Hiện để mở.
+- Thanh dưới mobile: bỏ Thêm. Ô thứ năm là Support, mở Zalo founder. Menu đầy đủ vẫn ở hamburger.
 - Menu hamburger trên mobile trượt từ mép trái ra khi mở và trượt vào khi đóng.
 - Mua / gia hạn: nút tạo nằm cùng hàng Học viên, SKU và Khóa.
 - Chăm sóc: thẻ sinh nhật có Chia sẻ mã. Trạng thái Chưa chăm sóc, Đã gửi Zalo, Đã gửi mã giảm giá.
