@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { Button, Card, ctaGhost, inputClass, inputClassInline } from "@/components/ui";
+import { Button, Card, ctaGhost, inputClass } from "@/components/ui";
 import { TransferQr } from "@/components/finance/transfer-qr";
 import { PromotionPicker } from "@/components/promotion-picker";
 import { applyPromotionToInstallment, payReceivable } from "@/lib/actions";
@@ -217,15 +217,6 @@ export default function FinanceCollectPage() {
           <Link href="/receivables" className={ctaGhost}>{t.nav.debts}</Link>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-2 lg:flex lg:flex-wrap">
-        <input className={`${inputClassInline} w-full lg:w-auto`} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label={t.pages.fromDay} />
-        <input className={`${inputClassInline} w-full lg:w-auto`} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.pages.toDay} />
-        <select className={`${inputClassInline} w-full lg:w-auto`} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
-          <option value="all">{t.money.method}</option>
-          <option value="cash">{t.common.cash}</option>
-          <option value="transfer">{t.common.transfer}</option>
-        </select>
-      </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card className="p-4">
           <input className={inputClass} placeholder={t.money.search} value={q} onChange={(e) => { const next = e.target.value; setQ(next); if (student && next.trim().toLowerCase() !== student.name.toLowerCase()) setStudentId(""); }} />
@@ -368,6 +359,27 @@ export default function FinanceCollectPage() {
         </Card>
         <Card className="p-4">
           <h2 className="crm-section-title">{t.money.history}</h2>
+          <div className="crm-date-pair mt-3 grid grid-cols-2 gap-2">
+            <label className="block min-w-0">
+              <span className="mb-1 block text-xs text-slate-500">{t.pages.fromDay}</span>
+              <span className="relative block">
+                <input className={cn(inputClass, "w-full", !fromDay && "crm-date-empty")} type="date" value={fromDay} onChange={(e) => setFromDay(e.target.value)} aria-label={t.pages.fromDay} />
+                {!fromDay ? <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">{t.money.datePh}</span> : null}
+              </span>
+            </label>
+            <label className="block min-w-0">
+              <span className="mb-1 block text-xs text-slate-500">{t.pages.toDay}</span>
+              <span className="relative block">
+                <input className={cn(inputClass, "w-full", !toDay && "crm-date-empty")} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.pages.toDay} />
+                {!toDay ? <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">{t.money.datePh}</span> : null}
+              </span>
+            </label>
+            <select className={cn(inputClass, "col-span-2")} value={methodFilter} onChange={(e) => setMethodFilter(e.target.value as "all" | PayMethod)}>
+              <option value="all">{t.money.method}</option>
+              <option value="cash">{t.common.cash}</option>
+              <option value="transfer">{t.common.transfer}</option>
+            </select>
+          </div>
           <ul className="mt-3 space-y-2 text-sm">
             {history.length === 0 ? <li className="text-slate-500">{t.money.empty}</li> : null}
             {history.slice(0, 12).map((p) => (

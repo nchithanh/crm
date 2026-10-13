@@ -2,7 +2,7 @@
 
 ## 2026-10-13
 
-- Thu học phí trên mobile: lọc từ ngày, đến ngày và hình thức xếp mỗi ô một hàng. Ô ngày và giờ đủ rộng để hiện `mm/dd/yyyy` trên một dòng.
+- Thu học phí: ô tìm học viên đứng trước. Lọc ngày và hình thức nằm trong Lịch sử thu. Ô ngày trống hiện `mm/dd/yyyy`.
 - Tác vụ: thanh lọc gồm ô tìm, avatar người nhận, nút Lọc (có số điều kiện) và nút Nhóm. List và board theo trạng thái, người nhận hoặc nhóm việc.
 - Header desktop hiện Điểm danh, Đăng ký và Báo cáo. Tổng quan thêm danh sách buổi chuyên cần thấp và giáo viên dạy từ 3 buổi hôm nay.
 - Buổi học hiện giáo viên phụ. Khóa và buổi học phân trang 20/50/100. Ghi chú học viên lưu tên người viết.

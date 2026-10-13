@@ -170,6 +170,14 @@ input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
   color: var(--foreground);
 }
+.crm-date-pair input[type="date"] {
+  min-width: 0;
+  width: 100%;
+}
+input.crm-date-empty::-webkit-datetime-edit,
+input.crm-date-empty::-webkit-datetime-edit-fields-wrapper {
+  color: transparent;
+}
 @media (max-width: 1023px) {
   input[type="time"],
   input[type="date"],
