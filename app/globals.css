@@ -10,17 +10,17 @@
   --border: #e8e6f2;
   --shadow-card: none;
   --shadow-btn: none;
-  --brand-50: #f6f2fd;
-  --brand-100: #eae0fb;
-  --brand-300: #bda0ee;
-  --brand-400: #8e5fdd;
-  --brand-500: #6d35ca;
-  --brand-600: #5b29ae;
-  --brand-700: #4a238b;
-  --brand-950: #24143d;
+  --brand-50: #f4f2fd;
+  --brand-100: #e4e0fb;
+  --brand-300: #aba0ee;
+  --brand-400: #7965e6;
+  --brand-500: #5b42eb;
+  --brand-600: #3620b6;
+  --brand-700: #2f1e8f;
+  --brand-950: #19123f;
   --radius-card: 5px;
-  --nav-active: #f6f2fd;
-  --nav-active-text: #5b29ae;
+  --nav-active: #f4f2fd;
+  --nav-active-text: #3620b6;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }
