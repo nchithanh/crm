@@ -10,17 +10,17 @@
   --border: #e8e6f2;
   --shadow-card: none;
   --shadow-btn: none;
-  --brand-50: #f9f1fe;
-  --brand-100: #f0ddfd;
-  --brand-300: #d293fb;
-  --brand-400: #b957fa;
-  --brand-500: #9f16f9;
-  --brand-600: #8909dc;
-  --brand-700: #6d0bad;
-  --brand-950: #350b50;
+  --brand-50: #f6f2fd;
+  --brand-100: #eae0fb;
+  --brand-300: #bda0ee;
+  --brand-400: #8e5fdd;
+  --brand-500: #6d35ca;
+  --brand-600: #5b29ae;
+  --brand-700: #4a238b;
+  --brand-950: #24143d;
   --radius-card: 5px;
-  --nav-active: #f9f1fe;
-  --nav-active-text: #8909dc;
+  --nav-active: #f6f2fd;
+  --nav-active-text: #5b29ae;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }
@@ -238,7 +238,15 @@ a { text-decoration: none; }
   transition: translate 200ms ease-out;
 }
 .crm-bottom-nav.is-hidden {
-  translate: 0 100%;
+  translate: 0 calc(100% + 16px);
+}
+.crm-bottom-pill {
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(26, 26, 46, 0.12);
+}
+.crm-bottom-active {
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--brand-500) 40%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .crm-menu-panel,

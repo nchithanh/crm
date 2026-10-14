@@ -1,6 +1,6 @@
 # Dolphin CRM FE
 
-Local-first. Dữ liệu mẫu: **Edu Dance** (studio giả, 3 cơ sở). Accent `#9f16f9` cho mọi lĩnh vực.
+Local-first. Dữ liệu mẫu: **Edu Dance** (studio giả, 3 cơ sở). Accent `#6d35ca` cho mọi lĩnh vực. Thanh dưới mobile là viên nổi.
 
 Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Nền trắng, thẻ số `#f7f7f8a1`, góc 5px, không bóng, bottom nav 5 mục. SoT: `context/design-language.md`. Students = chip + hàng avatar + drawer; Overview = lời chào + KPI + buổi sắp tới. Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`.
 

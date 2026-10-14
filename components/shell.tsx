@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   ArrowLeftRight,
@@ -16,7 +16,7 @@ import {
   LogOut,
   Menu,
   Package,
-  Plus,
+  UserPlus,
   QrCode,
   Receipt,
   Search,
@@ -100,7 +100,7 @@ const ZALO_FOUNDER = "https://zalo.me/0779937633";
 
 type MobileItem = {
   href: string;
-  key: "overview" | "students" | "attendShort" | "finance" | "tasks";
+  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks";
   icon: typeof LayoutDashboard;
 };
 
@@ -116,13 +116,9 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
   return [
     { href: "/overview", key: "overview", icon: LayoutDashboard },
     { href: "/students", key: "students", icon: Users },
+    { href: "/mid-course-enroll", key: "enrollTab", icon: UserPlus },
     { href: "/attendance", key: "attendShort", icon: ClipboardCheck },
-    { href: "/finance", key: "finance", icon: Wallet },
   ];
-}
-
-function financeSection(path: string) {
-  return path === "/finance" || path.startsWith("/collect-fees") || path.startsWith("/receivables") || path.startsWith("/revenue") || path.startsWith("/collections") || path.startsWith("/payment-accounts");
 }
 
 function active(href: string, path: string) {
@@ -130,6 +126,53 @@ function active(href: string, path: string) {
   if (href === "/finance") return path === "/finance";
   if (href === "/attendance") return path === "/attendance" || path.startsWith("/attendance/");
   return path === href || path.startsWith(`${href}/`);
+}
+
+function BottomTabFace({
+  raised,
+  on,
+  label,
+  badge,
+  children,
+}: {
+  raised: boolean;
+  on: boolean;
+  label: string;
+  badge?: number;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <span
+        className={cn(
+          "absolute left-1/2 flex -translate-x-1/2 items-center justify-center",
+          raised
+            ? "crm-bottom-active top-0 h-[48px] w-[48px] -translate-y-1/2 rounded-full bg-[var(--brand-500)] text-white"
+            : cn("top-3", on ? "text-[var(--brand-600)]" : "text-[var(--muted)]"),
+        )}
+      >
+        {children}
+        {badge && badge > 0 ? (
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-4 tabular-nums",
+              raised ? "bg-white text-[var(--brand-600)]" : "bg-[var(--brand-500)] text-white",
+            )}
+          >
+            {badge > 99 ? "99" : badge}
+          </span>
+        ) : null}
+      </span>
+      <span
+        className={cn(
+          "absolute inset-x-0 bottom-1.5 truncate px-0.5 text-center text-[11px] leading-tight",
+          on ? "font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
+        )}
+      >
+        {label}
+      </span>
+    </>
+  );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -516,7 +559,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main ref={mainRef} className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 pb-28 sm:px-5 lg:pb-6", path === "/overview" && "bg-white", canEnroll && "max-lg:!pb-[calc(4.625rem+max(0.5rem,env(safe-area-inset-bottom))+76px)]")}>
+        <main ref={mainRef} className={cn("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-[10px] py-4 sm:px-5 lg:pb-6", path === "/overview" && "bg-white", "max-lg:pb-[calc(6.75rem+max(0.625rem,env(safe-area-inset-bottom)))]")}>
           <div key={path} className="crm-tab-panel shrink-0">
             <AppBreadcrumb />
             {children}
@@ -530,51 +573,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </footer>
         </main>
       </div>
-      <nav className={cn("crm-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] px-1 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden", navHidden && "is-hidden")}>
-        {canEnroll ? (
-          <Link
-            href={`/mid-course-enroll${branchQuery}`}
-            aria-label={t.students.emptyCta}
-            className="absolute right-[16px] bottom-[calc(100%+16px)] inline-flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[var(--brand-500)] text-white"
-          >
-            <Plus size={22} strokeWidth={2.25} aria-hidden />
-          </Link>
-        ) : null}
-        <div className="grid grid-cols-5 gap-0.5">
-          {mobile.map((item) => {
+      <nav className={cn("crm-bottom-nav fixed inset-x-3 bottom-[max(10px,env(safe-area-inset-bottom))] z-40 pt-[24px] lg:hidden", navHidden && "is-hidden")}>
+        <div className="crm-bottom-pill grid h-16 grid-cols-5">
+          {mobile.map((item, index) => {
             const Icon = item.icon;
-            const on = item.href === "/finance" ? financeSection(path) : active(item.href, path);
-            const label = item.key === "attendShort" ? t.nav.attendShort : t.nav[item.key];
-            const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : item.href === "/finance" ? navBadges["/collect-fees"] ?? 0 : 0;
+            const raised = index === 2;
+            const on = active(item.href, path);
+            const label = t.nav[item.key];
+            const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : 0;
+            const href = item.href === "/mid-course-enroll" ? `/mid-course-enroll${branchQuery}` : item.href;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-[5px] px-1 text-[11px] leading-tight",
-                  on ? "bg-[var(--brand-50)] font-bold text-[var(--brand-600)]" : "font-medium text-[var(--muted)]",
-                )}
-              >
-                <span className="relative">
-                  <Icon size={22} strokeWidth={on ? 2.25 : 1.75} />
-                  {badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-2.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[9px] font-bold leading-4 text-white tabular-nums">
-                      {badge > 99 ? "99" : badge}
-                    </span>
-                  ) : null}
-                </span>
-                {label}
+              <Link key={item.href} href={href} className="relative h-16" aria-current={on ? "page" : undefined}>
+                <BottomTabFace raised={raised} on={on} label={label} badge={badge}>
+                  <Icon size={22} strokeWidth={raised || on ? 2.25 : 1.75} />
+                </BottomTabFace>
               </Link>
             );
           })}
-          <a
-            href={ZALO_FOUNDER}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-[5px] px-1 text-[11px] font-medium leading-tight text-[var(--muted)]"
-          >
-            <SupportIcon className="h-[22px] w-[22px]" />
-            {t.nav.support}
+          <a href={ZALO_FOUNDER} target="_blank" rel="noreferrer" className="relative h-16">
+            <BottomTabFace raised={false} on={false} label={t.nav.support}>
+              <SupportIcon className="h-[22px] w-[22px]" />
+            </BottomTabFace>
           </a>
         </div>
       </nav>

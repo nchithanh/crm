@@ -2,6 +2,8 @@
 
 ## 2026-10-14
 
+- Thanh dưới mobile: bỏ Tài chính và nút + cố định. Ghi danh nằm giữa và luôn nhô lên. Giáo viên giữ Điểm danh ở giữa.
+- Màu chủ đạo `#6d35ca`. Thanh dưới mobile là viên trắng nổi: mục đang chọn là vòng tròn tím nhô lên, icon trắng.
 - Đăng nhập: không tự mở popup tải app. Nút đáy là Download App. Chỉ máy không cài được mới mở ảnh hướng dẫn khi bấm.
 - Đăng nhập: nút đáy “Thêm vào Màn hình chính”. Chrome mở hộp thoại cài. Máy không hỗ trợ thì mở ảnh hướng dẫn. Đã mở từ icon thì ẩn nút.
 - Một màu chủ đạo `#9f16f9` cho nút, tab, link và FAB. Đổi lĩnh vực không đổi màu chrome.
