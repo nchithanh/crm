@@ -535,7 +535,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link
             href={`/mid-course-enroll${branchQuery}`}
             aria-label={t.students.emptyCta}
-            className="absolute right-[16px] bottom-[calc(100%+16px)] inline-flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#F97316] text-white"
+            className="absolute right-[16px] bottom-[calc(100%+16px)] inline-flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[var(--brand-500)] text-white"
           >
             <Plus size={22} strokeWidth={2.25} aria-hidden />
           </Link>

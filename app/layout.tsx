@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F97316",
+  themeColor: "#9f16f9",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -32,15 +32,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" data-vertical="nhay" suppressHydrationWarning>
+    <html lang="vi">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              '(function(){try{var v=localStorage.getItem("dolphin-crm-vertical");if(v==="nhay"||v==="anh"||v==="nhac"||v==="boi")document.documentElement.setAttribute("data-vertical",v);}catch(e){}})();',
-          }}
-        />
       </head>
       <body>
         <AuthGate>{children}</AuthGate>

@@ -25,23 +25,49 @@ const demos: Record<VerticalId, typeof nhayDemo> = {
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const guideSrc = `${basePath}/brand/download-app-guide.jpg`;
 
+type InstallPrompt = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
+function runningAsApp() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true)
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const loginWithPin = useAuthStore((s) => s.loginWithPin);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const [guideOpen, setGuideOpen] = useState(true);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
+  const [hideInstall, setHideInstall] = useState(false);
   const { lang, t } = useI18n();
   const [vertical, setVertical] = useState<VerticalId>("nhay");
   useEffect(() => {
     const stored = getStoredVertical();
     if (stored) setVertical(stored);
+    if (runningAsApp()) setHideInstall(true);
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPrompt);
+    };
+    const onInstalled = () => setHideInstall(true);
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
   const option = VERTICALS.find((v) => v.id === vertical) ?? VERTICALS[0];
   const demo = demos[option.id];
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8">
+    <main className={`mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8 ${hideInstall ? "" : "pb-28"}`}>
       <div className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-5 py-8 sm:px-8">
         <div className="flex flex-col items-center text-center">
           <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-50)]">
@@ -121,10 +147,30 @@ export default function LoginPage() {
           {t.login.switch}
         </button>
 
-        <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => setGuideOpen(true)}>
-          {t.login.downloadApp}
-        </Button>
       </div>
+
+      {hideInstall ? null : (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border)] bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="mx-auto max-w-md">
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => {
+                if (!installPrompt) {
+                  setGuideOpen(true);
+                  return;
+                }
+                void installPrompt.prompt().then(() => installPrompt.userChoice).then((choice) => {
+                  setInstallPrompt(null);
+                  if (choice.outcome === "accepted") setHideInstall(true);
+                }).catch(() => setGuideOpen(true));
+              }}
+            >
+              {t.login.downloadApp}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {guideOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
