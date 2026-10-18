@@ -73,7 +73,7 @@ export default function CoursesPage() {
 
       <input className={`${inputClass} mt-4 max-w-md`} placeholder={t.common.search} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
 
-      <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
+      <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
         <li className="hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem]">
           <span>{t.common.course}</span>
           <span>{t.common.teacher}</span>
@@ -122,12 +122,12 @@ export default function CoursesPage() {
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-1 text-xs text-slate-500">
             {t.students.pageSize}
-            <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
+            <select className="h-8 rounded-xl border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
               {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
-          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
+          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
+          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
         </div>
       </div>
     </div>

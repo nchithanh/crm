@@ -1,5 +1,5 @@
 [
-  { "id": "b-a", "name": "Nhà Mai", "address": "18 Mai Vàng, phường demo" },
-  { "id": "b-b", "name": "Nhà Đào", "address": "42 Đào Hồng, phường demo" },
-  { "id": "b-c", "name": "Nhà Lý", "address": "7 Lý Chính, phường demo" }
+  { "id": "b-a", "name": "Nhà Mai", "address": "18 Mai Vàng, phường demo", "lat": 21.0285, "lng": 105.8542, "checkInRadiusM": 150 },
+  { "id": "b-b", "name": "Nhà Đào", "address": "42 Đào Hồng, phường demo", "lat": 21.029, "lng": 105.855, "checkInRadiusM": 150 },
+  { "id": "b-c", "name": "Nhà Lý", "address": "7 Lý Chính, phường demo", "lat": 21.0278, "lng": 105.8535, "checkInRadiusM": 150 }
 ]

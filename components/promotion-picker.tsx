@@ -44,7 +44,7 @@ export function PromotionPicker({
 
   if (lockedName) {
     return (
-      <p className="rounded-[5px] bg-[var(--brand-50)] px-3 py-2 text-sm text-[var(--brand-700)]">
+      <p className="rounded-xl bg-[var(--brand-50)] px-3 py-2 text-sm text-[var(--brand-700)]">
         {t.promo.usedName}: {lockedName}
       </p>
     );
@@ -62,7 +62,7 @@ export function PromotionPicker({
     : null;
 
   return (
-    <div className="space-y-2 rounded-[5px] border border-slate-200 p-3">
+    <div className="space-y-2 rounded-xl border border-slate-200 p-3">
       <p className="text-sm font-semibold">{t.promo.picker}</p>
       {autos.length === 0 ? <p className="text-sm text-slate-500">{t.promo.noneMatch}</p> : null}
       <ul className="space-y-1">

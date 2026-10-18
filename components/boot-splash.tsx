@@ -31,10 +31,10 @@ export function BootSplash({
       </div>
       {slow ? (
         <div className="flex gap-2">
-          <button type="button" className="h-10 rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" onClick={onRetry}>
+          <button type="button" className="h-10 rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" onClick={onRetry}>
             {t.shell.bootRetry}
           </button>
-          <button type="button" className="h-10 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold" onClick={onLogin}>
+          <button type="button" className="h-10 rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold" onClick={onLogin}>
             {t.shell.bootLogin}
           </button>
         </div>

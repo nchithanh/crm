@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-10-19
+
+- Command Palette AI-style (Ctrl+K): popup giữa màn + neon viền; desktop FAB trên Zalo; **mobile bỏ FAB** — vuốt lên từ đáy mở palette (hoặc ô tìm header); Gợi ý · Hành động · Gần đây.
+- Tổng quan densify: hàng **3 cột** (task · HV mới · khóa sắp hết/khẩn); **6 KPI một hàng** `lg:grid-cols-6`. Typo KPI fluid `.crm-kpi-*` (`clamp` rem+svw — label~1rem / value~1.5rem max). Ask Dolphin thu gọn; bỏ search dưới greeting (Ctrl+K). Docs `design-language.md`.
+- Lịch `/schedule` và lịch phòng (`room-calendar`): palette **xám–trắng** (`--cal-*` / `.crm-cal-*`) — bỏ mint/lavender/sky; ô trống gần trắng, buổi xám nhạt, thẻ buổi nền trắng + viền xám. Không dùng `emerald-*` (remap brand).
+- Lịch: **vạch giờ hiện tại** trên cột hôm nay; thẻ buổi theo đồng hồ — đang diễn ra (đậm + chip), đã qua (mờ), sắp tới (trắng). Helper `sessionTimePhase` / `nowLineInHour` trong `lib/schedule.ts`.
+- Tổng quan: KPI tách primary/secondary (trước đó từng gộp 6 metric một hàng; FeeRemind trong thẻ học phí chờ). List buổi hôm nay / cảnh báo / top khóa / hoạt động dạng hàng dày (badge, bar, avatar).
+- Tổng quan: dưới lời chào hiện **task gần nhất** (ưu tiên việc của tôi → quá hạn → hạn sớm → priority) + CTA `/tasks`.
+- Chăm sóc: CTA Zalo / Chia sẻ mã mở **popup preview** (sửa nội dung) rồi mới share sheet / Zalo (`SharePreviewDialog`).
+- Điểm danh: hai luồng — `/attendance` lễ tân điểm hộ (UI gọn hơn + link QR); `/qr-attendance` tự check-in với geofence demo (`Branch.lat/lng/checkInRadiusM`, seed **16a**) + nút giả lập tại trung tâm.
+- Popup/drawer detail: animation mở/đóng (`crm-drawer-*` / `crm-modal-*`, helper `CrmDrawerShell` / `CrmModalShell`) cho class / teacher / task / lead / filter / tạo khóa / summary điểm danh / care modals.
+- Sidebar desktop nền `#030a12`, chữ sáng, hover `white/10`. Toggle ma trận Phân quyền có hover scale/sáng.
+- **Phân quyền 5 vai trò:** Boss · Quản lý · Lễ tân · Giáo viên · Marketing. Dexie `roleAccess` (v9), mặc định `access-defaults.ts`, store hydrate lúc boot. Trang `/settings/access` (desktop bảng / mobile chọn role). Sidebar + `/menu` + guard path + tab hồ sơ HV / Phòng / hub Khóa theo ma trận. Seed v15a: Boss PIN `9999`, Marketing PIN `5555`. Docs: `context/access.md`.
+- **Phiếu xác nhận học phí** (`/receipt?id={paymentId}`): trang A4 print-ready tiếng Việt theo mẫu MA Dance — đầu trang studio + chi nhánh + email, số phiếu `{MÃ}{yy}.{mm}.{seq}` (mã = 2 chữ cái đầu tên studio, sinh lúc thu tiền, lưu `Payment.receiptNo`), thông tin HV (hình thức/phương thức TT), bảng Gói · Học phí · Phải thu · Đã đóng · Còn lại, bằng chữ (`lib/number-words.ts`), note 4 mục, 3 chữ ký (Ngườờ tư vấn để trống — TODO). Nguồn: `lib/receipt.ts` buildReceipt từ Payment + Subscription + Installment; `Payment` thêm `receiptNo` + `actorId` (ngườI lập phiếu); settings seed thêm `email`.
+- CTA xuất phiếu 3 nơi: success modal **Thu học phí** (thay popup in tối thiểu cũ — bỏ `printReceipt`), từng dòng **Lịch sử thu** (`/collections`), tab Thanh toán trong hồ sơ học viên. Nhãn `money.exportReceipt` (vi/en); bỏ key `money.print` + `money.receipt` không còn dùng.
+- Drawer chi tiết bên phải (bộ lọc lịch, tạo buổi lẻ, hồ sơ buổi/học viên/giáo viên/khóa, bảo lưu, promotion, tác vụ, chăm sóc): mobile còn **80% chiều rộng** thay vì full màn; desktop giữ max-width cũ.
+- Lịch `/schedule`: thay 4 dropdown lọc bằng nút **Bộ lọc** + drawer kiểu Google Calendar (`components/schedule-filter-drawer.tsx`). Multi-select theo giáo viên / phòng (nhóm subheader theo cơ sở) / khóa / trạng thái; không tick mục nào = tất cả; checkbox bo 8px tô màu palette gán theo hash id; nhóm >6 mục có Hiện thêm / Thu gọn; nút Bộ lọc có badge số nhóm đang lọc; footer đếm buổi đang hiển thị. i18n vi/en (`filter*` trong `lib/copy.ts`).
+- Mobile: bỏ hamburger + drawer kéo trái. Bottom nav đổi tab Support thành **Menu** → mở trang `/menu` (giữ header + bottom nav). Desktop giữ sidebar và FAB support.
+- Trang `/menu` kiểu SSI iBoard: thẻ người dùng, chọn cơ sở, segmented tab Quản lý / Hỗ trợ; nhóm nav là thẻ trắng lưới icon 3 cột (icon tile 48px). Giáo viên được vào `/menu` (TEACHER_PATHS).
+- Tách SoT danh mục nav sang `lib/nav.ts`, badge sang `lib/nav-badges.ts` (dùng chung sidebar + `/menu`).
+
+## 2026-10-16
+
+- Redesign UI theo phong cách SSI iBoard: nền app tint lavender `#f6f5fc`, khối trắng bo 12–16px + bóng mềm (`crm-card-elev`), badge pill, nút primary có bóng brand.
+- Đổi màu chủ đạo sang `#5d5cc4` (hover `#4948a4`, nền nhấn `#f1f1f9`); cập nhật `themeColor`, `manifest.webmanifest`, `lib/vertical.ts`.
+- Sidebar desktop và menu hamburger đổi sang nền sáng: item active nền `--nav-active` bo 12px, icon `--brand-600`; bỏ nền tối `#1c1c2a`.
+- Thêm utility `.crm-icon-tile` / `.crm-gradient` / `.crm-card-elev`; banner Dolphin AI trên Tổng quan dùng gradient brand.
+- Sweep toàn bộ `rounded-[5px]` → `rounded-xl` (12px); drawer, dialog, input đồng bộ.
+
 ## 2026-10-14
 
 - Màu chủ đạo `#5b42eb` cho nút, tab, link và vòng Ghi danh.

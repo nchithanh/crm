@@ -31,6 +31,9 @@ const labels: Record<Lang, Record<string, string>> = {
     "dolphin-ai": "Dolphin AI",
     ai: "Dolphin AI",
     login: "Đăng nhập",
+    menu: "Menu",
+    settings: "Cài đặt",
+    access: "Phân quyền",
   },
   en: {
     home: "Home",
@@ -60,6 +63,9 @@ const labels: Record<Lang, Record<string, string>> = {
     "dolphin-ai": "Dolphin AI",
     ai: "Dolphin AI",
     login: "Login",
+    menu: "Menu",
+    settings: "Settings",
+    access: "Access",
   },
 };
 

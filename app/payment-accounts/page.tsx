@@ -121,7 +121,7 @@ export default function PaymentAccountsPage() {
         {!canEdit ? <p className="mt-2 text-sm text-slate-500">{t.payAccounts.readOnly}</p> : null}
       </div>
 
-      {error ? <p className="rounded-[5px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
 
       <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
         <Card className="p-4">

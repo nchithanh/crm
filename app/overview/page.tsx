@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
@@ -11,7 +10,6 @@ import {
   Clock,
   ChevronDown,
   LineChart,
-  Search,
   Sparkles,
   Users,
   Wallet,
@@ -25,7 +23,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ctaOutline } from "@/components/ui";
 import { FeeRemindButton } from "@/components/finance/fee-reminders";
 import { canSeeMoney } from "@/lib/access";
 import { db } from "@/lib/db";
@@ -37,8 +34,26 @@ import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { LucideIcon } from "lucide-react";
+import type { StudioTask } from "@/types";
 
 type Period = "today" | "d7" | "d30" | "month";
+
+const TASK_PRI = { high: 0, medium: 1, low: 2 } as const;
+
+function pickNearestTask(tasks: StudioTask[], userId: string | undefined, branchId: string, today: string) {
+  const open = tasks.filter(
+    (tk) => tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId),
+  );
+  const mine = userId ? open.filter((tk) => tk.assigneeId === userId) : [];
+  const pool = mine.length > 0 ? mine : open;
+  return [...pool].sort((a, b) => {
+    const aOver = a.dueDay < today ? 0 : 1;
+    const bOver = b.dueDay < today ? 0 : 1;
+    if (aOver !== bOver) return aOver - bOver;
+    if (a.dueDay !== b.dueDay) return a.dueDay.localeCompare(b.dueDay);
+    return TASK_PRI[a.priority] - TASK_PRI[b.priority];
+  })[0] ?? null;
+}
 
 /** Doanh thu demo T1–T12, triệu đồng. Không đọc phiếu thu. */
 const YEAR_REVENUE = [18, 16, 21, 19, 24, 22, 26, 23, 28, 25, 30, 27].map((million, i) => ({
@@ -82,12 +97,12 @@ function trend(current: number, previous: number) {
   return Math.round(((current - previous) / previous) * 100);
 }
 
-function Spark({ values }: { values: number[] }) {
+function Spark({ values, className }: { values: number[]; className?: string }) {
   const max = Math.max(1, ...values);
   return (
-    <span className="mt-2 flex h-6 items-end gap-0.5" aria-hidden>
+    <span className={cn("flex h-5 items-end gap-px", className)} aria-hidden>
       {values.map((v, i) => (
-        <span key={i} className="w-1.5 rounded-sm bg-[var(--brand-500)]" style={{ height: `${Math.max(12, (v / max) * 100)}%` }} />
+        <span key={i} className="w-1 rounded-sm bg-[var(--brand-400)]" style={{ height: `${Math.max(8, (v / max) * 100)}%` }} />
       ))}
     </span>
   );
@@ -107,7 +122,7 @@ function ChartTip({
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
   return (
-    <div className="rounded-[5px] border border-slate-200 bg-[var(--card)] px-3 py-2 text-xs">
+    <div className="crm-card-elev px-3 py-2 text-xs">
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-bold tabular-nums">{formatVnd(row?.amount ?? 0)}</p>
       {typeof row?.count === "number" ? (
@@ -180,8 +195,9 @@ function phaseLabel(start: string) {
 
 export default function DashboardPage() {
   const { t } = useI18n();
-  const role = useAuthStore((s) => s.user?.role);
-  const userName = useAuthStore((s) => s.user?.name) ?? "";
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
+  const userName = user?.name ?? "";
   const showMoney = canSeeMoney(role);
   const branches = useLiveQuery(() => db.branches.toArray());
   const students = useLiveQuery(() => db.students.toArray());
@@ -200,8 +216,7 @@ export default function DashboardPage() {
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
-  const [homeQ, setHomeQ] = useState("");
-  const router = useRouter();
+  const [aiOpen, setAiOpen] = useState(false);
 
   const ready = Boolean(
     branches && students && sessions && courses && classes && rooms && users && payments && receivables && attendance && holds && leads && classStudents && audits,
@@ -452,68 +467,43 @@ export default function DashboardPage() {
   if (!ready || !model) {
     return (
       <div className="space-y-4">
-        <div className="h-16 animate-pulse rounded-[5px] bg-slate-100" />
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-[5px] bg-slate-100" />
+        <div className="h-16 animate-pulse rounded-xl bg-slate-100" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100" />
           ))}
         </div>
         <div className="grid gap-4 lg:grid-cols-5">
-          <div className="h-72 animate-pulse rounded-[5px] bg-slate-100 lg:col-span-3" />
-          <div className="h-72 animate-pulse rounded-[5px] bg-slate-100 lg:col-span-2" />
+          <div className="h-72 animate-pulse rounded-xl bg-slate-100 lg:col-span-3" />
+          <div className="h-72 animate-pulse rounded-xl bg-slate-100 lg:col-span-2" />
         </div>
       </div>
     );
   }
 
-  const kpis: {
-    id?: string;
+  type MetricCard = {
+    id: string;
     label: string;
     value: string;
     hint: string;
     href: string;
     icon: LucideIcon;
+    tone: string;
     warn?: boolean;
-  }[] = [
+    spark?: number[];
+    feeRemind?: boolean;
+  };
+
+  /** One dense strip — 6 metrics on lg (no empty half-width secondary row). */
+  const metricCards: MetricCard[] = [
     {
+      id: "active",
       label: t.dash.activeStudents,
       value: String(model.active),
       hint: fill(t.dash.vsLast, { n: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta}` }),
       href: `/students${q}`,
       icon: Users,
-    },
-    {
-      id: "new",
-      label: t.dash.newStudents,
-      value: String(model.newStudents),
-      hint: fill(t.dash.vsLast, { n: `${model.newPct >= 0 ? "+" : ""}${model.newPct}%` }),
-      href: `/students${q}`,
-      icon: Users,
-    },
-    {
-      label: t.dash.todaySessions,
-      value: String(model.todaySessions.length),
-      hint: fill(t.dash.classStudents, { classes: model.todayClassCount, students: model.todayStudentCount }),
-      href: `/schedule${q}`,
-      icon: CalendarDays,
-    },
-    {
-      label: t.dash.revenueMonth,
-      value: showMoney ? formatVnd(model.revenue) : "—",
-      hint: showMoney
-        ? fill(t.dash.revenueHint, { arrow: model.revenueTrend >= 0 ? "↑" : "↓", pct: Math.abs(model.revenueTrend), prev: formatVnd(model.revenuePrev) })
-        : t.common.hiddenTeacher,
-      href: showMoney ? `/revenue${q}` : "",
-      icon: Wallet,
-    },
-    {
-      id: "debt",
-      label: t.dash.debtOpen,
-      value: showMoney ? formatVnd(model.debtTotal) : "—",
-      hint: showMoney ? fill(t.dash.debtHint, { n: model.debtStudents, share: model.debtShare }) : t.common.hiddenTeacher,
-      href: showMoney ? `/receivables${q}` : "",
-      icon: AlertTriangle,
-      warn: showMoney && model.debtTotal > 0,
+      tone: "bg-violet-100 text-violet-600",
     },
     {
       id: "rate",
@@ -522,59 +512,66 @@ export default function DashboardPage() {
       hint: fill(t.dash.attendHint, { arrow: model.rate - model.prevRate >= 0 ? "↑" : "↓", n: Math.abs(model.rate - model.prevRate) }),
       href: `/attendance${q}`,
       icon: Check,
-    },
-    {
-      label: t.dash.endingCourses,
-      value: String(model.ending7),
-      hint: t.dash.endingHint,
-      href: `/courses${q}`,
-      icon: Clock,
-    },
-  ];
-
-  const funnelMax = Math.max(1, ...model.funnel.map((f) => f.count));
-
-  const opsCards: {
-    id: string;
-    label: string;
-    value: string;
-    hint: string;
-    href: string;
-    warn: boolean;
-    icon: LucideIcon;
-    tone: string;
-  }[] = [
-    {
-      id: "today",
-      label: t.dash.todayClasses,
-      value: String(model.todayClassCount),
-      hint: fill(t.dash.classStudents, { classes: model.todayClassCount, students: model.todayStudentCount }),
-      href: `/schedule${q}`,
-      warn: false,
-      icon: CalendarDays,
-      tone: "bg-violet-100 text-violet-600",
+      tone: "bg-emerald-100 text-emerald-700",
+      spark: model.attendSpark,
     },
     ...(showMoney
-      ? [{
-          id: "fees",
-          label: t.dash.opsFees,
-          value: String(model.debtStudents),
-          hint: fill(t.dash.opsFeesHint, { n: model.debtStudents, amount: formatVnd(model.debtTotal) }),
-          href: `/collect-fees${q}`,
-          warn: model.debtStudents > 0,
-          icon: Wallet,
-          tone: "bg-amber-100 text-amber-700",
-        }]
-      : []),
+      ? [
+          {
+            id: "revenue",
+            label: t.dash.revenueMonth,
+            value: formatVnd(model.revenue),
+            hint: fill(t.dash.revenueHint, {
+              arrow: model.revenueTrend >= 0 ? "↑" : "↓",
+              pct: Math.abs(model.revenueTrend),
+              prev: formatVnd(model.revenuePrev),
+            }),
+            href: `/revenue${q}`,
+            icon: Wallet,
+            tone: "bg-amber-100 text-amber-700",
+          },
+          {
+            id: "debt",
+            label: t.dash.opsFees,
+            value: String(model.debtStudents),
+            hint: fill(t.dash.opsFeesHint, { n: model.debtStudents, amount: formatVnd(model.debtTotal) }),
+            href: `/collect-fees${q}`,
+            icon: AlertTriangle,
+            tone: "bg-rose-100 text-rose-600",
+            warn: model.debtStudents > 0,
+            feeRemind: true,
+          },
+        ]
+      : [
+          {
+            id: "low",
+            label: t.dash.opsLowAttend,
+            value: String(model.lowAttend),
+            hint: t.dash.opsLowAttendHint,
+            href: `/attendance${q}`,
+            icon: AlertTriangle,
+            tone: "bg-rose-100 text-rose-600",
+            warn: model.lowAttend > 0,
+          },
+          {
+            id: "ending",
+            label: t.dash.endingCourses,
+            value: String(model.ending7),
+            hint: t.dash.endingHint,
+            href: `/courses${q}`,
+            icon: Clock,
+            tone: "bg-amber-100 text-amber-700",
+            warn: model.ending7 > 0,
+          },
+        ]),
     {
-      id: "low",
-      label: t.dash.opsLowAttend,
-      value: String(model.lowAttend),
-      hint: t.dash.opsLowAttendHint,
-      href: `/attendance${q}`,
-      warn: model.lowAttend > 0,
-      icon: AlertTriangle,
-      tone: "bg-rose-100 text-rose-600",
+      id: "today",
+      label: t.dash.todaySessions,
+      value: String(model.todaySessions.length),
+      hint: fill(t.dash.classStudents, { classes: model.todayClassCount, students: model.todayStudentCount }),
+      href: `/schedule${q}`,
+      icon: CalendarDays,
+      tone: "bg-sky-100 text-sky-600",
     },
     {
       id: "teachers",
@@ -582,16 +579,76 @@ export default function DashboardPage() {
       value: String(model.teacherBusy + model.teacherFree),
       hint: fill(t.dash.opsTeachersHint, { busy: model.teacherBusy, free: model.teacherFree }),
       href: `/teachers${q}`,
-      warn: false,
       icon: Users,
-      tone: "bg-sky-100 text-sky-600",
+      tone: "bg-slate-100 text-slate-600",
     },
   ];
 
-  const iconTone = ["bg-violet-100 text-violet-600", "bg-sky-100 text-sky-600", "bg-rose-100 text-rose-600", "bg-amber-100 text-amber-700"];
+  function renderMetric(card: MetricCard) {
+    const Icon = card.icon;
+    const hintTone = card.hint.startsWith("↑") || card.hint.startsWith("+")
+      ? "text-green-600"
+      : card.hint.startsWith("↓") || card.hint.startsWith("-")
+        ? "text-rose-600"
+        : "text-slate-400";
+    const inner = (
+      <>
+        <div className="flex items-start justify-between gap-1">
+          <span className={cn("crm-kpi-tile inline-flex shrink-0 items-center justify-center rounded-lg", card.tone)}>
+            <Icon aria-hidden />
+          </span>
+          {card.spark ? <Spark values={card.spark} className="mt-0.5 max-w-[40%]" /> : null}
+        </div>
+        <p className="crm-kpi-label mt-1 truncate text-slate-500">{card.label}</p>
+        <p className={cn("crm-kpi-value mt-0.5", card.warn ? "text-amber-700" : "text-[var(--foreground)]")}>
+          {card.value}
+        </p>
+        <p className={cn("crm-kpi-hint mt-0.5 line-clamp-2", hintTone)}>{card.hint}</p>
+      </>
+    );
+    return (
+      <div key={card.id} className="crm-card-elev flex flex-col p-2.5 transition hover:-translate-y-px sm:p-3">
+        <Link href={card.href} className="min-w-0 flex-1">{inner}</Link>
+        {card.feeRemind ? (
+          <div className="mt-1.5 border-t border-[var(--border)] pt-1.5">
+            <FeeRemindButton />
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  const funnelMax = Math.max(1, ...model.funnel.map((f) => f.count));
+  const nearestTask = pickNearestTask(tasks, user?.id, branchId, model.today);
+  const nearestOverdue = nearestTask ? nearestTask.dueDay < model.today : false;
+  const urgentItems = model.groups.find((g) => g.tone === "danger")?.items ?? [];
+  const urgentCount = urgentItems.reduce((n, it) => n + it.count, 0);
+  /** Owner: khóa sắp hết. Teacher (ending đã trong strip): cảnh báo khẩn. */
+  const sideThird: MetricCard = showMoney
+    ? {
+        id: "side-ending",
+        label: t.dash.endingCourses,
+        value: String(model.ending7),
+        hint: t.dash.endingHint,
+        href: `/courses${q}`,
+        icon: Clock,
+        tone: "bg-amber-100 text-amber-700",
+        warn: model.ending7 > 0,
+      }
+    : {
+        id: "side-urgent",
+        label: t.dash.urgent,
+        value: String(urgentCount),
+        hint: urgentItems[0]?.label ?? t.dash.nextTaskNone,
+        href: urgentItems[0]?.href ?? "/tasks",
+        icon: AlertTriangle,
+        tone: "bg-rose-100 text-rose-600",
+        warn: urgentCount > 0,
+      };
+  const SideIcon = sideThird.icon;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="order-first lg:order-1">
         <h1 className="crm-page-title">
           {userName
@@ -605,95 +662,101 @@ export default function DashboardPage() {
               )
             : t.dash.title}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{settings?.name || "Edu Dance"} · {t.common.sample}</p>
-        <form
-          className="mt-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const query = homeQ.trim();
-            router.push(query ? `/students?q=${encodeURIComponent(query)}` : "/students");
-          }}
-        >
-          <label className="flex h-12 items-center gap-2 rounded-[5px] bg-[var(--search)] px-4 text-sm text-[var(--muted)]">
-            <Search size={18} />
-            <input
-              className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
-              placeholder={t.shell.search}
-              value={homeQ}
-              onChange={(e) => setHomeQ(e.target.value)}
-            />
-          </label>
-        </form>
-      </div>
-
-      <div className="order-2 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {kpis.slice(0, 4).map((card, i) => {
-          const Icon = card.icon;
-          const body = (
-            <>
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconTone[i] ?? iconTone[0]}`}>
-                  <Icon size={16} />
-                </span>
-              </div>
-              <p className={`mt-1 text-xl font-extrabold tabular-nums leading-tight sm:text-[2rem] ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
-              <p className={`mt-1 text-xs tabular-nums ${card.hint.startsWith("↑") || card.hint.startsWith("+") ? "text-green-600" : card.hint.startsWith("↓") || card.hint.startsWith("-") ? "text-rose-600" : "text-slate-400"}`}>{card.hint}</p>
-              {card.id === "rate" ? <Spark values={model.attendSpark} /> : null}
-              {card.id === "debt" && showMoney ? (
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-amber-500" style={{ width: `${model.debtShare}%` }} />
-                </div>
-              ) : null}
-            </>
-          );
-          const className = "block rounded-[5px] border border-[var(--border)] bg-[var(--panel)] p-3 sm:p-5";
-          return card.href ? (
-            <Link key={card.label} href={card.href} className={className}>{body}</Link>
-          ) : (
-            <div key={card.label} className={className}>{body}</div>
-          );
-        })}
-      </div>
-
-      <Link href="/dolphin-ai" className="order-5 block rounded-[5px] bg-[var(--brand-50)] px-5 py-4">
-        <p className="text-sm font-semibold text-[var(--brand-700)]">{t.shell.askDolphin}</p>
-        <p className="mt-1 text-sm text-[var(--muted)]">{t.pages.aiLead}</p>
-      </Link>
-
-      <section aria-labelledby="ops-strip-heading" className="order-3 space-y-2">
-        <h2 id="ops-strip-heading" className="crm-section-title">{t.dash.opsStrip}</h2>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          {opsCards.map((card) => {
-            const Icon = card.icon;
-            return (
+        <p className="mt-1 text-sm text-slate-500">
+          {settings?.name || "Edu Dance"} · {t.common.sample}
+          <span className="mx-1.5 text-slate-300">·</span>
+          <span className="text-slate-400">{t.dash.searchHint}</span>
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-3">
+          <section
+            aria-labelledby="home-next-task-heading"
+            className="crm-card-elev col-span-2 flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-3.5 lg:col-span-1"
+          >
+            <div className="min-w-0">
+              <h2 id="home-next-task-heading" className="crm-kpi-eyebrow text-slate-500">
+                {t.dash.nextTask}
+              </h2>
+              {nearestTask ? (
+                <>
+                  <p className="crm-kpi-title mt-1 line-clamp-2 text-[var(--foreground)]">{nearestTask.title}</p>
+                  <p className={cn("crm-kpi-hint mt-0.5 font-semibold", nearestOverdue ? "text-rose-600" : "text-slate-500")}>
+                    {fill(nearestOverdue ? t.dash.nextTaskOverdue : t.dash.nextTaskDue, { day: nearestTask.dueDay })}
+                    {" · "}
+                    {nearestTask.priority === "high" ? t.dash.priHigh : nearestTask.priority === "medium" ? t.dash.priMed : t.dash.priLow}
+                  </p>
+                </>
+              ) : (
+                <p className="crm-kpi-hint mt-1 text-slate-500">{t.dash.nextTaskNone}</p>
+              )}
+            </div>
             <Link
-              key={card.id}
-              href={card.href}
-              className="rounded-[5px] border border-[var(--border)] bg-[var(--panel)] p-3 transition hover:-translate-y-px hover:border-[var(--brand-100)]"
+              href="/tasks"
+              className="crm-kpi-label inline-flex h-[clamp(2.25rem,2rem+0.5svw,2.75rem)] shrink-0 items-center justify-center rounded-xl bg-[var(--brand-500)] px-3 font-semibold text-white crm-btn-elev hover:bg-[var(--brand-600)]"
             >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${card.tone}`}>
-                  <Icon size={16} />
-                </span>
-              </div>
-              <p className={`mt-1 text-xl font-extrabold tabular-nums leading-tight ${card.warn ? "text-amber-700" : "text-[var(--foreground)]"}`}>{card.value}</p>
-              <p className="mt-1 text-xs text-slate-400">{card.hint || t.dash.opsNone}</p>
-              {card.id === "fees" ? <FeeRemindButton /> : null}
+              {t.dash.nextTaskCta}
             </Link>
-            );
-          })}
+          </section>
+          <Link
+            href={`/students${q}`}
+            className="crm-card-elev flex flex-col p-2.5 transition hover:-translate-y-px sm:p-3"
+          >
+            <span className="crm-kpi-tile inline-flex items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+              <Users aria-hidden />
+            </span>
+            <p className="crm-kpi-label mt-1 truncate text-slate-500">{t.dash.newStudents}</p>
+            <p className="crm-kpi-value mt-0.5 text-[var(--foreground)]">{model.newStudents}</p>
+            <p className="crm-kpi-hint mt-0.5 text-slate-400">{fill(t.dash.vsLast, { n: `${model.studentDelta >= 0 ? "+" : ""}${model.studentDelta}` })}</p>
+          </Link>
+          <Link
+            href={sideThird.href}
+            className="crm-card-elev flex flex-col p-2.5 transition hover:-translate-y-px sm:p-3"
+          >
+            <span className={cn("crm-kpi-tile inline-flex items-center justify-center rounded-lg", sideThird.tone)}>
+              <SideIcon aria-hidden />
+            </span>
+            <p className="crm-kpi-label mt-1 truncate text-slate-500">{sideThird.label}</p>
+            <p className={cn("crm-kpi-value mt-0.5", sideThird.warn ? "text-amber-700" : "text-[var(--foreground)]")}>{sideThird.value}</p>
+            <p className="crm-kpi-hint mt-0.5 line-clamp-2 text-slate-400">{sideThird.hint}</p>
+          </Link>
+        </div>
+      </div>
+
+      <section aria-label={t.dash.title} className="order-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {metricCards.map((card) => renderMetric(card))}
         </div>
       </section>
 
+      <div className="order-5">
+        <button
+          type="button"
+          onClick={() => setAiOpen((v) => !v)}
+          className="crm-gradient flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left"
+          aria-expanded={aiOpen}
+        >
+          <span>
+            <span className="block text-sm font-semibold text-white">{t.shell.askDolphin}</span>
+            {!aiOpen ? <span className="mt-0.5 block text-xs text-white/75">{t.dash.aiBarHint}</span> : null}
+          </span>
+          <ChevronDown size={18} className={cn("shrink-0 text-white/90 transition-transform", aiOpen && "rotate-180")} aria-hidden />
+        </button>
+        {aiOpen ? (
+          <div className="mt-2 rounded-xl border border-[var(--border)] bg-white p-3">
+            <p className="text-sm text-slate-600">{t.pages.aiLead}</p>
+            <Link href="/dolphin-ai" className="mt-2 inline-flex text-sm font-semibold text-[var(--brand-600)] hover:underline">
+              {t.dash.aiBarOpen} →
+            </Link>
+          </div>
+        ) : null}
+      </div>
+
       <div className="order-4 grid grid-cols-2 gap-3 lg:order-7">
         {model.branchRows.length > 1 ? (
-          <section className="col-span-2 rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5" aria-labelledby="home-branches-heading">
+          <section className="col-span-2 crm-card-elev p-3 sm:p-5" aria-labelledby="home-branches-heading">
             <h2 id="home-branches-heading" className="crm-section-title">{t.dash.branches}</h2>
             <ul className="mt-3 space-y-2 min-[641px]:hidden">
               {model.branchRows.map((row) => (
-                <li key={row.id} className={cn("rounded-[5px] border border-[var(--border)] p-3", branchId === row.id && "bg-[var(--brand-50)]")}>
+                <li key={row.id} className={cn("rounded-xl border border-[var(--border)] p-3", branchId === row.id && "bg-[var(--brand-50)]")}>
                   <p className="font-bold text-[var(--foreground)]">{row.name}</p>
                   <dl className="mt-2 space-y-1.5 text-sm">
                     <div className="flex items-baseline justify-between gap-3">
@@ -758,20 +821,20 @@ export default function DashboardPage() {
             </div>
           </section>
         ) : null}
-        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 sm:p-5">
+        <section className="crm-card-elev p-3 sm:p-4">
           <h2 className="crm-section-title">{t.dash.workToday}</h2>
           {tasks.filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId)).length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{t.dash.noWork}</p>
+            <p className="mt-2 text-sm text-slate-500">{t.dash.noWork}</p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-1 divide-y divide-slate-100">
               {tasks
                 .filter((tk) => tk.dueDay === model.today && tk.status !== "done" && (branchId === "all" || !tk.branchId || tk.branchId === branchId))
                 .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]))
                 .map((tk) => (
                   <li key={tk.id}>
-                    <Link href="/tasks" className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 hover:bg-slate-50">
-                      <span className="text-sm">{tk.title}</span>
-                      <span className={`rounded-[5px] px-1.5 py-0.5 text-xs font-semibold ${tk.priority === "high" ? "bg-rose-50 text-rose-700" : tk.priority === "medium" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                    <Link href="/tasks" className="flex items-center justify-between gap-2 py-1.5 hover:bg-slate-50/80">
+                      <span className="min-w-0 truncate text-sm">{tk.title}</span>
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${tk.priority === "high" ? "bg-rose-50 text-rose-700" : tk.priority === "medium" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
                         {tk.priority === "high" ? t.dash.priHigh : tk.priority === "medium" ? t.dash.priMed : t.dash.priLow}
                       </span>
                     </Link>
@@ -780,7 +843,7 @@ export default function DashboardPage() {
             </ul>
           )}
         </section>
-        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
+        <section className="crm-card-elev p-3 sm:p-4">
           <MobileFold title={t.dash.freeSlots} panelId="home-free-rooms" titleClassName="crm-section-title">
           {(() => {
             const branchRooms = (rooms ?? []).filter((r) => branchId === "all" || r.branchId === branchId);
@@ -795,11 +858,11 @@ export default function DashboardPage() {
               .sort((a, b) => a[0].localeCompare(b[0]))
               .map(([start, used]) => ({ start, names: branchRooms.filter((r) => !used.has(r.id)).map((r) => r.name) }))
               .filter((line) => line.names.length > 0);
-            if (lines.length === 0) return <p className="mt-3 text-sm text-slate-500">{t.dash.noFree}</p>;
+            if (lines.length === 0) return <p className="mt-2 text-sm text-slate-500">{t.dash.noFree}</p>;
             return (
-              <ul className="mt-3 space-y-2 text-sm">
+              <ul className="mt-1 divide-y divide-slate-100 text-sm">
                 {lines.map((line) => (
-                  <li key={line.start} className="flex justify-between gap-3">
+                  <li key={line.start} className="flex justify-between gap-3 py-1.5">
                     <span className="font-semibold tabular-nums">{line.start}</span>
                     <span className="text-right text-slate-600">{line.names.join(", ")}</span>
                   </li>
@@ -812,7 +875,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="order-first grid gap-3 lg:order-4 lg:grid-cols-5">
-        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-3" aria-labelledby="home-revenue-heading">
+        <section className="crm-card-elev p-4 lg:col-span-3" aria-labelledby="home-revenue-heading">
           <MobileFold title={t.dash.revenueYear} headingId="home-revenue-heading" panelId="home-revenue" defaultOpen>
           {showMoney ? (
             <>
@@ -837,11 +900,11 @@ export default function DashboardPage() {
           )}
           </MobileFold>
         </section>
-        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-4 lg:col-span-2" aria-labelledby="home-funnel-heading">
+        <section className="crm-card-elev p-4 lg:col-span-2" aria-labelledby="home-funnel-heading">
           <MobileFold title={t.dash.funnel} headingId="home-funnel-heading" panelId="home-funnel">
           <p className="mt-1 text-xs text-slate-400">{t.dash.funnelNote}</p>
           {model.staleLeads > 0 ? (
-            <p className="mt-2 rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
               {fill(t.dash.stale, { n: model.staleLeads })}
             </p>
           ) : null}
@@ -851,7 +914,7 @@ export default function DashboardPage() {
               const conv = next && step.count > 0 ? Math.round((next.count / step.count) * 100) : null;
               return (
                 <li key={step.id}>
-                  <Link href={`/follow-up?stage=${step.id}`} className="block rounded-[5px] px-1 py-1 hover:bg-slate-50">
+                  <Link href={`/follow-up?stage=${step.id}`} className="block rounded-xl px-1 py-1 hover:bg-slate-50">
                     <div className="flex items-center justify-between text-sm">
                       <span>{step.label}</span>
                       <span className="font-semibold tabular-nums">{step.count}</span>
@@ -870,16 +933,15 @@ export default function DashboardPage() {
       </div>
 
       <div className="order-6 grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[5px] border border-slate-200 bg-[var(--card)] p-5">
-          <h2 className="text-base font-semibold">{t.dash.todayClasses}</h2>
+        <section className="crm-card-elev p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="crm-section-title">{t.dash.todayClasses}</h2>
+            <Link href={`/schedule${q}`} className="text-xs font-semibold text-[var(--brand-600)]">{t.dash.viewSchedule}</Link>
+          </div>
           {model.todaySessions.length === 0 ? (
-            <div className="mt-6 text-center">
-              <CalendarDays className="mx-auto text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">{t.dash.noClassToday}</p>
-              <Link href={`/schedule${q}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
-            </div>
+            <p className="mt-3 text-sm text-slate-500">{t.dash.noClassToday}</p>
           ) : (
-            <ul className="mt-3 space-y-3">
+            <ul className="mt-2 divide-y divide-slate-100">
               {model.todaySessions.map((s) => {
                 const course = courses?.find((c) => c.id === s.courseId);
                 const teacher = users?.find((u) => u.id === s.teacherId);
@@ -890,98 +952,28 @@ export default function DashboardPage() {
                 const bar = ratio >= 0.95 ? "bg-rose-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-[var(--brand-500)]";
                 const phase = phaseLabel(s.start);
                 return (
-                  <li key={s.id} className="rounded-[5px] border border-slate-100 p-3">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex gap-2">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: teacher?.avatarColor ?? "#64748B" }}>
-                          {initials(teacher?.name ?? "?")}
+                  <li key={s.id} className="flex items-center gap-2 py-2 first:pt-1">
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: teacher?.avatarColor ?? "#64748B" }}>
+                      {initials(teacher?.name ?? "?")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-sm font-semibold tabular-nums">{s.start}</span>
+                        <span className="truncate text-sm font-medium">{course?.name}</span>
+                        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold", phase === "live" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600")}>
+                          {phase === "live" ? t.dash.live : t.dash.soon}
                         </span>
-                        <div>
-                          <p className="font-semibold">{s.start} · {course?.name} · {levelLabel(course?.level ?? "")}</p>
-                          <p className="text-sm text-slate-500">{teacher?.name} · {room?.name}</p>
-                          <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                            <span>{branches?.find((b) => b.id === s.branchId)?.name}</span>
-                            <span className={`rounded-[5px] px-2 py-0.5 font-semibold ${phase === "live" ? "bg-green-50 text-[#16A34A]" : "bg-slate-100 text-slate-600"}`}>{phase === "live" ? t.dash.live : t.dash.soon}</span>
-                          </p>
+                      </div>
+                      <p className="truncate text-xs text-slate-500">{teacher?.name} · {room?.name} · {levelLabel(course?.level ?? "")}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100">
+                          <div className={`h-full ${bar}`} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
                         </div>
+                        <span className="shrink-0 text-[10px] tabular-nums text-slate-500">{seated}/{cap}</span>
                       </div>
-                      <Link href={`/attendance?class=${s.id}`} className={ctaOutline}>
-                        {t.dash.attend}
-                      </Link>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                        <div className={`h-full ${bar}`} style={{ width: `${Math.min(100, ratio * 100)}%` }} />
-                      </div>
-                      <span className="text-xs tabular-nums text-slate-500">{seated}/{cap}</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {model.todaySessions.length > 0 ? (
-            <Link href={`/schedule${q}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-700">{t.dash.viewSchedule}</Link>
-          ) : null}
-        </section>
-        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
-            <Link href="/tasks" className="inline-flex items-center gap-2 hover:text-[var(--brand-700)]">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-[5px] bg-[var(--brand-50)] text-[var(--brand-600)]">
-                <Sparkles size={16} aria-hidden />
-              </span>
-              {t.dash.tasks}
-            </Link>
-          </h2>
-          {model.groups.length === 0 ? (
-            <div className="mt-8 text-center">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
-                <Check />
-              </span>
-              <p className="mt-3 text-sm font-medium">{t.dash.noTasks}</p>
-            </div>
-          ) : (
-            <div className="mt-2 space-y-2">
-              {model.groups.map((group) => (
-                <div key={group.title} className={`rounded-[5px] border-l-4 px-2 py-1 ${group.tone === "danger" ? "border-[#DC2626] bg-rose-50/70" : group.tone === "warn" ? "border-[#D97706] bg-amber-50/70" : "border-slate-300 bg-slate-50"}`}>
-                  <p className={`text-xs font-semibold uppercase ${group.tone === "danger" ? "text-rose-700" : group.tone === "warn" ? "text-amber-700" : "text-slate-500"}`}>{group.title}</p>
-                  <ul className="mt-1 space-y-1">
-                    {group.items.map((item) => (
-                      <li key={item.id}>
-                        <Link href={item.href} className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 hover:bg-slate-50">
-                          <span className="text-sm">{item.label}</span>
-                          <span className="flex items-center gap-2">
-                            <span className={`rounded-[5px] px-1.5 py-0.5 text-xs font-semibold tabular-nums ${group.tone === "danger" ? "bg-white text-[#DC2626]" : group.tone === "warn" ? "bg-white text-[#D97706]" : "bg-white text-slate-600"}`}>{item.count}</span>
-                            <span className="text-xs font-semibold text-emerald-700">{t.dash.viewAll}</span>
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
-
-      <div className="order-6 grid gap-3 lg:grid-cols-2">
-        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
-          <h2 className="text-base font-semibold">{t.dash.opsLowAttend}</h2>
-          {model.lowAttendSessions.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{t.dash.opsNone}</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {model.lowAttendSessions.slice(0, 8).map((s) => {
-                const marks = (attendance ?? []).filter((a) => a.classId === s.id && a.subject === "student");
-                const present = marks.filter((a) => a.status === "present").length;
-                const rate = marks.length === 0 ? 0 : Math.round((present / marks.length) * 100);
-                const course = courses?.find((c) => c.id === s.courseId);
-                return (
-                  <li key={s.id}>
-                    <Link href={`/attendance?class=${s.id}`} className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 text-sm hover:bg-slate-50">
-                      <span className="min-w-0 truncate">{s.day.slice(5)} · {s.start} · {course?.name ?? s.name}</span>
-                      <span className="shrink-0 font-semibold tabular-nums text-rose-600">{rate}%</span>
+                    <Link href={`/attendance?class=${s.id}`} className="shrink-0 rounded-lg border border-[var(--border)] px-2 py-1.5 text-[11px] font-semibold text-[var(--brand-600)] hover:bg-[var(--brand-50)]">
+                      {t.dash.attend}
                     </Link>
                   </li>
                 );
@@ -989,17 +981,88 @@ export default function DashboardPage() {
             </ul>
           )}
         </section>
-        <section className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
-          <h2 className="text-base font-semibold">{t.dash.overloadTitle}</h2>
-          {model.overloaded.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{t.dash.noOverload}</p>
+        <section className="crm-card-elev p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="crm-section-title">
+              <Link href="/tasks" className="inline-flex items-center gap-1.5 hover:text-[var(--brand-700)]">
+                <Sparkles size={14} aria-hidden className="text-[var(--brand-600)]" />
+                {t.dash.tasks}
+              </Link>
+            </h2>
+            <Link href="/tasks" className="text-xs font-semibold text-[var(--brand-600)]">{t.dash.viewAll}</Link>
+          </div>
+          {model.groups.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">{t.dash.noTasks}</p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-2 divide-y divide-slate-100">
+              {model.groups.flatMap((group) =>
+                group.items.map((item) => (
+                  <li key={`${group.title}-${item.id}`}>
+                    <Link href={item.href} className="flex items-center justify-between gap-2 py-2 text-sm hover:bg-slate-50/80">
+                      <span className="min-w-0 truncate">
+                        <span className={cn(
+                          "mr-1.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                          group.tone === "danger" ? "bg-rose-50 text-rose-700" : group.tone === "warn" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600",
+                        )}>
+                          {group.title}
+                        </span>
+                        {item.label}
+                      </span>
+                      <span className={cn(
+                        "shrink-0 rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums",
+                        group.tone === "danger" ? "bg-rose-50 text-rose-700" : group.tone === "warn" ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600",
+                      )}>
+                        {item.count}
+                      </span>
+                    </Link>
+                  </li>
+                )),
+              )}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <div className="order-6 grid gap-3 lg:grid-cols-2">
+        <section className="crm-card-elev p-3 sm:p-4">
+          <h2 className="crm-section-title">{t.dash.opsLowAttend}</h2>
+          {model.lowAttendSessions.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">{t.dash.opsNone}</p>
+          ) : (
+            <ul className="mt-1 divide-y divide-slate-100">
+              {model.lowAttendSessions.slice(0, 8).map((s) => {
+                const marks = (attendance ?? []).filter((a) => a.classId === s.id && a.subject === "student");
+                const present = marks.filter((a) => a.status === "present").length;
+                const rate = marks.length === 0 ? 0 : Math.round((present / marks.length) * 100);
+                const course = courses?.find((c) => c.id === s.courseId);
+                return (
+                  <li key={s.id}>
+                    <Link href={`/attendance?class=${s.id}`} className="flex items-center justify-between gap-2 py-1.5 text-sm hover:bg-slate-50/80">
+                      <span className="min-w-0 truncate text-slate-700">{s.day.slice(5)} · {s.start} · {course?.name ?? s.name}</span>
+                      <span className="shrink-0 rounded-full bg-rose-50 px-1.5 py-0.5 text-xs font-bold tabular-nums text-rose-700">{rate}%</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+        <section className="crm-card-elev p-3 sm:p-4">
+          <h2 className="crm-section-title">{t.dash.overloadTitle}</h2>
+          {model.overloaded.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">{t.dash.noOverload}</p>
+          ) : (
+            <ul className="mt-1 divide-y divide-slate-100">
               {model.overloaded.map((row) => (
                 <li key={row.id}>
-                  <Link href={`/teachers?teacher=${row.id}`} className="flex items-center justify-between gap-2 rounded-[5px] px-2 py-2 text-sm hover:bg-slate-50">
-                    <span className="min-w-0 truncate font-semibold">{row.name}</span>
-                    <span className="shrink-0 font-semibold tabular-nums text-amber-700">{fill(t.dash.overloadLine, { n: row.count })}</span>
+                  <Link href={`/teachers?teacher=${row.id}`} className="flex items-center justify-between gap-2 py-1.5 text-sm hover:bg-slate-50/80">
+                    <span className="inline-flex min-w-0 items-center gap-2 truncate">
+                      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-800">
+                        {initials(row.name)}
+                      </span>
+                      <span className="truncate font-medium">{row.name}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-bold tabular-nums text-amber-700">{fill(t.dash.overloadLine, { n: row.count })}</span>
                   </Link>
                 </li>
               ))}
@@ -1009,34 +1072,49 @@ export default function DashboardPage() {
       </div>
 
       <div className="order-8 grid items-stretch gap-3 lg:grid-cols-2">
-        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4" aria-labelledby="home-top-courses-heading">
+        <section className="h-full crm-card-elev p-3 sm:p-4" aria-labelledby="home-top-courses-heading">
           <MobileFold title={t.dash.topCourses} headingId="home-top-courses-heading" panelId="home-top-courses">
-          <ol className="mt-3 space-y-2">
+          <ol className="mt-2 space-y-1.5">
             {model.ranking.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noCourse}</li> : null}
-            {model.ranking.map((c, i) => (
-              <li key={c.id}>
-                <Link href={`/courses${q}`} className="flex items-center justify-between rounded-[5px] px-1 py-1 text-sm hover:bg-slate-50">
-                  <span>{i + 1}. {c.name} · {levelLabel(c.level)}</span>
-                  <span className="font-semibold tabular-nums">{fill(t.dash.studentCount, { n: c.count })}</span>
-                </Link>
-              </li>
-            ))}
+            {model.ranking.map((c, i) => {
+              const maxCount = Math.max(1, ...model.ranking.map((r) => r.count));
+              return (
+                <li key={c.id}>
+                  <Link href={`/courses${q}`} className="flex items-center gap-2 rounded-lg px-1 py-1 text-sm hover:bg-slate-50">
+                    <span className="w-4 shrink-0 text-xs font-bold text-slate-400">{i + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex justify-between gap-2">
+                        <span className="truncate font-medium">{c.name} · {levelLabel(c.level)}</span>
+                        <span className="shrink-0 text-xs font-semibold tabular-nums text-slate-600">{c.count}</span>
+                      </span>
+                      <span className="mt-1 block h-1 overflow-hidden rounded-full bg-slate-100">
+                        <span className="block h-full rounded-full bg-[var(--brand-400)]" style={{ width: `${(c.count / maxCount) * 100}%` }} />
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ol>
           </MobileFold>
         </section>
-        <section className="h-full rounded-[5px] border border-slate-200 bg-[var(--card)] p-4" aria-labelledby="home-activity-heading">
+        <section className="h-full crm-card-elev p-3 sm:p-4" aria-labelledby="home-activity-heading">
           <MobileFold
-            title={<span className="inline-flex items-center gap-2"><LineChart size={16} aria-hidden /> {t.dash.recent}</span>}
+            title={<span className="inline-flex items-center gap-2"><LineChart size={14} aria-hidden /> {t.dash.recent}</span>}
             headingId="home-activity-heading"
             panelId="home-activity"
           >
-          <ul className="mt-3 space-y-3">
+          <ul className="mt-2 divide-y divide-slate-100">
             {model.activity.length === 0 ? <li className="text-sm text-slate-500">{t.dash.noActivity}</li> : null}
             {model.activity.map((a) => (
-              <li key={a.id} className="relative border-l border-slate-200 pl-3 text-sm">
-                <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)]" />
-                <p>{a.text}</p>
-                <p className="text-xs text-slate-400">{relativeDay(a.day, model.today, { today: t.dash.todayWord, yesterday: t.dash.yesterday, ago: t.dash.daysAgo })}</p>
+              <li key={a.id} className="flex items-start justify-between gap-3 py-1.5 text-sm">
+                <span className="inline-flex min-w-0 items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-500)]" aria-hidden />
+                  <span className="min-w-0 leading-snug text-slate-700">{a.text}</span>
+                </span>
+                <time className="shrink-0 text-[11px] text-slate-400" dateTime={a.day}>
+                  {relativeDay(a.day, model.today, { today: t.dash.todayWord, yesterday: t.dash.yesterday, ago: t.dash.daysAgo })}
+                </time>
               </li>
             ))}
           </ul>

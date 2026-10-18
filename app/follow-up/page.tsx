@@ -11,7 +11,8 @@ import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { leadStageLabel, leadStages } from "@/lib/labels";
 import { usePageQuery } from "@/lib/page-query";
-import { shareTransferNotice } from "@/lib/share-transfer";
+import { SharePreviewDialog, type SharePreviewInput } from "@/components/share-preview";
+import { CrmModalShell, CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import { dayFromOffset, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
@@ -119,7 +120,7 @@ export default function LeadsPage() {
         <input className={inputClassInline} type="date" value={toDay} onChange={(e) => setToDay(e.target.value)} aria-label={t.care.toDay} />
       </div>
       {chosen.length > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-[5px] border border-slate-200 bg-white px-3 py-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
           <span className="text-sm font-semibold">{fill(t.care.selected, { n: chosen.length })}</span>
           <select className={`${inputClass} w-auto`} value={assignTo} onChange={(e) => setAssignTo(e.target.value)}>
             <option value="">{t.care.assignTo}</option>
@@ -133,7 +134,7 @@ export default function LeadsPage() {
       {mode === "kanban" ? (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
           {stages.map((col) => (
-            <section key={col.id} className="w-72 shrink-0 rounded-[5px] bg-slate-100/80 p-2" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const id = e.dataTransfer.getData("text/plain"); if (id) void moveLead(id, col.id); }}>
+            <section key={col.id} className="w-72 shrink-0 rounded-xl bg-slate-100/80 p-2" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { const id = e.dataTransfer.getData("text/plain"); if (id) void moveLead(id, col.id); }}>
               <h2 className="px-2 py-2 text-sm font-semibold">{col.label}<span className="ml-2 text-slate-400">{filtered.filter((l) => l.stage === col.id).length}</span></h2>
               <ul className="space-y-2">
                 {filtered.filter((l) => l.stage === col.id).map((l) => {
@@ -141,7 +142,7 @@ export default function LeadsPage() {
                   const cold = isCold(l);
                   return (
                     <li key={l.id}>
-                      <article className={`rounded-[5px] bg-[var(--card)] p-3 ${cold ? "border border-amber-400" : "border border-transparent"}`}>
+                      <article className={`rounded-xl bg-[var(--card)] p-3 ${cold ? "border border-amber-400" : "border border-transparent"}`}>
                         <div className="flex items-start gap-2">
                           <input type="checkbox" className="mt-1 h-5 w-5" checked={picked.includes(l.id)} aria-label={`Chọn ${l.name}`} onChange={() => toggle(l.id)} />
                           <button type="button" draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", l.id)} onClick={() => setOpenId(l.id)} className="min-w-0 flex-1 text-left">
@@ -160,7 +161,7 @@ export default function LeadsPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-4 max-h-[70dvh] overflow-auto rounded-[5px] border border-slate-200 bg-white">
+        <div className="mt-4 max-h-[70dvh] overflow-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full min-w-[860px] text-sm">
             <thead className="sticky top-0 bg-slate-50 text-left">
               <tr>
@@ -190,7 +191,7 @@ export default function LeadsPage() {
 
       {form ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
-          <form className="w-full max-w-md rounded-[5px] bg-white p-4" onSubmit={(e) => {
+          <form className="w-full max-w-md rounded-xl bg-white p-4" onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim() || !phone.trim() || !me) return;
             void addLead({ name, phone, interest, source: leadSource, ownerId: me.id }).then(() => { setForm(false); setName(""); setPhone(""); setInterest(""); });
@@ -272,6 +273,8 @@ function BirthdayReminders() {
   const [shown, setShown] = useState<Record<string, { promoName: string; code: string; percent: string; startDay: string; endDay: string }>>({});
   const [care, setCare] = useState<Record<string, { zalo: boolean; code: boolean }>>({});
   const [shareNote, setShareNote] = useState("");
+  const [shareDraft, setShareDraft] = useState<SharePreviewInput | null>(null);
+  const [pendingCare, setPendingCare] = useState<{ studentId: string; kind: "zalo" | "code" } | null>(null);
   const [busy, setBusy] = useState(false);
   const seeContact = canSeeContact(me?.role);
   const canSave = canManagePromotions(me?.role);
@@ -371,19 +374,20 @@ function BirthdayReminders() {
     setShareNote("");
   }
 
-  async function shareCreated() {
+  function openShareCreated() {
     if (!created) return;
-    const text = fill(t.care.shareText, {
-      name: created.studentName,
-      code: created.code,
-      percent: created.percent,
-      from: created.startDay,
-      to: created.endDay,
+    setPendingCare({ studentId: created.studentId, kind: "code" });
+    setShareDraft({
+      title: created.promoName,
+      text: fill(t.care.shareText, {
+        name: created.studentName,
+        code: created.code,
+        percent: created.percent,
+        from: created.startDay,
+        to: created.endDay,
+      }),
+      phone: created.phone,
     });
-    const result = await shareTransferNotice({ title: created.promoName, text, phone: created.phone });
-    if (result === "aborted") return;
-    setShareNote(result === "copied" ? t.care.shareCopied : "");
-    markCare(created.studentId, "code");
   }
 
   function markCare(studentId: string, kind: "zalo" | "code") {
@@ -393,19 +397,20 @@ function BirthdayReminders() {
     }));
   }
 
-  async function sendZaloWish(student: Student) {
-    const result = await shareTransferNotice({
+  function sendZaloWish(student: Student) {
+    setPendingCare({ studentId: student.id, kind: "zalo" });
+    setShareDraft({
       title: t.care.shareZalo,
       text: fill(t.care.zaloWish, { name: student.name }),
       phone: student.phone,
     });
-    if (result !== "aborted") markCare(student.id, "zalo");
   }
 
-  async function shareCardCode(student: Student) {
+  function shareCardCode(student: Student) {
     const row = shown[student.id];
     if (!row) return;
-    const result = await shareTransferNotice({
+    setPendingCare({ studentId: student.id, kind: "code" });
+    setShareDraft({
       title: row.promoName,
       text: fill(t.care.shareText, {
         name: student.name,
@@ -416,7 +421,12 @@ function BirthdayReminders() {
       }),
       phone: student.phone,
     });
-    if (result !== "aborted") markCare(student.id, "code");
+  }
+
+  function onShareDone(result: "shared" | "copied") {
+    setShareNote(result === "copied" ? t.care.shareCopied : t.care.shareOpened);
+    if (pendingCare) markCare(pendingCare.studentId, pendingCare.kind);
+    setPendingCare(null);
   }
 
   return (
@@ -434,7 +444,7 @@ function BirthdayReminders() {
                 const phone = student.phone?.trim() ?? "";
                 const zalo = zaloHref(phone);
                 return (
-                  <li key={student.id} className="rounded-[5px] border border-slate-200 bg-white px-3 py-3">
+                  <li key={student.id} className="rounded-xl border border-slate-200 bg-white px-3 py-3">
                     <p className="font-semibold">{student.name}</p>
                     <p className="text-sm text-slate-500">
                       <time dateTime={day}>{left === 0 ? t.care.birthdayToday : fill(t.care.birthdayIn, { day, n: left })}</time>
@@ -454,15 +464,15 @@ function BirthdayReminders() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Button type="button" className="min-h-10" onClick={() => openPreview(student, day)}>{t.care.quickCode}</Button>
                       {shown[student.id] ? (
-                        <Button type="button" variant="outline" className="min-h-10" onClick={() => void shareCardCode(student)}>{t.care.shareCode}</Button>
+                        <Button type="button" variant="outline" className="min-h-10" onClick={() => shareCardCode(student)}>{t.care.shareCode}</Button>
                       ) : null}
                       {seeContact && phone ? (
-                        <a className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`tel:${phone}`}>{t.care.call}</a>
+                        <a className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`tel:${phone}`}>{t.care.call}</a>
                       ) : null}
                       {seeContact && zalo ? (
-                        <button type="button" className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" onClick={() => void sendZaloWish(student)}>Zalo</button>
+                        <button type="button" className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-semibold" onClick={() => sendZaloWish(student)}>Zalo</button>
                       ) : null}
-                      <Link className="inline-flex min-h-10 items-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`/students/${student.id}`}>{t.care.openStudent}</Link>
+                      <Link className="inline-flex min-h-10 items-center rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-semibold" href={`/students/${student.id}`}>{t.care.openStudent}</Link>
                     </div>
                   </li>
                 );
@@ -472,67 +482,147 @@ function BirthdayReminders() {
         </div>
       ))}
       {created ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
-          <div className="w-full max-w-md rounded-[5px] bg-white p-4">
-            <h3 className="text-lg font-bold">{t.care.saved}</h3>
-            <dl className="mt-3 grid grid-cols-2 gap-y-2 text-sm">
-              <dt className="text-slate-500">{t.promo.name}</dt>
-              <dd className="text-right font-semibold">{created.promoName}</dd>
-              <dt className="text-slate-500">{t.care.code}</dt>
-              <dd className="text-right font-semibold tabular-nums">{created.code}</dd>
-              <dt className="text-slate-500">{t.care.discount}</dt>
-              <dd className="text-right tabular-nums">{created.percent}%</dd>
-              <dt className="text-slate-500">{t.care.fromDay}</dt>
-              <dd className="text-right"><time dateTime={created.startDay}>{created.startDay}</time></dd>
-              <dt className="text-slate-500">{t.care.toDay}</dt>
-              <dd className="text-right"><time dateTime={created.endDay}>{created.endDay}</time></dd>
-            </dl>
-            {shareNote ? <p className="mt-3 text-sm text-green-800">{shareNote}</p> : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => setCreated(null)}>{t.common.close}</Button>
-              <Button type="button" onClick={() => void shareCreated()}>{t.care.shareZalo}</Button>
-            </div>
-          </div>
-        </div>
+        <CreatedPromoModal
+          created={created}
+          shareNote={shareNote}
+          onClose={() => setCreated(null)}
+          onShare={openShareCreated}
+        />
       ) : null}
       {draft ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center">
-          <form
-            className="w-full max-w-md rounded-[5px] bg-white p-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void saveDraft();
-            }}
-          >
-            <h3 className="text-lg font-bold">{t.care.previewTitle}</h3>
-            <div className="mt-3 space-y-3">
-              <Field label={t.promo.name}>
-                <input className={inputClass} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-              </Field>
-              <Field label={t.care.code}>
-                <input className={inputClass} value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })} />
-              </Field>
-              <Field label={t.care.discount}>
-                <input className={inputClass} inputMode="numeric" value={draft.percent} onChange={(event) => setDraft({ ...draft, percent: event.target.value })} />
-              </Field>
-              <Field label={t.care.fromDay}>
-                <input className={inputClass} type="date" value={draft.startDay} onChange={(event) => setDraft({ ...draft, startDay: event.target.value })} />
-              </Field>
-              <Field label={t.care.toDay}>
-                <input className={inputClass} type="date" value={draft.endDay} onChange={(event) => setDraft({ ...draft, endDay: event.target.value })} />
-              </Field>
-            </div>
-            {!canSave ? <p className="mt-3 text-sm text-slate-500">{t.care.receptionHint}</p> : null}
-            {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t.common.cancel}</Button>
-              <Button type="button" variant="outline" onClick={() => void copyDraft()}>{copied ? t.care.copied : t.care.copyCode}</Button>
-              {canSave ? <Button type="submit" disabled={busy}>{t.care.saveCode}</Button> : null}
-            </div>
-          </form>
-        </div>
+        <DraftPromoModal
+          draft={draft}
+          error={error}
+          busy={busy}
+          copied={copied}
+          canSave={canSave}
+          onClose={() => setDraft(null)}
+          onCopy={() => void copyDraft()}
+          onChange={setDraft}
+          onSave={() => void saveDraft()}
+        />
       ) : null}
+      <SharePreviewDialog
+        open={Boolean(shareDraft)}
+        draft={shareDraft}
+        onClose={() => {
+          setShareDraft(null);
+          setPendingCare(null);
+        }}
+        onDone={onShareDone}
+      />
     </section>
+  );
+}
+
+function CreatedPromoModal({
+  created,
+  shareNote,
+  onClose,
+  onShare,
+}: {
+  created: {
+    promoName: string;
+    code: string;
+    percent: string;
+    startDay: string;
+    endDay: string;
+  };
+  shareNote: string;
+  onClose: () => void;
+  onShare: () => void;
+}) {
+  const { t } = useI18n();
+  const { leaving, requestClose } = useOverlayClose(onClose);
+  return (
+    <CrmModalShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
+      <h3 className="text-lg font-bold">{t.care.saved}</h3>
+      <dl className="mt-3 grid grid-cols-2 gap-y-2 text-sm">
+        <dt className="text-slate-500">{t.promo.name}</dt>
+        <dd className="text-right font-semibold">{created.promoName}</dd>
+        <dt className="text-slate-500">{t.care.code}</dt>
+        <dd className="text-right font-semibold tabular-nums">{created.code}</dd>
+        <dt className="text-slate-500">{t.care.discount}</dt>
+        <dd className="text-right tabular-nums">{created.percent}%</dd>
+        <dt className="text-slate-500">{t.care.fromDay}</dt>
+        <dd className="text-right"><time dateTime={created.startDay}>{created.startDay}</time></dd>
+        <dt className="text-slate-500">{t.care.toDay}</dt>
+        <dd className="text-right"><time dateTime={created.endDay}>{created.endDay}</time></dd>
+      </dl>
+      {shareNote ? <p className="mt-3 text-sm text-green-800">{shareNote}</p> : null}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={requestClose}>{t.common.close}</Button>
+        <Button type="button" onClick={onShare}>{t.care.shareZalo}</Button>
+      </div>
+    </CrmModalShell>
+  );
+}
+
+function DraftPromoModal({
+  draft,
+  error,
+  busy,
+  copied,
+  canSave,
+  onClose,
+  onCopy,
+  onChange,
+  onSave,
+}: {
+  draft: {
+    studentId: string;
+    name: string;
+    code: string;
+    percent: string;
+    startDay: string;
+    endDay: string;
+  };
+  error: string;
+  busy: boolean;
+  copied: boolean;
+  canSave: boolean;
+  onClose: () => void;
+  onCopy: () => void;
+  onChange: (next: typeof draft) => void;
+  onSave: () => void;
+}) {
+  const { t } = useI18n();
+  const { leaving, requestClose } = useOverlayClose(onClose);
+  return (
+    <CrmModalShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close} panelClassName="max-h-[90vh] overflow-y-auto">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSave();
+        }}
+      >
+        <h3 className="text-lg font-bold">{t.care.previewTitle}</h3>
+        <div className="mt-3 space-y-3">
+          <Field label={t.promo.name}>
+            <input className={inputClass} value={draft.name} onChange={(event) => onChange({ ...draft, name: event.target.value })} />
+          </Field>
+          <Field label={t.care.code}>
+            <input className={inputClass} value={draft.code} onChange={(event) => onChange({ ...draft, code: event.target.value })} />
+          </Field>
+          <Field label={t.care.discount}>
+            <input className={inputClass} inputMode="numeric" value={draft.percent} onChange={(event) => onChange({ ...draft, percent: event.target.value })} />
+          </Field>
+          <Field label={t.care.fromDay}>
+            <input className={inputClass} type="date" value={draft.startDay} onChange={(event) => onChange({ ...draft, startDay: event.target.value })} />
+          </Field>
+          <Field label={t.care.toDay}>
+            <input className={inputClass} type="date" value={draft.endDay} onChange={(event) => onChange({ ...draft, endDay: event.target.value })} />
+          </Field>
+        </div>
+        {!canSave ? <p className="mt-3 text-sm text-slate-500">{t.care.receptionHint}</p> : null}
+        {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={requestClose}>{t.common.cancel}</Button>
+          <Button type="button" variant="outline" onClick={onCopy}>{copied ? t.care.copied : t.care.copyCode}</Button>
+          {canSave ? <Button type="submit" disabled={busy}>{t.care.saveCode}</Button> : null}
+        </div>
+      </form>
+    </CrmModalShell>
   );
 }
 
@@ -556,11 +646,10 @@ function LeadDrawer({
   const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
   const [error, setError] = useState("");
   const owner = users.find((u) => u.id === lead.ownerId)?.name ?? "—";
+  const { leaving, requestClose } = useOverlayClose(onClose);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-        <button className="absolute inset-0" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
+    <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close} panelClassName="max-w-md overflow-y-auto bg-white p-5">
         <p className="text-xs text-slate-400">{t.care.source} {lead.source}</p>
         <h2 className="mt-1 crm-page-title">{lead.name}</h2>
         <p className="text-sm text-slate-500">{lead.phone}</p>
@@ -574,7 +663,7 @@ function LeadDrawer({
           </select>
         </label>
         {lead.stage === "won" ? (
-          <div className="mt-3 rounded-[5px] bg-[var(--brand-50)] p-3">
+          <div className="mt-3 rounded-xl bg-[var(--brand-50)] p-3">
             <p className="text-sm font-semibold">{t.care.convert}</p>
             {lead.convertedStudentId ? <p className="mt-1 text-sm text-slate-600">{t.care.converted}</p> : (
               <>
@@ -594,7 +683,7 @@ function LeadDrawer({
         <h3 className="mt-5 text-sm font-semibold">{t.care.addTouch}</h3>
         <div className="mt-2 flex gap-2">
           {(["call", "zalo", "note"] as const).map((item) => (
-            <button key={item} type="button" className={kind === item ? "h-10 rounded-[5px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
+            <button key={item} type="button" className={kind === item ? "h-10 rounded-xl bg-[var(--brand-500)] px-3 text-sm font-semibold text-white" : "h-10 rounded-xl border border-[var(--border)] bg-white px-3 text-sm"} onClick={() => setKind(item)}>
               {item === "call" ? t.care.call : item === "zalo" ? "Zalo" : t.care.note}
             </button>
           ))}
@@ -611,7 +700,6 @@ function LeadDrawer({
           ))}
         </ol>
         <p className="mt-4 text-xs text-slate-400">{t.common.today} {localDayKey()}</p>
-      </aside>
-    </div>
+    </CrmDrawerShell>
   );
 }

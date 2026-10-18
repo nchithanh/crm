@@ -359,7 +359,7 @@ export default function StudentsPage() {
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">
-      <label className="flex h-12 items-center gap-2 rounded-[5px] bg-[var(--search)] px-4 text-sm text-[var(--muted)]">
+      <label className="flex h-12 items-center gap-2 rounded-xl bg-[var(--search)] px-4 text-sm text-[var(--muted)]">
         <Search size={18} />
         <input
           className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
@@ -380,7 +380,7 @@ export default function StudentsPage() {
               type="button"
               onClick={() => { if (k.id === "hold") setChip("hold"); else { setChip("all"); setKpi(k.id); } }}
               className={cn(
-                "rounded-[5px] border bg-[var(--panel)] p-3 text-left",
+                "rounded-xl border bg-[var(--panel)] p-3 text-left",
                 on ? "border-[var(--brand-300)]" : "border-[var(--border)]",
               )}
             >
@@ -406,18 +406,18 @@ export default function StudentsPage() {
             type="button"
             onClick={() => setChip(item.id)}
             className={cn(
-              "h-9 shrink-0 rounded-[5px] px-4 text-sm font-semibold",
+              "h-9 shrink-0 rounded-xl px-4 text-sm font-semibold",
               chip === item.id ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-[var(--muted)]",
             )}
           >
             {item.label}
           </button>
         ))}
-        <button type="button" className="h-9 shrink-0 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]" onClick={() => setMore((v) => !v)}>{t.students.more}</button>
+        <button type="button" className="h-9 shrink-0 rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]" onClick={() => setMore((v) => !v)}>{t.students.more}</button>
       </div>
 
       {more ? (
-        <div className="grid gap-2 rounded-[5px] border border-[var(--border)] bg-white p-4 md:grid-cols-3">
+        <div className="grid gap-2 rounded-xl border border-[var(--border)] bg-white p-4 md:grid-cols-3">
           {branchId === "all" ? (
             <select className={inputClass} value={branchPick} onChange={(e) => setBranchPick(e.target.value)}>
               <option value="all">{t.common.branch}</option>
@@ -461,7 +461,7 @@ export default function StudentsPage() {
       ) : null}
 
       {picked.length > 0 ? (
-        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:right-20 lg:bottom-6 lg:left-[276px]">
+        <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 lg:right-20 lg:bottom-6 lg:left-[276px]">
           <span className="text-sm font-semibold">{fill(t.students.selected, { n: picked.length })}</span>
           {seeContact ? <Button type="button" variant="outline" onClick={() => openZalo(picked)}>{t.students.message}</Button> : null}
           <Button type="button" variant="outline" onClick={() => void assignFollow(picked)}>{t.students.assignFollow}</Button>
@@ -471,7 +471,7 @@ export default function StudentsPage() {
         </div>
       ) : null}
 
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
+      <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
           {rows.length === 0 ? (
             <div className="flex flex-col items-center px-6 py-14 text-center">
               {branchStudents.length === 0 ? (
@@ -595,7 +595,7 @@ export default function StudentsPage() {
                 <p className="text-xs text-slate-500">{fill(t.students.range, { from: fromN, to: toN, total: rows.length })}</p>
                 <label className="flex items-center gap-1 text-xs text-slate-500">
                   {t.students.pageSize}
-                  <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value) as (typeof PAGE_SIZES)[number])}>
+                  <select className="h-8 rounded-xl border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value) as (typeof PAGE_SIZES)[number])}>
                     {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>

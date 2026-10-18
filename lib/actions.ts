@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
+import { nextReceiptNo } from "@/lib/receipt";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { isSubscriptionValid } from "@/lib/subscription";
 import { quotePromotion } from "@/lib/promotions";
@@ -269,6 +270,7 @@ export async function payReceivable(input: {
   billNote?: string;
   billImage?: string;
   note?: string;
+  actorId?: string;
 }) {
   const row = await db.installments.get(input.receivableId);
   if (!row) return "Không thấy khoản phải thu.";
@@ -278,6 +280,7 @@ export async function payReceivable(input: {
   const student = await db.students.get(row.studentId);
   const id = uid("pay");
   const day = localDayKey();
+  const receiptNo = await nextReceiptNo(day);
   await db.transaction("rw", [db.installments, db.payments, db.students], async () => {
     await db.installments.update(row.id, { paid: row.paid + amount });
     await db.payments.add({
@@ -292,6 +295,8 @@ export async function payReceivable(input: {
       note: input.note?.trim() || `Thu ${row.title}`,
       billNote: input.billNote?.trim() ?? "",
       billImage: input.billImage || "",
+      receiptNo,
+      actorId: input.actorId ?? "",
     });
     if (student) {
       await db.students.update(student.id, {

@@ -18,7 +18,7 @@ export default function AiPage() {
   return (
     <div>
       <h1 className="crm-page-title inline-flex items-center gap-2">
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] bg-[var(--brand-50)] text-[var(--brand-600)]">
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--brand-50)] text-[var(--brand-600)]">
           <Sparkles size={18} aria-hidden />
         </span>
         {t.pages.ai}

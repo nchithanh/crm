@@ -158,14 +158,14 @@ export default function TeachersPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center rounded-[5px] border border-dashed border-[var(--border)] bg-white px-6 py-14 text-center">
+        <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-[var(--border)] bg-white px-6 py-14 text-center">
           <p className="text-sm text-slate-500">{t.teachers.empty}</p>
           {canEdit ? (
             <Button type="button" className="mt-4" onClick={openCreate}>{t.teachers.add}</Button>
           ) : null}
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
+        <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
           <li className={cn("hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid", seeContact ? "lg:grid-cols-[minmax(8rem,1.2fr)_minmax(6rem,0.7fr)_minmax(6.5rem,0.8fr)_minmax(6rem,0.9fr)_4.5rem_5.5rem_4.5rem_5.5rem]" : "lg:grid-cols-[minmax(8rem,1.3fr)_minmax(6rem,0.8fr)_minmax(6rem,1fr)_4.5rem_5.5rem_4.5rem_5.5rem]")}>
             <span>{t.teachers.name}</span>
             <span>{t.common.branch}</span>
@@ -323,10 +323,10 @@ function TeacherFormDrawer({
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
       <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-[var(--card)]">
+      <aside className="relative flex h-full w-[80%] max-w-[34rem] flex-col bg-[var(--card)]">
         <header className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h2 className="text-lg font-bold text-slate-900">{teacher ? t.teachers.edit : t.teachers.add}</h2>
-          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
             <X size={18} />
           </button>
         </header>
@@ -354,7 +354,7 @@ function TeacherFormDrawer({
                   type="button"
                   onClick={() => toggleStyle(s)}
                   className={cn(
-                    "rounded-[5px] border px-2.5 py-1.5 text-sm font-medium",
+                    "rounded-xl border px-2.5 py-1.5 text-sm font-medium",
                     styles.includes(s) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[var(--border)] text-slate-600",
                   )}
                 >
@@ -373,7 +373,7 @@ function TeacherFormDrawer({
                   type="button"
                   onClick={() => toggleLevel(l)}
                   className={cn(
-                    "rounded-[5px] border px-2.5 py-1.5 text-sm font-medium",
+                    "rounded-xl border px-2.5 py-1.5 text-sm font-medium",
                     levels.includes(l) ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]" : "border-[var(--border)] text-slate-600",
                   )}
                 >

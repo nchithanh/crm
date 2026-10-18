@@ -5,17 +5,21 @@ import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button } from "@/components/ui";
+import { canSeeTab } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/copy";
 import { levelLabel } from "@/lib/rules";
+import { tabKeyFor } from "@/lib/tabs";
 import { cn, initials, localDayKey } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 const tabs = ["overview", "classes", "students", "teachers", "subscriptions"] as const;
 type Tab = (typeof tabs)[number];
 
 export default function CourseDetailPage() {
   const { t } = useI18n();
+  const role = useAuthStore((s) => s.user?.role);
   const params = useParams();
   const id = String(params?.id ?? "");
   const course = useLiveQuery(() => db.courses.get(id), [id]);
@@ -28,6 +32,11 @@ export default function CourseDetailPage() {
   const subscriptions = useLiveQuery(() => db.subscriptions.where("courseId").equals(id).toArray(), [id]) ?? [];
   const plans = useLiveQuery(() => db.subscriptionPlans.toArray(), []) ?? [];
   const [tab, setTab] = useState<Tab>("overview");
+  const visibleTabs = tabs.filter((idTab) => {
+    const key = tabKeyFor("course", idTab);
+    return key ? canSeeTab(role, key) : true;
+  });
+  const activeTab = visibleTabs.includes(tab) ? tab : visibleTabs[0] ?? "overview";
 
   const sortedClasses = useMemo(
     () => [...classes].sort((a, b) => a.day.localeCompare(b.day) || a.index - b.index),
@@ -53,7 +62,7 @@ export default function CourseDetailPage() {
     teachers: `${t.nav.teachers} (${teachers.length})`,
     subscriptions: `Subscriptions (${subscriptions.length})`,
   };
-  const show = (id: Tab) => tab === "overview" || tab === id;
+  const show = (id: Tab) => activeTab === "overview" || activeTab === id;
 
   return (
     <div>
@@ -83,26 +92,26 @@ export default function CourseDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-[5px] border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+          <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-xl border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
             {t.nav.schedule}
           </Link>
-          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
+          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
             {t.nav.midEnroll}
           </Link>
         </div>
       </header>
 
       <div className="mt-4 flex gap-1 overflow-x-auto border-b border-[var(--border)]" role="tablist">
-        {tabs.map((idTab) => (
+        {visibleTabs.map((idTab) => (
           <button
             key={idTab}
             type="button"
             role="tab"
-            aria-selected={tab === idTab}
+            aria-selected={activeTab === idTab}
             onClick={() => setTab(idTab)}
             className={cn(
               "shrink-0 -mb-px border-b-2 px-3 py-2.5 text-sm font-semibold text-[var(--foreground)]",
-              tab === idTab ? "border-[var(--brand-500)]" : "border-transparent",
+              activeTab === idTab ? "border-[var(--brand-500)]" : "border-transparent",
             )}
           >
             {tabLabel[idTab]}
@@ -110,8 +119,8 @@ export default function CourseDetailPage() {
         ))}
       </div>
 
-      <div key={tab} className={cn("crm-tab-panel mt-4", tab === "overview" && "space-y-8")}>
-        {tab === "overview" ? (
+      <div key={activeTab} className={cn("crm-tab-panel mt-4", activeTab === "overview" && "space-y-8")}>
+        {activeTab === "overview" ? (
           <div className="space-y-3">
             <div className="grid grid-cols-6 gap-2 md:grid-cols-2 md:gap-3 xl:grid-cols-3">
               {(
@@ -124,7 +133,7 @@ export default function CourseDetailPage() {
                 ] as const
               ).map((card) => {
                 const className = cn(
-                  "rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 text-left md:col-span-1 md:p-4",
+                  "rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left md:col-span-1 md:p-4",
                   card.wide ? "col-span-3" : "col-span-2",
                 );
                 const body = (
@@ -147,7 +156,7 @@ export default function CourseDetailPage() {
                 );
               })}
             </div>
-            <div className="rounded-[5px] border border-[var(--border)] bg-white p-4 text-sm text-slate-600">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-4 text-sm text-slate-600">
               <p>{course.description || "—"}</p>
               <p className="mt-2 text-slate-400">
                 {course.startDay} → {course.endDay} · {course.sessionCount} buổi · {t.catalog.capacityCurrent} {students.length} · {t.catalog.capacityMax} {course.capacity ?? 12}
@@ -158,8 +167,8 @@ export default function CourseDetailPage() {
 
         {show("classes") ? (
           <section>
-            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.classes}</h2> : null}
-            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
+            {activeTab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.classes}</h2> : null}
+            <div className="overflow-auto rounded-xl border border-[var(--border)] bg-white">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>
@@ -202,8 +211,8 @@ export default function CourseDetailPage() {
 
         {show("students") ? (
           <section>
-            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.students}</h2> : null}
-            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
+            {activeTab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.students}</h2> : null}
+            <div className="overflow-auto rounded-xl border border-[var(--border)] bg-white">
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>
@@ -233,14 +242,14 @@ export default function CourseDetailPage() {
 
         {show("teachers") ? (
           <section>
-            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.teachers}</h2> : null}
+            {activeTab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.teachers}</h2> : null}
             <ul className="space-y-2">
               {teachers.map((ct) => {
                 const u = users.find((x) => x.id === ct.teacherId);
                 if (!u) return null;
                 return (
                   <li key={ct.id}>
-                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-[5px] border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
+                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
                       <span className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: u.avatarColor }}>{initials(u.name)}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold text-slate-900">{u.name}</span>
@@ -257,8 +266,8 @@ export default function CourseDetailPage() {
 
         {show("subscriptions") ? (
           <section>
-            {tab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.subscriptions}</h2> : null}
-            <div className="overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
+            {activeTab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.subscriptions}</h2> : null}
+            <div className="overflow-auto rounded-xl border border-[var(--border)] bg-white">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-slate-50 text-left">
                   <tr>

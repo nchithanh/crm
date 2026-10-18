@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { RoomCalendar } from "@/components/room-calendar";
 import { Button, Card, Field, inputClass } from "@/components/ui";
-import { canManageCatalog } from "@/lib/access";
+import { canManageCatalog, canSeeTab } from "@/lib/access";
+import { tabKeyFor } from "@/lib/tabs";
 import { createRoom, updateRoom } from "@/lib/actions";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
@@ -18,7 +19,8 @@ type Tab = "list" | "calendar";
 
 export default function RoomsPage() {
   const { t } = useI18n();
-  const canEdit = canManageCatalog(useAuthStore((s) => s.user?.role));
+  const role = useAuthStore((s) => s.user?.role);
+  const canEdit = canManageCatalog(role);
   const { branchId } = useStudioBranch();
   const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
   const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
@@ -29,6 +31,12 @@ export default function RoomsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [focusRoomId, setFocusRoomId] = useState<string | undefined>();
 
+  const roomTabs = (["calendar", "list"] as const).filter((id) => {
+    const key = tabKeyFor("room", id);
+    return key ? canSeeTab(role, key) : true;
+  });
+  const activeTab = roomTabs.includes(tab) ? tab : roomTabs[0] ?? "calendar";
+
   const scoped = rooms.filter((r) => branchId === "all" || r.branchId === branchId);
 
   return (
@@ -38,37 +46,34 @@ export default function RoomsPage() {
           <h1 className="crm-page-title">{t.pages.rooms}</h1>
           <p className="mt-1 text-sm text-slate-500">{t.roomsCal.lead}</p>
         </div>
-        {tab === "list" && canEdit ? (
+        {activeTab === "list" && canEdit ? (
           <Button type="button" onClick={() => setCreating((v) => !v)}>{t.catalog.addRoom}</Button>
         ) : null}
-        {tab === "list" && !canEdit ? (
+        {activeTab === "list" && !canEdit ? (
           <p className="text-sm text-slate-500">{t.catalog.viewOnly}</p>
         ) : null}
       </div>
 
       <div className="mt-4 flex gap-2" role="tablist" aria-label={t.pages.rooms}>
-        {([
-          ["calendar", t.roomsCal.calendar],
-          ["list", t.roomsCal.list],
-        ] as const).map(([id, label]) => (
+        {roomTabs.map((id) => (
           <button
             key={id}
             type="button"
             role="tab"
-            aria-selected={tab === id}
+            aria-selected={activeTab === id}
             className={cn(
-              "inline-flex h-10 items-center rounded-[5px] px-4 text-sm font-semibold",
-              tab === id ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+              "inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold",
+              activeTab === id ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200",
             )}
             onClick={() => setTab(id)}
           >
-            {label}
+            {id === "calendar" ? t.roomsCal.calendar : t.roomsCal.list}
           </button>
         ))}
       </div>
 
-      <div key={tab} className="crm-tab-panel">
-      {tab === "calendar" ? (
+      <div key={activeTab} className="crm-tab-panel">
+      {activeTab === "calendar" ? (
         <RoomCalendar
           rooms={rooms}
           classes={classes}
@@ -79,7 +84,7 @@ export default function RoomsPage() {
         />
       ) : null}
 
-      {tab === "list" ? (
+      {activeTab === "list" ? (
         <>
           {creating && canEdit ? <RoomForm branches={branches} onDone={() => setCreating(false)} /> : null}
           <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -147,7 +152,7 @@ function RoomForm({
   }
 
   return (
-    <div className="mt-4 grid gap-3 rounded-[5px] border border-slate-200 bg-white p-4">
+    <div className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4">
       <Field label={t.common.room}><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} /></Field>
       {room ? null : (
         <Field label={t.common.branch}>

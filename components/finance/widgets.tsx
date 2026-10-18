@@ -91,7 +91,7 @@ export function KpiCard({
       {spark && Icon ? <div className="mt-2"><Sparkline points={spark} up={up} /></div> : null}
     </>
   );
-  const className = "block rounded-[5px] border border-[var(--border)] bg-[var(--panel)] p-3 transition hover:-translate-y-px hover:border-[var(--brand-100)]";
+  const className = "block rounded-xl border border-[var(--border)] bg-[var(--panel)] p-3 transition hover:-translate-y-px hover:border-[var(--brand-100)]";
   if (href) {
     return (
       <Link href={href} className={className}>
@@ -127,7 +127,7 @@ export function DateRangeFilter({
       <label className="text-sm">
         <span className="sr-only">{t.finance.range}</span>
         <select
-          className="h-10 min-w-[9rem] rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm"
+          className="h-10 min-w-[9rem] rounded-xl border border-[var(--border)] bg-white px-3 text-sm"
           value={value}
           onChange={(e) => onChange(e.target.value as RangeKey)}
         >
@@ -143,14 +143,14 @@ export function DateRangeFilter({
           <input
             type="date"
             aria-label={t.finance.fromDay}
-            className="h-10 rounded-[5px] border border-[var(--border)] px-2 text-sm"
+            className="h-10 rounded-xl border border-[var(--border)] px-2 text-sm"
             value={from}
             onChange={(e) => onFrom(e.target.value)}
           />
           <input
             type="date"
             aria-label={t.finance.toDay}
-            className="h-10 rounded-[5px] border border-[var(--border)] px-2 text-sm"
+            className="h-10 rounded-xl border border-[var(--border)] px-2 text-sm"
             value={to}
             onChange={(e) => onTo(e.target.value)}
           />
@@ -169,7 +169,7 @@ export function useRangeState(initial: RangeKey = "month") {
 
 export function EmptyBlock({ text }: { text: string }) {
   return (
-    <p className="rounded-[5px] border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
+    <p className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
       {text}
     </p>
   );
@@ -193,7 +193,7 @@ export function FinanceTabs({
           role="tab"
           aria-selected={value === o.id}
           className={cn(
-            "inline-flex h-10 shrink-0 items-center rounded-[5px] px-3 text-sm font-semibold",
+            "inline-flex h-10 shrink-0 items-center rounded-xl px-3 text-sm font-semibold",
             value === o.id
               ? "bg-[var(--brand-500)] text-white"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200",

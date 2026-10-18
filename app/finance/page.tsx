@@ -101,7 +101,7 @@ export default function FinanceOverviewPage() {
                 <button
                   key={n}
                   type="button"
-                  className={`h-9 rounded-[5px] px-3 text-sm font-semibold ${days === n ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600"}`}
+                  className={`h-9 rounded-xl px-3 text-sm font-semibold ${days === n ? "bg-[var(--brand-500)] text-white" : "bg-slate-100 text-slate-600"}`}
                   onClick={() => setDays(n)}
                 >
                   {n === 7 ? t.finance.days7 : n === 30 ? t.finance.days30 : t.finance.days90}
@@ -147,7 +147,7 @@ export default function FinanceOverviewPage() {
               const st = debtUiStatus(row);
               const student = students.find((s) => s.id === row.studentId);
               return (
-                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-slate-100 px-3 py-2 text-sm">
+                <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-3 py-2 text-sm">
                   <span>
                     <span className="block font-semibold">{student?.name ?? row.studentId}</span>
                     <span className={st === "overdue" ? "text-rose-600" : "text-amber-700"}>

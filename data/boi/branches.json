@@ -1,5 +1,5 @@
 [
-  { "id": "b-a", "name": "Bể Mai", "address": "18 Đường Bơi, phường demo" },
-  { "id": "b-b", "name": "Bể Đào", "address": "42 Hồ Trong, phường demo" },
-  { "id": "b-c", "name": "Bể Lý", "address": "7 Làn Xanh, phường demo" }
+  { "id": "b-a", "name": "Bể Mai", "address": "18 Đường Bơi, phường demo", "lat": 21.0285, "lng": 105.8542, "checkInRadiusM": 150 },
+  { "id": "b-b", "name": "Bể Đào", "address": "42 Hồ Trong, phường demo", "lat": 21.029, "lng": 105.855, "checkInRadiusM": 150 },
+  { "id": "b-c", "name": "Bể Lý", "address": "7 Làn Xanh, phường demo", "lat": 21.0278, "lng": 105.8535, "checkInRadiusM": 150 }
 ]

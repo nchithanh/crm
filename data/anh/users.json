@@ -1,5 +1,14 @@
 [
   {
+    "id": "u_boss",
+    "name": "Boss Demo",
+    "email": "boss@eduenglish.demo",
+    "phone": "0900 100 000",
+    "role": "boss",
+    "pin": "9999",
+    "avatarColor": "#111111"
+  },
+  {
     "id": "u_owner",
     "name": "Nguyễn An",
     "email": "an@eduenglish.demo",
@@ -74,5 +83,14 @@
     ],
     "teacherStatus": "active",
     "note": ""
+  },
+  {
+    "id": "u_marketing",
+    "name": "Mai Lan",
+    "email": "mai@eduenglish.demo",
+    "phone": "0900 100 009",
+    "role": "marketing",
+    "pin": "5555",
+    "avatarColor": "#EC4899"
   }
 ]

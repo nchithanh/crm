@@ -30,7 +30,7 @@ export default function ChooseVerticalPage() {
           <li key={v.id}>
             <button
               type="button"
-              className="flex w-full items-center gap-3 rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-left transition hover:border-[var(--brand-300)] hover:bg-[var(--brand-50)]"
+              className="crm-card-elev flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:border-[var(--brand-300)] hover:bg-[var(--brand-50)]"
               onClick={() => {
                 setStoredVertical(v.id);
                 reopenDb(v.id);
@@ -38,7 +38,7 @@ export default function ChooseVerticalPage() {
               }}
             >
               <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl"
                 style={{ backgroundColor: v.soft }}
                 aria-hidden
               >

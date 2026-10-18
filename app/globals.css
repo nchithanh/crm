@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a2e;
+  --background: #f6f5fc;
+  --foreground: #23233f;
   --card: #ffffff;
-  --panel: #f7f7f8a1;
-  --search: #f7f7f8;
-  --muted: #8b8ba3;
-  --border: #e8e6f2;
-  --shadow-card: none;
-  --shadow-btn: none;
-  --brand-50: #f4f2fd;
-  --brand-100: #e4e0fb;
-  --brand-300: #aba0ee;
-  --brand-400: #7965e6;
-  --brand-500: #5b42eb;
-  --brand-600: #3620b6;
-  --brand-700: #2f1e8f;
-  --brand-950: #19123f;
-  --radius-card: 5px;
-  --nav-active: #f4f2fd;
-  --nav-active-text: #3620b6;
+  --panel: #ffffff;
+  --search: #efeff8;
+  --muted: #8a8aa5;
+  --border: #e7e5f3;
+  --shadow-card: 0 1px 2px rgba(32, 31, 71, 0.05), 0 10px 30px rgba(32, 31, 71, 0.07);
+  --shadow-btn: 0 6px 16px rgba(93, 92, 196, 0.28);
+  --brand-50: #f1f1f9;
+  --brand-100: #e3e3f3;
+  --brand-300: #a5a3dd;
+  --brand-400: #807ecb;
+  --brand-500: #5d5cc4;
+  --brand-600: #4948a4;
+  --brand-700: #3c3b87;
+  --brand-950: #201f47;
+  --radius-card: 14px;
+  --nav-active: #eceaf8;
+  --nav-active-text: #3c3b87;
+  /* Calendar / room grid — neutral gray (like soft ops calendars; no mint/sky wash) */
+  --cal-grid: #e6e6ea;
+  --cal-header: #f4f4f6;
+  --cal-free: #fafafa;
+  --cal-free-hover: #f3f3f5;
+  --cal-free-text: #6b6b78;
+  --cal-free-swatch: #d8d8de;
+  --cal-class: #f0f0f3;
+  --cal-class-hover: #e8e8ec;
+  --cal-class-text: #3a3a48;
+  --cal-class-swatch: #cfcfd6;
+  --cal-booking: #eeeeef;
+  --cal-booking-hover: #e6e6ea;
+  --cal-booking-text: #3a3a48;
+  --cal-booking-swatch: #c8c8d0;
+  --cal-done: #f5f5f6;
+  --cal-done-text: #8a8a96;
+  --cal-done-swatch: #d2d2d8;
+  --cal-cancel: #f3f1f2;
+  --cal-cancel-text: #6e5e62;
+  --cal-cancel-swatch: #d6ced0;
+  --cal-warm: #f2f2f4;
+  --cal-warm-text: #5c5c68;
+  --cal-warm-swatch: #d0d0d6;
 }
 
 .bg-emerald-50 { background-color: var(--brand-50) !important; }
@@ -72,6 +96,45 @@ body {
   font-weight: 800;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
+}
+/* Overview strip — fluid type (scales with viewport; rem + svw) */
+.crm-kpi-label {
+  font-size: clamp(0.8125rem, 0.74rem + 0.4svw, 1rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+.crm-kpi-value {
+  font-size: clamp(1.2rem, 1.05rem + 0.65svw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.crm-kpi-hint {
+  font-size: clamp(0.75rem, 0.68rem + 0.35svw, 0.875rem);
+  font-weight: 400;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.crm-kpi-eyebrow {
+  font-size: clamp(0.75rem, 0.68rem + 0.32svw, 0.875rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.crm-kpi-title {
+  font-size: clamp(1rem, 0.9rem + 0.45svw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.crm-kpi-tile {
+  width: clamp(1.625rem, 1.45rem + 0.45svw, 2rem);
+  height: clamp(1.625rem, 1.45rem + 0.45svw, 2rem);
+}
+.crm-kpi-tile svg {
+  width: 55%;
+  height: 55%;
 }
 .crm-body {
   font-size: 0.875rem; /* 14px */
@@ -195,14 +258,6 @@ a { text-decoration: none; }
   height: 0;
 }
 
-@keyframes crm-menu-in {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-@keyframes crm-menu-out {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
 @keyframes crm-drawer-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -223,12 +278,224 @@ a { text-decoration: none; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.crm-menu-panel { animation: crm-menu-in 200ms ease-out; }
-.crm-menu-panel.is-leaving { animation: crm-menu-out 200ms ease-in forwards; }
+@keyframes crm-modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes crm-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
 .crm-drawer-panel { animation: crm-drawer-in 200ms ease-out; }
 .crm-drawer-panel.is-leaving { animation: crm-drawer-out 200ms ease-in forwards; }
 .crm-drawer-backdrop { animation: crm-fade-in 200ms ease-out; }
 .crm-drawer-backdrop.is-leaving { animation: crm-fade-out 200ms ease-in forwards; }
+.crm-modal-panel { animation: crm-modal-in 220ms ease-out; }
+.crm-modal-panel.is-leaving { animation: crm-modal-out 160ms ease-in forwards; }
+
+/* Command Palette — AI-style (subtle glow / sparkle) */
+@keyframes crm-cmd-glow {
+  0%, 100% { filter: drop-shadow(0 0 0.25rem color-mix(in srgb, var(--brand-500) 35%, transparent)); opacity: 1; }
+  50% { filter: drop-shadow(0 0 0.45rem color-mix(in srgb, var(--brand-500) 55%, transparent)); opacity: 0.92; }
+}
+@keyframes crm-cmd-sparkle {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+@keyframes crm-cmd-pulse-soft {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-500) 0%, transparent); }
+  50% { box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--brand-500) 12%, transparent); }
+}
+.crm-cmd-backdrop {
+  background: color-mix(in srgb, #0f172a 45%, transparent);
+  backdrop-filter: blur(0.5rem);
+  -webkit-backdrop-filter: blur(0.5rem);
+}
+@property --crm-cmd-neon-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes crm-cmd-neon-spin {
+  to { --crm-cmd-neon-angle: 360deg; }
+}
+@keyframes crm-cmd-neon-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+/* Neon viền: padding + lớp quay + overflow (góc bo mượt, không móm) */
+.crm-cmd-neon {
+  --crm-cmd-neon: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 40%,
+    color-mix(in srgb, var(--brand-300) 55%, transparent) 47%,
+    var(--brand-400) 51%,
+    var(--brand-500) 54%,
+    var(--brand-600) 58%,
+    color-mix(in srgb, var(--brand-300) 55%, transparent) 62%,
+    transparent 68%,
+    transparent 100%
+  );
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+  padding: 2px;
+  border-radius: 1rem;
+  overflow: hidden;
+  isolation: isolate;
+  animation: crm-modal-in 220ms ease-out;
+  box-shadow:
+    0 1.5rem 3rem rgba(15, 23, 42, 0.18),
+    0 0 1.25rem color-mix(in srgb, var(--brand-500) 14%, transparent);
+}
+.crm-cmd-neon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 160%;
+  height: 160%;
+  background: var(--crm-cmd-neon);
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: crm-cmd-neon-rotate 2.8s linear infinite;
+  pointer-events: none;
+}
+.crm-cmd-panel {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(1rem - 2px);
+  border: none;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: none;
+}
+/* FAB mở palette — position do utility `fixed` (không set relative ở đây) */
+.crm-cmd-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--brand-500) 22%, var(--border));
+  background: linear-gradient(145deg, #fff 0%, var(--brand-50) 100%);
+  color: var(--brand-600);
+  box-shadow:
+    0 0.5rem 1.25rem rgba(15, 23, 42, 0.12),
+    0 0 1rem color-mix(in srgb, var(--brand-500) 22%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.crm-cmd-fab:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0.65rem 1.5rem rgba(15, 23, 42, 0.14),
+    0 0 1.25rem color-mix(in srgb, var(--brand-500) 35%, transparent);
+}
+.crm-cmd-fab .crm-cmd-fab-spark {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  color: var(--brand-500);
+  animation: crm-cmd-sparkle 2.2s ease-in-out infinite;
+}
+.crm-cmd-header {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--brand-50) 90%, white) 0%,
+    #ffffff 55%,
+    color-mix(in srgb, var(--brand-50) 40%, white) 100%
+  );
+}
+.crm-cmd-search-glow {
+  color: var(--brand-600);
+  animation: crm-cmd-glow 2.8s ease-in-out infinite;
+}
+.crm-cmd-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.75rem;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  flex-shrink: 0;
+  transition: box-shadow 180ms ease, background 180ms ease, color 180ms ease;
+}
+.crm-cmd-icon.is-ai {
+  background: linear-gradient(145deg, var(--brand-50), color-mix(in srgb, var(--brand-500) 18%, white));
+  color: var(--brand-600);
+  box-shadow: 0 0 0.75rem color-mix(in srgb, var(--brand-500) 22%, transparent);
+}
+.crm-cmd-icon.is-sparkle {
+  animation: crm-cmd-pulse-soft 2.4s ease-in-out infinite;
+}
+.crm-cmd-icon.is-sparkle svg:last-child {
+  animation: crm-cmd-sparkle 2.2s ease-in-out infinite;
+}
+.crm-cmd-item {
+  --crm-cmd-item-fill: #ffffff;
+  position: relative;
+  border: 1.5px solid transparent;
+  border-radius: 0.75rem;
+  background-color: transparent;
+  background-clip: padding-box;
+  transition: background-color 140ms ease;
+}
+.crm-cmd-item.is-active {
+  --crm-cmd-item-fill: color-mix(in srgb, var(--brand-50) 92%, white);
+}
+/* Neon viền item: border trong suốt + clip (góc bo mượt) */
+.crm-cmd-item:hover,
+.crm-cmd-item.is-active {
+  background-image:
+    linear-gradient(var(--crm-cmd-item-fill), var(--crm-cmd-item-fill)),
+    conic-gradient(
+      from var(--crm-cmd-neon-angle),
+      transparent 0%,
+      transparent 40%,
+      color-mix(in srgb, var(--brand-300) 50%, transparent) 47%,
+      var(--brand-400) 51%,
+      var(--brand-500) 54%,
+      var(--brand-600) 58%,
+      color-mix(in srgb, var(--brand-300) 50%, transparent) 62%,
+      transparent 68%,
+      transparent 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  animation: crm-cmd-neon-spin 2.8s linear infinite;
+}
+/* Vạch trái khi chọn */
+.crm-cmd-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0.35rem;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  width: 0.2rem;
+  border-radius: 9999px;
+  background: var(--brand-500);
+  z-index: 2;
+}
+.crm-cmd-item.is-active .crm-cmd-icon,
+.crm-cmd-item:hover .crm-cmd-icon {
+  background: white;
+  color: var(--brand-600);
+  box-shadow: 0 0 0.85rem color-mix(in srgb, var(--brand-500) 28%, transparent);
+}
+.crm-cmd-footer {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f8fafc 90%, white) 0%,
+    color-mix(in srgb, var(--brand-50) 45%, white) 100%
+  );
+}
+.crm-cmd-footer-ai {
+  color: color-mix(in srgb, var(--brand-600) 70%, var(--muted));
+}
 .crm-tab-panel {
   overflow-anchor: none;
   animation: crm-tab-in 180ms ease-out;
@@ -248,11 +515,164 @@ a { text-decoration: none; }
 .crm-bottom-active {
   box-shadow: 0 8px 16px color-mix(in srgb, var(--brand-500) 40%, transparent);
 }
+
+/* SSI-style patterns — design-language.md */
+.crm-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--brand-50);
+  color: var(--brand-600);
+  flex-shrink: 0;
+}
+.crm-gradient {
+  background-image: linear-gradient(120deg, var(--brand-600) 0%, var(--brand-500) 55%, var(--brand-400) 100%);
+}
+.crm-card-elev {
+  border-radius: var(--radius-card);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+/* Soft calendar cells / event chips — avoid Tailwind emerald (remapped to brand) */
+.crm-cal-header { background: var(--cal-header); border-color: var(--cal-grid); }
+.crm-cal-line { border-color: var(--cal-grid); }
+.crm-cal-cell-free { background: var(--cal-free); }
+.crm-cal-cell-free:hover { background: var(--cal-free-hover); }
+.crm-cal-cell-class { background: var(--cal-class); }
+.crm-cal-cell-class:hover { background: var(--cal-class-hover); }
+.crm-cal-cell-booking { background: var(--cal-booking); }
+.crm-cal-cell-booking:hover { background: var(--cal-booking-hover); }
+.crm-cal-chip-free {
+  background: var(--cal-free);
+  color: var(--cal-free-text);
+  box-shadow: inset 0 0 0 1px var(--cal-free-swatch);
+}
+.crm-cal-chip-class {
+  background: var(--cal-class);
+  color: var(--cal-class-text);
+  box-shadow: inset 0 0 0 1px var(--cal-class-swatch);
+}
+.crm-cal-chip-booking {
+  background: var(--cal-booking);
+  color: var(--cal-booking-text);
+  box-shadow: inset 0 0 0 1px var(--cal-booking-swatch);
+}
+.crm-cal-chip-warm {
+  background: var(--cal-warm);
+  color: var(--cal-warm-text);
+  box-shadow: inset 0 0 0 1px var(--cal-warm-swatch);
+}
+.crm-cal-chip-busy {
+  background: var(--cal-cancel);
+  color: var(--cal-cancel-text);
+  box-shadow: inset 0 0 0 1px var(--cal-cancel-swatch);
+}
+.crm-cal-event {
+  border-left: 2px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--cal-grid);
+}
+.crm-cal-event-upcoming {
+  border-left-color: #b8b8c0;
+  background: #fff;
+  color: var(--cal-class-text);
+  box-shadow: inset 0 0 0 1px var(--cal-grid);
+}
+.crm-cal-event-live {
+  border-left-color: #5a5a68;
+  background: #fff;
+  color: var(--cal-class-text);
+  box-shadow: inset 0 0 0 1.5px #9a9aa8;
+  font-weight: 600;
+}
+.crm-cal-event-past {
+  border-left-color: var(--cal-done-swatch);
+  background: var(--cal-done);
+  color: var(--cal-done-text);
+  box-shadow: inset 0 0 0 1px var(--cal-grid);
+  opacity: 0.72;
+}
+.crm-cal-event-ongoing {
+  border-left-color: #9a9aa6;
+  background: var(--cal-class);
+  color: var(--cal-class-text);
+  box-shadow: inset 0 0 0 1px var(--cal-class-swatch);
+}
+.crm-cal-event-completed {
+  border-left-color: var(--cal-done-swatch);
+  background: var(--cal-done);
+  color: var(--cal-done-text);
+  box-shadow: inset 0 0 0 1px var(--cal-grid);
+}
+.crm-cal-event-cancelled {
+  border-left-color: var(--cal-cancel-swatch);
+  background: var(--cal-cancel);
+  color: var(--cal-cancel-text);
+  box-shadow: inset 0 0 0 1px var(--cal-grid);
+  opacity: 0.85;
+}
+.crm-cal-col-today {
+  background: color-mix(in srgb, var(--cal-header) 70%, #fff);
+}
+.crm-cal-now {
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 0;
+  border-top: 2px solid #6b6b78;
+}
+.crm-cal-now::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #6b6b78;
+}
+.crm-cal-live-dot {
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: #5a5a68;
+  vertical-align: middle;
+}
+.crm-cal-swatch {
+  display: inline-block;
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(35, 35, 63, 0.08);
+}
+.crm-cal-swatch-free { background: var(--cal-free); box-shadow: inset 0 0 0 1px var(--cal-free-swatch); }
+.crm-cal-swatch-class { background: var(--cal-class); box-shadow: inset 0 0 0 1px var(--cal-class-swatch); }
+.crm-cal-swatch-booking { background: var(--cal-booking); box-shadow: inset 0 0 0 1px var(--cal-booking-swatch); }
+.crm-btn-elev {
+  box-shadow: var(--shadow-btn);
+}
 @media (prefers-reduced-motion: reduce) {
-  .crm-menu-panel,
   .crm-drawer-panel,
   .crm-drawer-backdrop,
-  .crm-tab-panel { animation: none; }
+  .crm-modal-panel,
+  .crm-tab-panel,
+  .crm-cmd-neon,
+  .crm-cmd-panel { animation: none; }
+  .crm-cmd-neon::before,
+  .crm-cmd-item:hover,
+  .crm-cmd-item.is-active { animation: none; }
+  .crm-cmd-search-glow,
+  .crm-cmd-icon.is-sparkle,
+  .crm-cmd-icon.is-sparkle svg:last-child,
+  .crm-cmd-fab .crm-cmd-fab-spark { animation: none; }
   .crm-bottom-nav { transition: none; }
 }
 

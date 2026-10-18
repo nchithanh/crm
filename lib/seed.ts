@@ -27,9 +27,10 @@ import type {
   TeacherAbsence,
   User,
 } from "@/types";
+import { defaultAllRoleAccess } from "@/lib/access-defaults";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "14f";
+const SEED_VERSION = "16a";
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -485,11 +486,13 @@ export async function ensureSeed(id: VerticalId) {
       db.bookings,
       db.branches,
       db.teacherAbsences,
+      db.roleAccess,
       db.meta,
     ],
     async () => {
       await db.settings.clear();
       await db.users.clear();
+      await db.roleAccess.clear();
       await db.subscriptionPlans.clear();
       await db.classes.clear();
       await db.classStudents.clear();
@@ -515,6 +518,7 @@ export async function ensureSeed(id: VerticalId) {
 
       await db.settings.add(raw.settings as StudioSettings);
       await db.users.bulkAdd(raw.users as User[]);
+      await db.roleAccess.bulkPut(defaultAllRoleAccess());
       await db.subscriptionPlans.bulkAdd(raw.subscriptionPlans as SubscriptionPlan[]);
       await db.courses.bulkAdd(courseRows);
       await db.courseTeachers.bulkAdd(courseTeachers);

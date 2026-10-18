@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { FileText, X } from "lucide-react";
 import { Button, Card, ctaGhost, inputClass } from "@/components/ui";
 import { TransferQr } from "@/components/finance/transfer-qr";
 import { PromotionPicker } from "@/components/promotion-picker";
@@ -21,16 +21,7 @@ import { useStudioBranch } from "@/stores/branch-store";
 import type { PayMethod } from "@/types";
 
 type CollectUiMethod = "cash" | "transfer" | "debt";
-type Receipt = { studentName: string; title: string; amount: number; method: PayMethod; day: string; note: string };
-
-function printReceipt(receipt: Receipt, studio: string, labels: { title: string; cash: string; transfer: string }) {
-  const popup = window.open("", "_blank", "noopener,noreferrer");
-  if (!popup) return;
-  popup.document.write(`<!doctype html><title>${labels.title}</title><body style="font-family:sans-serif;padding:24px"><h1>${labels.title}</h1><p>${studio}</p><p>${receipt.day}</p><p><b>${receipt.studentName}</b></p><p>${receipt.title}</p><p style="font-size:28px"><b>${formatVnd(receipt.amount)}</b></p><p>${receipt.method === "cash" ? labels.cash : labels.transfer}</p><p>${receipt.note}</p></body>`);
-  popup.document.close();
-  popup.focus();
-  popup.print();
-}
+type Receipt = { id: string; studentName: string; title: string; amount: number; method: PayMethod; day: string; note: string };
 
 function toPayMethod(m: CollectUiMethod): PayMethod {
   return m === "cash" ? "cash" : "transfer";
@@ -38,7 +29,8 @@ function toPayMethod(m: CollectUiMethod): PayMethod {
 
 export default function FinanceCollectPage() {
   const { t } = useI18n();
-  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const rows = useLiveQuery(() => db.installments.toArray(), []) ?? [];
   const payments = useLiveQuery(() => db.payments.toArray(), []) ?? [];
@@ -166,6 +158,7 @@ export default function FinanceCollectPage() {
     if (uiMethod === "debt") {
       setCheckoutOpen(false);
       setReceipt({
+        id: "",
         studentName: student?.name ?? "",
         title: target.title,
         amount: 0,
@@ -183,6 +176,7 @@ export default function FinanceCollectPage() {
       note,
       billNote: billName,
       billImage: uiMethod === "transfer" ? billImage : "",
+      actorId: user?.id ?? "",
     });
     setBusy(false);
     if (typeof result === "string") {
@@ -191,6 +185,7 @@ export default function FinanceCollectPage() {
     }
     setCheckoutOpen(false);
     setReceipt({
+      id: result.id,
       studentName: student?.name ?? result.studentName,
       title: target.title,
       amount: result.amount,
@@ -224,7 +219,7 @@ export default function FinanceCollectPage() {
             <ul className="mt-2">
               {matches.map((s) => (
                 <li key={s.id}>
-                  <button type="button" className="flex min-h-12 w-full items-center justify-between rounded-[5px] px-2 text-left hover:bg-slate-50" onClick={() => { const first = rows.find((r) => r.studentId === s.id && debtRemaining(r) > 0); setStudentId(s.id); setQ(s.name); setReceivableId(first?.id ?? ""); setAmount(first ? String(debtRemaining(first)) : ""); }}>
+                  <button type="button" className="flex min-h-12 w-full items-center justify-between rounded-xl px-2 text-left hover:bg-slate-50" onClick={() => { const first = rows.find((r) => r.studentId === s.id && debtRemaining(r) > 0); setStudentId(s.id); setQ(s.name); setReceivableId(first?.id ?? ""); setAmount(first ? String(debtRemaining(first)) : ""); }}>
                     <span className="font-semibold">{s.name}</span>
                     <span className="text-sm tabular-nums">{formatVnd(s.debt)}</span>
                   </button>
@@ -234,7 +229,7 @@ export default function FinanceCollectPage() {
           ) : null}
           {student ? (
             <div className="mt-4 space-y-3">
-              <div className="flex flex-wrap items-end justify-between gap-3 rounded-[5px] border border-slate-100 bg-slate-50/80 px-3 py-2">
+              <div className="flex flex-wrap items-end justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2">
                 <div>
                   <p className="text-lg font-bold">{student.name}</p>
                   <p className="text-sm text-slate-500">{pack?.name ?? t.pages.noPackage} · {course?.name ?? t.pages.noCourse} · {branches.find((b) => b.id === student.branchId)?.name}</p>
@@ -270,7 +265,7 @@ export default function FinanceCollectPage() {
               ) : null}
 
               {target ? (
-                <div className="rounded-[5px] border border-slate-200 p-3">
+                <div className="rounded-xl border border-slate-200 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold">{target.title}</p>
@@ -305,7 +300,7 @@ export default function FinanceCollectPage() {
                     type="button"
                     onClick={() => setUiMethod(id)}
                     className={cn(
-                      "rounded-[5px] border px-2 py-2.5 text-sm font-semibold",
+                      "rounded-xl border px-2 py-2.5 text-sm font-semibold",
                       uiMethod === id
                         ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                         : "border-slate-200 text-slate-700",
@@ -328,7 +323,7 @@ export default function FinanceCollectPage() {
               ) : null}
 
               {uiMethod === "debt" ? (
-                <p className="rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
               ) : null}
 
               <label className="block text-sm">{t.money.note}
@@ -395,10 +390,10 @@ export default function FinanceCollectPage() {
 
       {checkoutOpen && target ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[5px] bg-white p-5">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-lg font-bold">{t.money.confirmPay}</h2>
-              <button type="button" className="rounded-[5px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setCheckoutOpen(false)}>
+              <button type="button" className="rounded-xl p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setCheckoutOpen(false)}>
                 <X size={18} />
               </button>
             </div>
@@ -407,7 +402,7 @@ export default function FinanceCollectPage() {
             <p className="mt-1 text-sm text-slate-500">{student?.name} · {target.title}</p>
 
             {uiMethod === "debt" ? (
-              <p className="mt-3 rounded-[5px] bg-amber-50 p-3 text-sm text-amber-800">{t.money.debtNote}</p>
+              <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t.money.debtNote}</p>
             ) : null}
 
             {uiMethod === "transfer" ? (
@@ -435,10 +430,10 @@ export default function FinanceCollectPage() {
 
       {receipt ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <div className="w-full max-w-sm rounded-[5px] bg-white p-5">
+          <div className="w-full max-w-sm rounded-xl bg-white p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-lg font-bold">{t.money.successTitle}</h2>
-              <button type="button" className="rounded-[5px] p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setReceipt(null)}>
+              <button type="button" className="rounded-xl p-1 text-slate-500 hover:bg-slate-100" aria-label={t.common.close} onClick={() => setReceipt(null)}>
                 <X size={18} />
               </button>
             </div>
@@ -454,12 +449,13 @@ export default function FinanceCollectPage() {
               )}
             </div>
             <div className="mt-4 flex flex-col gap-2">
-              {receipt.amount > 0 ? (
-                <Button variant="outline" onClick={() => printReceipt(receipt, settings?.name || t.brand, { title: t.money.receipt, cash: t.common.cash, transfer: t.common.transfer })}>
-                  {t.money.print}
+              {receipt.id ? (
+                <Button onClick={() => window.open(`/receipt?id=${receipt.id}`, "_blank", "noopener,noreferrer")}>
+                  <FileText size={16} />
+                  {t.money.exportReceipt}
                 </Button>
               ) : null}
-              <Button onClick={() => setReceipt(null)}>{t.money.done}</Button>
+              <Button variant={receipt.id ? "outline" : "primary"} onClick={() => setReceipt(null)}>{t.money.done}</Button>
             </div>
           </div>
         </div>

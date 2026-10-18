@@ -14,6 +14,7 @@ import {
   weekDaysFrom,
   type BusyBlock,
 } from "@/lib/room-availability";
+import { nowLineInHour, nowMinutesOfDay, sessionTimePhase } from "@/lib/schedule";
 import { useI18n } from "@/lib/i18n";
 import { cn, localDayKey, roomWithBranch, weekdayShort } from "@/lib/utils";
 import type { Branch, Room, RoomBooking, StudioClass } from "@/types";
@@ -43,10 +44,18 @@ export function RoomCalendar({
   const [roomId, setRoomId] = useState(initialRoomId || "all");
   const [mode, setMode] = useState<Mode>("week");
   const [focusDay, setFocusDay] = useState(localDayKey());
+  const [nowMin, setNowMin] = useState(() => nowMinutesOfDay());
   const [monthCursor, setMonthCursor] = useState(() => {
     const d = new Date();
     return { y: d.getFullYear(), m: d.getMonth() };
   });
+  const today = localDayKey();
+
+  useEffect(() => {
+    setNowMin(nowMinutesOfDay());
+    const id = window.setInterval(() => setNowMin(nowMinutesOfDay()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (initialRoomId && scopedRooms.some((r) => r.id === initialRoomId)) {
@@ -160,17 +169,39 @@ export function RoomCalendar({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3 text-xs font-semibold">
-        <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-emerald-100 ring-1 ring-emerald-300" />{t.roomsCal.free}</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-[var(--brand-100)] ring-1 ring-[var(--brand-400)]" />{t.roomsCal.busyClass}</span>
-        <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded-[4px] bg-sky-100 ring-1 ring-sky-400" />{t.roomsCal.busyBooking}</span>
+      <div className="flex flex-wrap gap-3 text-xs font-semibold text-slate-600">
+        <span className="inline-flex items-center gap-1.5"><span className="crm-cal-swatch crm-cal-swatch-free" />{t.roomsCal.free}</span>
+        <span className="inline-flex items-center gap-1.5"><span className="crm-cal-swatch crm-cal-swatch-class" />{t.roomsCal.busyClass}</span>
+        <span className="inline-flex items-center gap-1.5"><span className="crm-cal-swatch crm-cal-swatch-booking" />{t.roomsCal.busyBooking}</span>
+        <span className="inline-flex items-center gap-1.5 text-slate-500">{t.schedule.legendHint}</span>
       </div>
 
       {mode === "week" ? (
-        <WeekGrid roomId={activeRoomId} week={week} blocks={blocks} lang={lang} t={t} showRoom={viewingAll} labelOf={labelOf} onPickDay={(d) => { setFocusDay(d); setMode("day"); }} />
+        <WeekGrid
+          roomId={activeRoomId}
+          week={week}
+          blocks={blocks}
+          lang={lang}
+          t={t}
+          today={today}
+          nowMin={nowMin}
+          showRoom={viewingAll}
+          labelOf={labelOf}
+          onPickDay={(d) => { setFocusDay(d); setMode("day"); }}
+        />
       ) : null}
       {mode === "day" ? (
-        <DayTimeline roomId={activeRoomId} heading={heading} day={focusDay} blocks={blocks} t={t} showRoom={viewingAll} labelOf={labelOf} />
+        <DayTimeline
+          roomId={activeRoomId}
+          heading={heading}
+          day={focusDay}
+          blocks={blocks}
+          t={t}
+          today={today}
+          nowMin={nowMin}
+          showRoom={viewingAll}
+          labelOf={labelOf}
+        />
       ) : null}
       {mode === "month" ? (
         <MonthHeat
@@ -202,6 +233,8 @@ function WeekGrid({
   blocks,
   lang,
   t,
+  today,
+  nowMin,
   showRoom,
   labelOf,
   onPickDay,
@@ -211,6 +244,8 @@ function WeekGrid({
   blocks: BusyBlock[];
   lang: "vi" | "en";
   t: ReturnType<typeof useI18n>["t"];
+  today: string;
+  nowMin: number;
   showRoom: boolean;
   labelOf: (id: string) => string;
   onPickDay: (day: string) => void;
@@ -218,7 +253,7 @@ function WeekGrid({
   return (
     <Card className="overflow-auto">
       <div className="min-w-[720px]">
-        <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b border-slate-100 bg-slate-50 text-xs font-semibold">
+        <div className="crm-cal-header grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b text-xs font-semibold">
           <div className="p-2 text-slate-400">{t.roomsCal.hour}</div>
           {week.map((day) => {
             const d = new Date(`${day}T12:00:00`);
@@ -227,48 +262,72 @@ function WeekGrid({
                 key={day}
                 type="button"
                 onClick={() => onPickDay(day)}
-                className="border-l border-slate-100 p-2 text-left hover:bg-white"
+                className={cn(
+                  "crm-cal-line border-l p-2 text-left hover:bg-white",
+                  day === today && "crm-cal-col-today font-bold",
+                )}
               >
                 <span className="block">{weekdayShort(d.getDay(), lang)}</span>
-                <span className="text-slate-500">{day.slice(8)}/{day.slice(5, 7)}</span>
+                <span className={day === today ? "text-[var(--foreground)]" : "text-slate-500"}>
+                  {day === today ? t.schedule.today : `${day.slice(8)}/${day.slice(5, 7)}`}
+                </span>
               </button>
             );
           })}
         </div>
-        {HOUR_ROWS.map((hour) => (
-          <div key={hour} className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b border-slate-50 text-xs">
-            <div className="p-2 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</div>
-            {week.map((day) => {
-              const hits = blocksInHour(blocks, roomId, day, hour);
-              const kind = hits.some((h) => h.kind === "class")
-                ? "class"
-                : hits.some((h) => h.kind === "booking")
-                  ? "booking"
-                  : "free";
-              return (
-                <button
-                  key={`${day}-${hour}`}
-                  type="button"
-                  title={hits.map((h) => `${showRoom ? `${labelOf(h.roomId)} · ` : ""}${h.start}–${h.end} ${h.title}`).join("\n") || t.roomsCal.free}
-                  onClick={() => onPickDay(day)}
-                  className={cn(
-                    "min-h-10 border-l border-slate-50 px-1 py-1 text-left",
-                    kind === "free" && "bg-emerald-50/70 hover:bg-emerald-100",
-                    kind === "class" && "bg-[var(--brand-50)] hover:bg-[var(--brand-100)]",
-                    kind === "booking" && "bg-sky-50 hover:bg-sky-100",
-                  )}
-                >
-                  {hits[0] ? (
-                    <span className="line-clamp-2 font-medium text-slate-800">
-                      {showRoom ? `${labelOf(hits[0].roomId)} · ` : ""}{hits[0].title}
-                      {hits.length > 1 ? ` +${hits.length - 1}` : ""}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+        {HOUR_ROWS.map((hour) => {
+          const nowFrac = nowLineInHour(hour, nowMin);
+          return (
+            <div key={hour} className="crm-cal-line grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b text-xs">
+              <div className={cn("p-2 tabular-nums text-slate-400", nowFrac != null && "font-semibold text-[var(--foreground)]")}>
+                {String(hour).padStart(2, "0")}:00
+              </div>
+              {week.map((day) => {
+                const hits = blocksInHour(blocks, roomId, day, hour);
+                const kind = hits.some((h) => h.kind === "class")
+                  ? "class"
+                  : hits.some((h) => h.kind === "booking")
+                    ? "booking"
+                    : "free";
+                const phase = hits[0]
+                  ? sessionTimePhase(hits[0].day, hits[0].start, hits[0].end, { today, nowMin })
+                  : null;
+                const showNow = day === today && nowFrac != null;
+                return (
+                  <button
+                    key={`${day}-${hour}`}
+                    type="button"
+                    title={hits.map((h) => `${showRoom ? `${labelOf(h.roomId)} · ` : ""}${h.start}–${h.end} ${h.title}`).join("\n") || t.roomsCal.free}
+                    onClick={() => onPickDay(day)}
+                    className={cn(
+                      "crm-cal-line relative min-h-10 border-l px-1.5 py-1 text-left",
+                      day === today && "crm-cal-col-today",
+                      kind === "free" && "crm-cal-cell-free",
+                      kind === "class" && "crm-cal-cell-class",
+                      kind === "booking" && "crm-cal-cell-booking",
+                      phase === "past" && "opacity-70",
+                      phase === "live" && "shadow-[inset_0_0_0_1.5px_#9a9aa8]",
+                    )}
+                  >
+                    {showNow ? (
+                      <div className="crm-cal-now" style={{ top: `${nowFrac * 100}%` }} title={t.schedule.now} aria-hidden />
+                    ) : null}
+                    {hits[0] ? (
+                      <span className={cn(
+                        "relative z-[1] line-clamp-2 font-medium text-[var(--cal-class-text)]",
+                        phase === "past" && "text-[var(--cal-done-text)]",
+                      )}>
+                        {phase === "live" ? "● " : ""}
+                        {showRoom ? `${labelOf(hits[0].roomId)} · ` : ""}{hits[0].title}
+                        {hits.length > 1 ? ` +${hits.length - 1}` : ""}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
@@ -280,6 +339,8 @@ function DayTimeline({
   day,
   blocks,
   t,
+  today,
+  nowMin,
   showRoom,
   labelOf,
 }: {
@@ -288,6 +349,8 @@ function DayTimeline({
   day: string;
   blocks: BusyBlock[];
   t: ReturnType<typeof useI18n>["t"];
+  today: string;
+  nowMin: number;
   showRoom: boolean;
   labelOf: (id: string) => string;
 }) {
@@ -301,36 +364,55 @@ function DayTimeline({
       <ul className="mt-4 space-y-2">
         {HOUR_ROWS.map((hour) => {
           const hits = blocksInHour(blocks, roomId, day, hour);
+          const nowFrac = day === today ? nowLineInHour(hour, nowMin) : null;
           return (
-            <li key={hour} className="flex gap-3 text-sm">
-              <span className="w-14 shrink-0 tabular-nums text-slate-400">{String(hour).padStart(2, "0")}:00</span>
-              {hits.length === 0 ? (
-                <span className="flex-1 rounded-[5px] bg-emerald-50 px-3 py-2 text-emerald-800">{t.roomsCal.free}</span>
-              ) : (
-                <div className="flex flex-1 flex-col gap-1">
-                  {hits.map((h) => (
-                    <div
-                      key={h.id}
-                      className={cn(
-                        "rounded-[5px] px-3 py-2",
-                        h.kind === "class" ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "bg-sky-50 text-sky-900",
-                      )}
-                    >
-                      <span className="font-semibold">{h.start}–{h.end}</span>
-                      {showRoom ? <span className="mx-2">· {labelOf(h.roomId)}</span> : <span className="mx-2">·</span>}
-                      <span>{h.title}</span>
-                      <span className="ml-2 text-xs font-semibold uppercase opacity-70">
-                        {h.kind === "class" ? t.roomsCal.busyClass : t.roomsCal.busyBooking}
-                      </span>
-                      {h.kind === "class" ? (
-                        <Link href={`/classes/${h.id}`} className="ml-2 text-xs font-semibold underline">
-                          {t.roomsCal.openClass}
-                        </Link>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <li key={hour} className="relative flex gap-3 text-sm">
+              <span className={cn("w-14 shrink-0 tabular-nums text-slate-400", nowFrac != null && "font-semibold text-[var(--foreground)]")}>
+                {String(hour).padStart(2, "0")}:00
+              </span>
+              <div className="relative min-h-10 flex-1">
+                {nowFrac != null ? (
+                  <div className="crm-cal-now" style={{ top: `${nowFrac * 100}%` }} title={t.schedule.now} aria-hidden />
+                ) : null}
+                {hits.length === 0 ? (
+                  <span className="crm-cal-chip-free relative z-[1] flex rounded-xl px-3 py-2">{t.roomsCal.free}</span>
+                ) : (
+                  <div className="relative z-[1] flex flex-col gap-1">
+                    {hits.map((h) => {
+                      const phase = sessionTimePhase(h.day, h.start, h.end, { today, nowMin });
+                      return (
+                        <div
+                          key={h.id}
+                          className={cn(
+                            "rounded-xl px-3 py-2",
+                            phase === "live" && "crm-cal-event crm-cal-event-live",
+                            phase === "past" && "crm-cal-event crm-cal-event-past",
+                            phase === "soon" && (h.kind === "class" ? "crm-cal-chip-class" : "crm-cal-chip-booking"),
+                          )}
+                        >
+                          {phase === "live" ? (
+                            <span className="mb-0.5 block text-[10px] font-bold uppercase tracking-wide">
+                              <span className="crm-cal-live-dot mr-1" aria-hidden />
+                              {t.schedule.live}
+                            </span>
+                          ) : null}
+                          <span className="font-semibold">{h.start}–{h.end}</span>
+                          {showRoom ? <span className="mx-2">· {labelOf(h.roomId)}</span> : <span className="mx-2">·</span>}
+                          <span>{h.title}</span>
+                          <span className="ml-2 text-xs font-semibold uppercase opacity-70">
+                            {h.kind === "class" ? t.roomsCal.busyClass : t.roomsCal.busyBooking}
+                          </span>
+                          {h.kind === "class" ? (
+                            <Link href={`/classes/${h.id}`} className="ml-2 text-xs font-semibold underline">
+                              {t.roomsCal.openClass}
+                            </Link>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </li>
           );
         })}
@@ -381,7 +463,7 @@ function MonthHeat({
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, i) => {
-          if (!day) return <div key={`e-${i}`} className="min-h-16 rounded-[5px] bg-slate-50/50" />;
+          if (!day) return <div key={`e-${i}`} className="min-h-16 rounded-xl bg-slate-50/50" />;
           const occ = roomId === "all"
             ? (rooms.length === 0 ? 0 : rooms.reduce((sum, r) => sum + dayOccupancy(blocks, r.id, day), 0) / rooms.length)
             : dayOccupancy(blocks, roomId, day);
@@ -391,18 +473,18 @@ function MonthHeat({
             : [];
           const tone =
             occ === 0
-              ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
+              ? "crm-cal-chip-free"
               : occ < 0.35
-                ? "bg-amber-50 text-amber-900 ring-amber-200"
+                ? "crm-cal-chip-warm"
                 : occ < 0.7
-                  ? "bg-[var(--brand-50)] text-[var(--brand-700)] ring-[var(--brand-100)]"
-                  : "bg-rose-50 text-rose-900 ring-rose-200";
+                  ? "crm-cal-chip-class"
+                  : "crm-cal-chip-busy";
           return (
             <button
               key={day}
               type="button"
               onClick={() => onPickDay(day)}
-              className={cn("min-h-16 rounded-[5px] p-2 text-left ring-1", tone)}
+              className={cn("min-h-16 rounded-xl p-2 text-left", tone)}
             >
               <span className="block text-sm font-bold">{Number(day.slice(8))}</span>
               <span className="mt-1 block text-[10px] font-semibold">

@@ -150,7 +150,7 @@ export default function MidEnrollPage() {
           const passed = step > n || Boolean(done);
           return (
             <li key={label} className="shrink-0">
-              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 items-center gap-2 rounded-[5px] border px-3 text-left text-sm whitespace-nowrap ${on ? "border-[var(--brand-500)] bg-[var(--brand-50)] font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
+              <button type="button" disabled={n > step} onClick={() => { if (n < step) { setStep(n); setError(""); } }} className={`flex min-h-12 items-center gap-2 rounded-xl border px-3 text-left text-sm whitespace-nowrap ${on ? "border-[var(--brand-500)] bg-[var(--brand-50)] font-semibold" : passed ? "border-slate-200 bg-white" : "border-slate-100 text-slate-400"}`}>
                 <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${on || passed ? "bg-[var(--brand-500)] text-white" : "bg-slate-100"}`}>{n}</span>
                 <span>{label}</span>
               </button>
@@ -158,14 +158,14 @@ export default function MidEnrollPage() {
           );
         })}
       </ol>
-      {error ? <p className="mt-3 rounded-[5px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
-      {done ? <p className="mt-3 rounded-[5px] bg-green-50 px-3 py-2 text-sm text-green-800">{done}</p> : null}
+      {error ? <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
+      {done ? <p className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">{done}</p> : null}
 
       {step === 1 && !done ? (
-        <section className="mt-4 rounded-[5px] border border-slate-200 bg-white p-4">
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={!creating ? "h-10 rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-[5px] border border-[var(--border)] px-4 text-sm"} onClick={() => setCreating(false)}>{t.enroll.existing}</button>
-            <button type="button" className={creating ? "h-10 rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-[5px] border border-[var(--border)] px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>{t.enroll.create}</button>
+            <button type="button" className={!creating ? "h-10 rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-xl border border-[var(--border)] px-4 text-sm"} onClick={() => setCreating(false)}>{t.enroll.existing}</button>
+            <button type="button" className={creating ? "h-10 rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white" : "h-10 rounded-xl border border-[var(--border)] px-4 text-sm"} onClick={() => { setCreating(true); setStudentId(""); }}>{t.enroll.create}</button>
           </div>
           {creating ? (
             <div className="mt-3 grid gap-2">
@@ -182,7 +182,7 @@ export default function MidEnrollPage() {
               <ul className="mt-2 max-h-64 space-y-1 overflow-auto">
                 {matches.map((s) => (
                   <li key={s.id}>
-                    <button type="button" className={`flex min-h-12 w-full items-center justify-between rounded-[5px] px-3 text-left ${studentId === s.id ? "bg-[var(--brand-50)] font-semibold" : "hover:bg-slate-50"}`} onClick={() => setStudentId(s.id)}>
+                    <button type="button" className={`flex min-h-12 w-full items-center justify-between rounded-xl px-3 text-left ${studentId === s.id ? "bg-[var(--brand-50)] font-semibold" : "hover:bg-slate-50"}`} onClick={() => setStudentId(s.id)}>
                       <span>{s.name}</span>
                       <span className="text-sm text-slate-500">{s.remainingSessions} buổi</span>
                     </button>
@@ -205,7 +205,7 @@ export default function MidEnrollPage() {
                 type="button"
                 disabled={!open}
                 onClick={() => setClassId(offer.course.id)}
-                className={`w-full rounded-[5px] border p-3 text-left ${selected ? "border-[var(--brand-500)] bg-[var(--brand-50)]" : "border-slate-200 bg-white"} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400`}
+                className={`w-full rounded-xl border p-3 text-left ${selected ? "border-[var(--brand-500)] bg-[var(--brand-50)]" : "border-slate-200 bg-white"} disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400`}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>
@@ -225,7 +225,7 @@ export default function MidEnrollPage() {
       ) : null}
 
       {step === 3 && picked && !done ? (
-        <section className="mt-4 rounded-[5px] border border-slate-200 bg-white p-4">
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-500">{picked.course.name} · vào từ buổi {picked.next?.index}</p>
           <p className="mt-2 text-4xl font-bold tabular-nums">{picked.granted}</p>
           <p className="text-sm text-slate-500">Buổi còn lại của khóa, không tính buổi đã hủy</p>
@@ -237,7 +237,7 @@ export default function MidEnrollPage() {
             </select>
           </label>
           {pack && seeMoney ? (
-            <div className="mt-4 rounded-[5px] bg-slate-50 p-3 text-sm">
+            <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
               <p>Giá theo tỷ lệ: {formatVnd(price)}</p>
               <p className="text-slate-500">{picked.granted}/{pack.sessions} buổi của {pack.name}. Học phí mẫu của studio.</p>
             </div>
@@ -247,7 +247,7 @@ export default function MidEnrollPage() {
       ) : null}
 
       {step === 4 && picked && student && !done ? (
-        <section className="mt-4 rounded-[5px] border border-slate-200 bg-white p-4 text-sm">
+        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-sm">
           <dl className="grid gap-2 sm:grid-cols-2">
             <div><dt className="text-slate-500">{t.enroll.student}</dt><dd className="font-semibold">{student.name}</dd></div>
             <div><dt className="text-slate-500">{t.enroll.course}</dt><dd className="font-semibold">{picked.course.name}</dd></div>

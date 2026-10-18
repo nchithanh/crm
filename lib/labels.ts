@@ -40,8 +40,10 @@ export function debtLabel(status: DebtStatus, lang: Lang) {
 
 export function roleLabel(role: string, lang: Lang) {
   const r = copy[lang].role;
+  if (role === "boss") return r.boss;
   if (role === "owner") return r.owner;
   if (role === "reception") return r.reception;
+  if (role === "marketing") return r.marketing;
   return r.teacher;
 }
 

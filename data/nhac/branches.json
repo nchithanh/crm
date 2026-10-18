@@ -1,5 +1,5 @@
 [
-  { "id": "b-a", "name": "Nhà Đàn", "address": "12 Đàn Nguyệt, phường demo" },
-  { "id": "b-b", "name": "Nhà Sáo", "address": "9 Sáo Trúc, phường demo" },
-  { "id": "b-c", "name": "Nhà Trống", "address": "3 Trống Cơm, phường demo" }
+  { "id": "b-a", "name": "Nhà Đàn", "address": "12 Đàn Nguyệt, phường demo", "lat": 21.0285, "lng": 105.8542, "checkInRadiusM": 150 },
+  { "id": "b-b", "name": "Nhà Sáo", "address": "9 Sáo Trúc, phường demo", "lat": 21.029, "lng": 105.855, "checkInRadiusM": 150 },
+  { "id": "b-c", "name": "Nhà Trống", "address": "3 Trống Cơm, phường demo", "lat": 21.0278, "lng": 105.8535, "checkInRadiusM": 150 }
 ]

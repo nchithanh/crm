@@ -19,7 +19,7 @@ Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). 
 
 | File | Nội dung |
 | --- | --- |
-| `settings.json` `users.json` `demo-accounts.json` | Studio + PIN |
+| `settings.json` `users.json` `demo-accounts.json` | Studio (+ `email` cho đầu phiếu thu) + PIN |
 | `branches.json` `rooms.json` | Chi nhánh / phòng |
 | `courses.json` | Khung khóa + lịch mẫu (`weekdays`, `start`/`end`, `sessionCount`, `capacity` = HV tối đa, `teacherId`, `roomId` optional) |
 | `course-teachers.json` | `main` \| `assistant` |

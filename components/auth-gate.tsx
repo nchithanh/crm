@@ -7,6 +7,8 @@ import { BootSplash } from "@/components/boot-splash";
 import { I18nProvider } from "@/lib/i18n";
 import { bootStudio, resetBoot } from "@/lib/seed";
 import { applyVerticalTheme, getStoredVertical, type VerticalId } from "@/lib/vertical";
+import { homePathForRole } from "@/lib/access";
+import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
 
 function pathOf(pathname: string) {
@@ -53,7 +55,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       return;
     }
     if (user && (path === "/login" || path === "/choose-vertical")) {
-      router.replace("/overview");
+      router.replace(homePathForRole(user.role));
     }
   }, [hydrated, user, path, router, vertical]);
 
@@ -75,6 +77,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       if (!cancelled) setReady(true);
     }, 5000);
     void bootStudio(vertical)
+      .then(() => useAccessStore.getState().hydrate())
       .then(() => {
         if (!cancelled) setReady(true);
       })

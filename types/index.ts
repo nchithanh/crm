@@ -1,6 +1,13 @@
 export type VerticalId = "nhay";
 
-export type Role = "owner" | "reception" | "teacher";
+export type Role = "boss" | "owner" | "reception" | "teacher" | "marketing";
+
+/** Ma trận phân quyền theo role — Dexie `roleAccess`. */
+export type RoleAccess = {
+  id: Role;
+  items: Record<string, boolean>;
+  tabs: Record<string, boolean>;
+};
 
 export type LeadStage = "new" | "contacted" | "trial" | "won" | "lost";
 
@@ -53,6 +60,7 @@ export type StudioSettings = {
   vertical: VerticalId;
   address: string;
   phone: string;
+  email?: string;
 };
 
 export type Activity = {
@@ -113,6 +121,11 @@ export type Branch = {
   id: string;
   name: string;
   address: string;
+  /** Demo geofence center for QR self check-in (WGS84). */
+  lat?: number;
+  lng?: number;
+  /** Meters from center allowed for self check-in. Default 150. */
+  checkInRadiusM?: number;
 };
 
 /** Course = khung khóa + lịch mẫu. Room optional. */
@@ -265,6 +278,10 @@ export type Payment = {
   note: string;
   billNote: string;
   billImage?: string;
+  /** Số phiếu xác nhận học phí, sinh lúc thu tiền: {MÃ}{yy}.{mm}.{seq} */
+  receiptNo?: string;
+  /** Ngườờ lập phiếu (user.id) */
+  actorId?: string;
 };
 
 /** Tài khoản nhận CK. `bank` là mã SePay (vd. MBBank). */

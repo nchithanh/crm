@@ -23,6 +23,7 @@ import type {
   Subscription,
   SubscriptionPlan,
   TaskParent,
+  RoleAccess,
   TeacherAbsence,
   User,
 } from "@/types";
@@ -57,6 +58,7 @@ export class DolphinCrmDB extends Dexie {
   bookings!: EntityTable<RoomBooking, "id">;
   branches!: EntityTable<Branch, "id">;
   teacherAbsences!: EntityTable<TeacherAbsence, "id">;
+  roleAccess!: EntityTable<RoleAccess, "id">;
   meta!: EntityTable<Meta, "key">;
 
   constructor(name: string) {
@@ -132,6 +134,9 @@ export class DolphinCrmDB extends Dexie {
     this.version(8).stores({
       paymentAccounts: "id, active, isDefault",
       paymentRoutes: "id, accountId, priority",
+    });
+    this.version(9).stores({
+      roleAccess: "id",
     });
   }
 }

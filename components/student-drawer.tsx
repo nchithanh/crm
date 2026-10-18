@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { CalendarDays, Check, Clock, MoreHorizontal, Wallet, X } from "lucide-react";
+import { CalendarDays, Check, Clock, FileText, MoreHorizontal, Wallet, X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
-import { canApproveHold, canSeeContact, canSeeMoney } from "@/lib/access";
+import { canApproveHold, canSeeContact, canSeeMoney, canSeeTab } from "@/lib/access";
+import { tabKeyFor } from "@/lib/tabs";
 import { addStudentNote, decideHold, moveStudentClass, requestHold, setStudentsFlag, updateStudentProfile } from "@/lib/actions";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
@@ -103,7 +104,18 @@ export function StudentDrawer({
     setProfileError("");
   }, [studentId, initialTab, seeMoney]);
 
-  const visibleTabs = tabIds.filter((id) => id !== "money" || seeMoney);
+  const visibleTabs = useMemo(
+    () =>
+      tabIds.filter((id) => {
+        if (id === "money" && !seeMoney) return false;
+        const key = tabKeyFor("student", id);
+        return key ? canSeeTab(role, key) : true;
+      }),
+    [seeMoney, role],
+  );
+  useEffect(() => {
+    if (!visibleTabs.includes(tab) && visibleTabs[0]) setTab(visibleTabs[0]);
+  }, [visibleTabs, tab]);
   const show = (id: TabId) => tab === id;
   const tabLabel: Record<TabId, string> = {
     overview: t.drawer.tabOverview,
@@ -147,7 +159,7 @@ export function StudentDrawer({
   if (student === undefined) {
     if (variant === "panel") {
       return (
-        <aside className="flex h-full min-h-[28rem] w-full flex-col rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-slate-500">
+        <aside className="flex h-full min-h-[28rem] w-full flex-col rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 text-sm text-slate-500">
           {t.drawer.loading}
         </aside>
       );
@@ -155,7 +167,7 @@ export function StudentDrawer({
     return (
       <div className={cn("fixed inset-0 z-50 flex justify-end", leaving && "pointer-events-none")}>
         <button type="button" className={cn("crm-drawer-backdrop absolute inset-0 bg-slate-900/40", leaving && "is-leaving")} aria-label={t.drawer.close} onClick={requestClose} />
-        <aside className="crm-drawer-panel h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
+        <aside className="crm-drawer-panel h-full w-[80%] max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.drawer.loading}</aside>
       </div>
     );
   }
@@ -272,8 +284,8 @@ export function StudentDrawer({
       <aside
         className={
           variant === "panel"
-            ? "flex h-full max-h-[calc(100dvh-7rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-[5px] border border-[var(--border)] bg-[var(--card)]"
-            : cn("crm-drawer-panel relative flex h-full w-full flex-col overflow-x-hidden bg-[var(--background)] sm:w-[420px] sm:max-w-[420px]", leaving && "is-leaving")
+            ? "flex h-full max-h-[calc(100dvh-7rem)] min-h-[28rem] w-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]"
+            : cn("crm-drawer-panel relative flex h-full w-[80%] flex-col overflow-x-hidden bg-[var(--background)] sm:w-[420px] sm:max-w-[420px]", leaving && "is-leaving")
         }
       >
         <header className="shrink-0 bg-white px-5 pt-5 pb-3">
@@ -306,19 +318,19 @@ export function StudentDrawer({
           </div>
           <div className="mt-4 flex items-center gap-2">
             {seeMoney ? (
-              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[5px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
                 {t.drawer.collect}
               </Link>
             ) : null}
-            <Link href="/mid-course-enroll" className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[5px] border border-[var(--border)] bg-white px-3 text-sm font-semibold text-[var(--foreground)]">
+            <Link href="/mid-course-enroll" className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-semibold text-[var(--foreground)]">
               {t.drawer.enrollMore}
             </Link>
             <div className="relative">
-              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-[5px] border border-[var(--border)] bg-white" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+              <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white" aria-label={t.drawer.moreActions} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
                 <MoreHorizontal size={18} />
               </button>
               {menu ? (
-                <div className="absolute top-12 right-0 z-20 w-52 rounded-[5px] border border-[var(--border)] bg-[var(--card)] py-1 text-left text-sm">
+                <div className="absolute top-12 right-0 z-20 w-52 rounded-xl border border-[var(--border)] bg-[var(--card)] py-1 text-left text-sm">
                   {seeContact && phone ? (
                     <a className="block px-3 py-2 hover:bg-[var(--brand-50)]" href={zaloHref(phone) || "#"} target="_blank" rel="noreferrer">{t.task.zalo}</a>
                   ) : null}
@@ -369,7 +381,7 @@ export function StudentDrawer({
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.health}</h3>
                 <div className="mt-2 grid grid-cols-2 gap-3">
-                  <div className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+                  <div className="rounded-xl border border-[var(--border)] bg-white p-3">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-medium text-slate-500">{t.students.remain}</p>
                       <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600"><Clock size={16} /></span>
@@ -377,7 +389,7 @@ export function StudentDrawer({
                     <p className={`mt-1 text-xl font-extrabold leading-tight tabular-nums ${student.remainingSessions <= 3 ? "text-rose-600" : "text-[var(--foreground)]"}`}>{student.remainingSessions}</p>
                     <p className="mt-1 text-xs text-slate-400">{pack?.name ?? "—"}</p>
                   </div>
-                  <div className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+                  <div className="rounded-xl border border-[var(--border)] bg-white p-3">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-medium text-slate-500">{t.drawer.attendRate}</p>
                       <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600"><Check size={16} /></span>
@@ -388,7 +400,7 @@ export function StudentDrawer({
                     </div>
                   </div>
                   {seeMoney ? (
-                    <div className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+                    <div className="rounded-xl border border-[var(--border)] bg-white p-3">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-xs font-medium text-slate-500">{t.drawer.outstanding}</p>
                         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600"><Wallet size={16} /></span>
@@ -396,7 +408,7 @@ export function StudentDrawer({
                       <p className="mt-1 text-xl font-extrabold leading-tight tabular-nums text-[var(--foreground)]">{formatVnd(outstanding || student.debt)}</p>
                     </div>
                   ) : null}
-                  <div className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+                  <div className="rounded-xl border border-[var(--border)] bg-white p-3">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-medium text-slate-500">{t.drawer.nextSession}</p>
                       <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700"><CalendarDays size={16} /></span>
@@ -406,16 +418,16 @@ export function StudentDrawer({
                   </div>
                 </div>
                 {student.remainingSessions <= 3 ? (
-                  <Link href="/mid-course-enroll" className="mt-3 inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.renew}</Link>
+                  <Link href="/mid-course-enroll" className="mt-3 inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.renew}</Link>
                 ) : null}
               </section>
-              <section className="rounded-[5px] border border-[var(--border)] p-3">
+              <section className="rounded-xl border border-[var(--border)] p-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.enrollment}</h3>
                 <p className="mt-2 font-semibold">{course?.name ?? t.drawer.noCourse}</p>
                 <p className="text-slate-500">{levelLabel(student.level)} · {teacher?.name ?? "—"} · {branch?.name ?? "—"}</p>
                 <p className="mt-1 text-slate-500">{t.drawer.package} {pack?.name ?? "—"}</p>
               </section>
-              <section className="rounded-[5px] border border-[var(--border)] bg-white p-3">
+              <section className="rounded-xl border border-[var(--border)] bg-white p-3">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.personal}</h3>
                   {seeContact && !editingProfile ? (
@@ -505,7 +517,7 @@ export function StudentDrawer({
               <ul className="space-y-2">
                 {student.notes.length === 0 ? <li className="text-slate-500">{t.drawer.notesEmpty}</li> : null}
                 {student.notes.map((n, i) => (
-                  <li key={i} className="rounded-[5px] border border-[var(--border)] px-3 py-2">
+                  <li key={i} className="rounded-xl border border-[var(--border)] px-3 py-2">
                     <p>{n.text}</p>
                     <p className="mt-1 text-xs text-slate-400">{n.author || "—"} · {relativeDayLabel(n.day, lang)}</p>
                   </li>
@@ -521,7 +533,7 @@ export function StudentDrawer({
           {show("courses") ? (
             <section className="space-y-3 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.courses}</h2> : null}
-              <article className="rounded-[5px] border border-[var(--border)] p-3">
+              <article className="rounded-xl border border-[var(--border)] p-3">
                 <p className="font-semibold text-slate-900">{course?.name ?? t.drawer.noCourse}</p>
                 <p className="mt-1 text-slate-500">{levelLabel(student.level)} · {branch?.name}</p>
                 <p className="mt-2">
@@ -539,7 +551,7 @@ export function StudentDrawer({
               {enrollments.length > 0 ? (
                 <ul className="space-y-2">
                   {[...enrollments].sort((a, b) => b.day.localeCompare(a.day)).map((e) => (
-                    <li key={e.id} className="rounded-[5px] border border-slate-100 px-3 py-2 text-slate-600">
+                    <li key={e.id} className="rounded-xl border border-slate-100 px-3 py-2 text-slate-600">
                       <span className="font-medium text-slate-800">{packages.find((p) => p.id === e.planId)?.name ?? "—"}</span>
                       {" · "}{courses.find((c) => c.id === e.courseId)?.name}
                       {" · "}{e.sessions} · {e.day}
@@ -548,9 +560,9 @@ export function StudentDrawer({
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
+                <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.enrollMore}</Link>
               </div>
-              <div className="rounded-[5px] border border-[var(--border)] p-3">
+              <div className="rounded-xl border border-[var(--border)] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.drawer.changeClass}</p>
                 <select className={`${inputClass} mt-2`} value={classId} onChange={(e) => setClassId(e.target.value)}>
                   <option value="">{t.drawer.pickClass}</option>
@@ -607,26 +619,27 @@ export function StudentDrawer({
             <section className="space-y-3 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.money}</h2> : null}
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-[5px] bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
-                <div className="rounded-[5px] bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
+                <div className="rounded-xl bg-slate-50 p-3"><p className="text-slate-500">{t.drawer.paidTotal}</p><p className="text-lg font-bold tabular-nums">{formatVnd(paidTotal)}</p></div>
+                <div className="rounded-xl bg-amber-50 p-3"><p className="text-amber-800">{t.drawer.outstanding}</p><p className="text-lg font-bold tabular-nums text-amber-800">{formatVnd(outstanding || student.debt)}</p></div>
               </div>
               {enrollments.filter((row) => row.promotionName).map((row) => (
                 <p key={row.id} className="text-sm text-slate-600">{t.promo.usedName}: {row.promotionName}</p>
               ))}
-              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-[5px] bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
-              <div className="overflow-auto rounded-[5px] border border-[var(--border)]">
-                <table className="w-full min-w-[320px] text-sm">
+              <Link href={`/collect-fees?student=${student.id}`} className="inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-4 text-sm font-semibold text-white">{t.drawer.collect}</Link>
+              <div className="overflow-auto rounded-xl border border-[var(--border)]">
+                <table className="w-full min-w-[400px] text-sm">
                   <thead className="bg-slate-50 text-left text-xs text-slate-500">
                     <tr>
                       <th className="px-3 py-2">{t.drawer.day}</th>
                       <th className="px-3 py-2 text-right">{t.drawer.amount}</th>
                       <th className="px-3 py-2">{t.drawer.method}</th>
                       <th className="px-3 py-2">{t.drawer.note}</th>
+                      <th className="px-3 py-2" />
                     </tr>
                   </thead>
                   <tbody>
                     {payments.length === 0 ? (
-                      <tr><td className="px-3 py-3 text-slate-500" colSpan={4}>{t.drawer.noPayments}</td></tr>
+                      <tr><td className="px-3 py-3 text-slate-500" colSpan={5}>{t.drawer.noPayments}</td></tr>
                     ) : (
                       [...payments].sort((a, b) => b.day.localeCompare(a.day)).map((p) => (
                         <tr key={p.id} className="border-t border-slate-100">
@@ -634,6 +647,11 @@ export function StudentDrawer({
                           <td className="px-3 py-2 text-right font-semibold tabular-nums">{formatVnd(p.amount)}</td>
                           <td className="px-3 py-2">{p.method === "transfer" ? t.common.transfer : t.common.cash}</td>
                           <td className="px-3 py-2 text-slate-500">{p.note || "—"}</td>
+                          <td className="px-3 py-2 text-right">
+                            <Link href={`/receipt?id=${p.id}`} target="_blank" aria-label={t.money.exportReceipt} className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[var(--muted)] transition hover:bg-[var(--brand-50)] hover:text-[var(--brand-600)]">
+                              <FileText size={15} />
+                            </Link>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -645,10 +663,10 @@ export function StudentDrawer({
 
           {show("hold") ? (
             <section className="space-y-3 text-sm">
-              <p className="rounded-[5px] bg-slate-50 px-3 py-2 text-xs text-slate-600">{t.hold.lead}</p>
+              <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">{t.hold.lead}</p>
               {tab === "overview" ? <h2 className="crm-section-title">{t.drawer.hold}</h2> : null}
               {currentHold ? (
-                <article className="rounded-[5px] border border-[var(--border)] p-3">
+                <article className="rounded-xl border border-[var(--border)] p-3">
                   <Badge tone={currentHold.status === "approved" ? "warn" : "warn"}>{holdStatusLabel(currentHold.status, lang)}</Badge>
                   <p className="mt-2 font-semibold">{currentHold.fromDay} → {currentHold.toDay}</p>
                   <p className="text-slate-500">{currentHold.reason}</p>
@@ -673,7 +691,7 @@ export function StudentDrawer({
                 <p className="text-slate-500">{t.drawer.noHold}</p>
               )}
               {canRequestHold ? (
-                <div className="grid gap-2 rounded-[5px] border border-[var(--border)] bg-slate-50 p-3">
+                <div className="grid gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3">
                   <Field label={t.drawer.holdFrom}>
                     <input className={inputClass} type="date" value={holdFrom} onChange={(e) => setHoldFrom(e.target.value)} />
                   </Field>

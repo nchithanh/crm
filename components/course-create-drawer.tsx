@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Button, Field, inputClass } from "@/components/ui";
+import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import { createCourse } from "@/lib/actions";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
@@ -23,6 +24,7 @@ export function CourseCreateDrawer({
   initialBranch: string;
   onClose: () => void;
 }) {
+  const { leaving, requestClose } = useOverlayClose(onClose);
   const { lang, t } = useI18n();
   const [name, setName] = useState("");
   const [style, setStyle] = useState("");
@@ -40,14 +42,6 @@ export function CourseCreateDrawer({
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const count = Math.max(1, Math.min(40, Math.round(Number(sessionCount) || 8)));
   const previewDays = useMemo(
@@ -88,19 +82,17 @@ export function CourseCreateDrawer({
       setError(code === "weekday" ? t.catalog.needWeekday : code === "room" ? t.catalog.roomBranch : t.catalog.needFields);
       return;
     }
-    onClose();
+    requestClose();
   }
 
   const branchRooms = rooms.filter((r) => r.branchId === branchId);
   const dateLabel = previewDays.map((d) => d.slice(5).replace("-", "/")).join(", ");
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-[var(--card)]">
+    <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
         <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h2 className="text-base font-bold text-slate-900">{t.catalog.drawerTitle}</h2>
-          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+          <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-100" aria-label={t.common.close} onClick={requestClose}>
             <X size={18} />
           </button>
         </header>
@@ -154,8 +146,8 @@ export function CourseCreateDrawer({
                   type="button"
                   onClick={() => toggleAssistant(x.id)}
                   className={assistantIds.includes(x.id)
-                    ? "rounded-[5px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
-                    : "rounded-[5px] border border-[var(--border)] px-2.5 py-1.5 text-sm"}
+                    ? "rounded-xl border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
+                    : "rounded-xl border border-[var(--border)] px-2.5 py-1.5 text-sm"}
                 >
                   {x.name}
                 </button>
@@ -172,8 +164,8 @@ export function CourseCreateDrawer({
                   type="button"
                   onClick={() => toggleDay(d)}
                   className={weekdays.includes(d)
-                    ? "rounded-[5px] border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
-                    : "rounded-[5px] border border-[var(--border)] px-2.5 py-1.5 text-sm"}
+                    ? "rounded-xl border border-[var(--brand-500)] bg-[var(--brand-50)] px-2.5 py-1.5 text-sm font-medium"
+                    : "rounded-xl border border-[var(--border)] px-2.5 py-1.5 text-sm"}
                 >
                   {weekdayShort(d, lang)}
                 </button>
@@ -186,11 +178,11 @@ export function CourseCreateDrawer({
           </Field>
 
           {previewDays.length > 0 ? (
-            <div className="rounded-[5px] border border-[var(--brand-100)] bg-[var(--brand-50)] px-3 py-2.5 text-sm text-[var(--brand-700)]">
+            <div className="rounded-xl border border-[var(--brand-100)] bg-[var(--brand-50)] px-3 py-2.5 text-sm text-[var(--brand-700)]">
               {fill(t.catalog.previewWillCreate, { n: previewDays.length, dates: dateLabel })}
             </div>
           ) : (
-            <div className="rounded-[5px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
               {t.catalog.needWeekday}
             </div>
           )}
@@ -199,12 +191,11 @@ export function CourseCreateDrawer({
         </div>
 
         <footer className="flex shrink-0 gap-2 border-t border-[var(--border)] px-5 py-4">
-          <Button type="button" variant="outline" onClick={onClose}>{t.common.cancel}</Button>
+          <Button type="button" variant="outline" onClick={requestClose}>{t.common.cancel}</Button>
           <Button type="button" disabled={saving || previewDays.length === 0} onClick={() => void save()}>
             {t.catalog.confirmCreate}
           </Button>
         </footer>
-      </aside>
-    </div>
+    </CrmDrawerShell>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import Link from "next/link";
+import { FileText } from "lucide-react";
 import { Card, inputClassInline } from "@/components/ui";
 import { DateRangeFilter, KpiCard, useRangeState } from "@/components/finance/widgets";
 import { canSeeMoney } from "@/lib/access";
@@ -86,15 +88,15 @@ export default function FinanceLedgerPage() {
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-slate-50 text-left">
             <tr>
-              {[t.money.day, t.finance.student, t.money.amount, t.money.method, t.money.note].map((h) => (
-                <th key={h} className="px-3 py-3 font-semibold text-slate-600">{h}</th>
+              {[t.money.day, t.finance.student, t.money.amount, t.money.method, t.money.note, ""].map((h, i) => (
+                <th key={i} className="px-3 py-3 font-semibold text-slate-600">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-8 text-center text-slate-500">{t.money.empty}</td>
+                <td colSpan={6} className="px-3 py-8 text-center text-slate-500">{t.money.empty}</td>
               </tr>
             ) : (
               rows.map((p) => (
@@ -104,6 +106,11 @@ export default function FinanceLedgerPage() {
                   <td className="px-3 py-3 font-semibold tabular-nums text-emerald-700">{formatVnd(p.amount)}</td>
                   <td className="px-3 py-3">{p.method === "cash" ? t.common.cash : t.common.transfer}</td>
                   <td className="px-3 py-3 text-slate-500">{p.note}</td>
+                  <td className="px-3 py-3 text-right">
+                    <Link href={`/receipt?id=${p.id}`} target="_blank" aria-label={t.money.exportReceipt} className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-[var(--muted)] transition hover:bg-[var(--brand-50)] hover:text-[var(--brand-600)]">
+                      <FileText size={16} />
+                    </Link>
+                  </td>
                 </tr>
               ))
             )}

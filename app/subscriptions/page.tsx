@@ -191,7 +191,7 @@ export default function SubscriptionsPage() {
                       type="button"
                       onClick={() => setPayMethod(id)}
                       className={cn(
-                        "rounded-[5px] border px-2 py-2.5 text-sm font-semibold",
+                        "rounded-xl border px-2 py-2.5 text-sm font-semibold",
                         payMethod === id
                           ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-700)]"
                           : "border-slate-200 text-slate-700",
@@ -212,7 +212,7 @@ export default function SubscriptionsPage() {
                   />
                 ) : null}
                 {payMethod === "debt" ? (
-                  <p className="rounded-[5px] bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
+                  <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{t.money.debtNote}</p>
                 ) : null}
               </div>
             ) : null}
@@ -224,7 +224,7 @@ export default function SubscriptionsPage() {
 
       <section className="mt-8">
         <h2 className="text-base font-bold">{t.pages.subActive}</h2>
-        <div className="mt-3 overflow-auto rounded-[5px] border border-[var(--border)] bg-white">
+        <div className="mt-3 overflow-auto rounded-xl border border-[var(--border)] bg-white">
           <table className="w-full min-w-[800px] text-sm">
             <thead className="bg-slate-50 text-left">
               <tr>

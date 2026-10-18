@@ -185,7 +185,7 @@ export default function PromotionsPage() {
             key={item}
             type="button"
             className={cn(
-              "h-9 rounded-[5px] px-3 text-sm font-semibold",
+              "h-9 rounded-xl px-3 text-sm font-semibold",
               phase === item ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white text-slate-600",
             )}
             onClick={() => setPhase(item)}
@@ -197,7 +197,7 @@ export default function PromotionsPage() {
       {visible.length === 0 ? <p className="mt-4 text-sm text-slate-500">{t.promo.empty}</p> : null}
       <ul className="mt-4 grid gap-3 md:grid-cols-2">
         {visible.map((row) => (
-          <li key={row.id} className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-4">
+          <li key={row.id} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-base font-semibold">{row.name}</h2>
               <Badge tone={row.codeMode === "none" ? "info" : "neutral"}>
@@ -231,7 +231,7 @@ export default function PromotionsPage() {
       {draft ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
           <form
-            className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-white p-4"
+            className="flex h-full w-[80%] max-w-md flex-col overflow-y-auto bg-white p-4"
             onSubmit={(event) => { event.preventDefault(); void save(); }}
           >
             <div className="flex items-center justify-between gap-2">
@@ -256,7 +256,7 @@ export default function PromotionsPage() {
                   key={day}
                   type="button"
                   className={cn(
-                    "h-9 rounded-[5px] px-2 text-xs font-semibold",
+                    "h-9 rounded-xl px-2 text-xs font-semibold",
                     draft.weekdays.includes(day) ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white",
                   )}
                   onClick={() => setDraft({ ...draft, weekdays: toggle(draft.weekdays, day) })}
@@ -296,7 +296,7 @@ export default function PromotionsPage() {
                   key={benefit}
                   type="button"
                   className={cn(
-                    "h-9 rounded-[5px] px-3 text-xs font-semibold",
+                    "h-9 rounded-xl px-3 text-xs font-semibold",
                     draft.benefit === benefit ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white",
                   )}
                   onClick={() => setDraft({ ...draft, benefit })}
@@ -315,7 +315,7 @@ export default function PromotionsPage() {
                   key={mode}
                   type="button"
                   className={cn(
-                    "h-9 rounded-[5px] px-3 text-xs font-semibold",
+                    "h-9 rounded-xl px-3 text-xs font-semibold",
                     draft.codeMode === mode ? "bg-[var(--brand-500)] text-white" : "border border-[var(--border)] bg-white",
                   )}
                   onClick={() => setDraft({ ...draft, codeMode: mode })}
@@ -357,7 +357,7 @@ export default function PromotionsPage() {
             <label className="mt-2 block text-sm">{t.promo.note}
               <textarea className={`${inputClass} mt-1 min-h-20`} value={draft.note} onChange={(event) => setDraft({ ...draft, note: event.target.value })} />
             </label>
-            {preview ? <p className="mt-3 rounded-[5px] bg-slate-50 px-3 py-2 text-sm text-slate-600">{preview}</p> : null}
+            {preview ? <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600">{preview}</p> : null}
             {error ? <p className="mt-2 text-sm text-rose-700">{error}</p> : null}
             <div className="mt-4 flex gap-2 pb-6">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setDraft(null)}>{t.common.cancel}</Button>

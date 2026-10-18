@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Layers, ListFilter, Search, UserRound } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
+import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import { canManageTasks } from "@/lib/access";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
 import { fill } from "@/lib/copy";
@@ -194,7 +195,7 @@ export default function TasksPage() {
       </div>
 
       <div ref={barRef} className="mt-4 flex flex-wrap items-center gap-2">
-        <label className="flex h-10 min-w-[12rem] flex-1 items-center gap-2 rounded-[5px] border border-[var(--border)] bg-white px-3 sm:max-w-xs sm:flex-none">
+        <label className="flex h-10 min-w-[12rem] flex-1 items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 sm:max-w-xs sm:flex-none">
           <Search size={16} className="shrink-0 text-slate-400" aria-hidden />
           <input
             className="h-9 min-w-0 flex-1 bg-transparent text-base text-[var(--foreground)] outline-none"
@@ -243,7 +244,7 @@ export default function TasksPage() {
             aria-expanded={filterOpen}
             onClick={() => { setFilterOpen((v) => !v); setGroupOpen(false); }}
             className={cn(
-              "inline-flex h-10 items-center gap-2 rounded-[5px] border bg-white px-3 text-sm font-semibold",
+              "inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold",
               filterOpen || filterCount > 0 ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
             )}
           >
@@ -254,7 +255,7 @@ export default function TasksPage() {
             ) : null}
           </button>
           {filterOpen ? (
-            <div className="absolute left-0 z-30 mt-1 w-64 rounded-[5px] border border-[var(--border)] bg-white p-3">
+            <div className="absolute left-0 z-30 mt-1 w-64 rounded-xl border border-[var(--border)] bg-white p-3">
               <label className="block text-xs font-semibold text-slate-500">
                 {t.task.status}
                 <select className={`${inputClass} mt-1`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "all")}>
@@ -281,7 +282,7 @@ export default function TasksPage() {
                 type="button"
                 onClick={() => setOverdueOnly((v) => !v)}
                 className={cn(
-                  "mt-3 h-10 w-full rounded-[5px] border text-sm font-semibold",
+                  "mt-3 h-10 w-full rounded-xl border text-sm font-semibold",
                   overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-600",
                 )}
               >
@@ -296,7 +297,7 @@ export default function TasksPage() {
             aria-expanded={groupOpen}
             onClick={() => { setGroupOpen((v) => !v); setFilterOpen(false); }}
             className={cn(
-              "inline-flex h-10 items-center gap-2 rounded-[5px] border bg-white px-3 text-sm font-semibold",
+              "inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold",
               groupOpen ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
             )}
           >
@@ -304,7 +305,7 @@ export default function TasksPage() {
             {t.task.group}
           </button>
           {groupOpen ? (
-            <div className="absolute left-0 z-30 mt-1 w-52 rounded-[5px] border border-[var(--border)] bg-white p-1" role="menu">
+            <div className="absolute left-0 z-30 mt-1 w-52 rounded-xl border border-[var(--border)] bg-white p-1" role="menu">
               {([
                 ["status", t.task.groupStatus],
                 ["assignee", t.task.groupAssignee],
@@ -317,7 +318,7 @@ export default function TasksPage() {
                   aria-checked={groupBy === id}
                   onClick={() => { setGroupBy(id); setGroupOpen(false); }}
                   className={cn(
-                    "block w-full rounded-[5px] px-3 py-2 text-left text-sm font-semibold",
+                    "block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold",
                     groupBy === id ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "text-slate-700 hover:bg-slate-50",
                   )}
                 >
@@ -338,7 +339,7 @@ export default function TasksPage() {
                 key={group.id}
                 type="button"
                 onClick={() => setParentFilter(group.id)}
-                className="rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left"
+                className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left"
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-800">{group.name}</p>
@@ -389,7 +390,7 @@ export default function TasksPage() {
                   <tr className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-3 py-3">
                       <select
-                        className="h-9 rounded-[5px] border border-[var(--border)] bg-white px-2 text-sm"
+                        className="h-9 rounded-xl border border-[var(--border)] bg-white px-2 text-sm"
                         value={task.status}
                         disabled={!canEdit && task.assigneeId !== me?.id}
                         onChange={(e) => void moveTaskStatus(task.id, e.target.value as TaskStatus)}
@@ -445,7 +446,7 @@ export default function TasksPage() {
             return (
               <section
                 key={col.id}
-                className="w-[272px] shrink-0 rounded-[5px] border border-[var(--border)] bg-slate-50 p-2"
+                className="w-[272px] shrink-0 rounded-xl border border-[var(--border)] bg-slate-50 p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   if (groupBy !== "status") return;
@@ -456,7 +457,7 @@ export default function TasksPage() {
               >
                 <div className="flex items-center justify-between px-2 py-2">
                   <h2 className="text-sm font-bold text-slate-700">{col.label}</h2>
-                  <span className="rounded-[5px] bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
+                  <span className="rounded-xl bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
                 </div>
                 <ul className="space-y-2">
                   {rows.map((task) => {
@@ -475,7 +476,7 @@ export default function TasksPage() {
                             e.dataTransfer.effectAllowed = "move";
                           }}
                           onClick={() => { setOpenId(task.id); setCreating(false); }}
-                          className="w-full rounded-[5px] border border-[var(--border)] bg-[var(--card)] p-3 text-left"
+                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left"
                         >
                           {group ? (
                             <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--brand-600)]">{group}</p>
@@ -568,6 +569,8 @@ function TaskDrawer({
   const zalo = phone ? zaloHref(phone) : "";
   const comments = [...(current?.comments ?? [])].sort((a, b) => b.day.localeCompare(a.day));
 
+  const { leaving, requestClose } = useOverlayClose(onClose);
+
   async function save() {
     if (!canEdit) return;
     const code = task
@@ -577,7 +580,7 @@ function TaskDrawer({
       setError(t.task.needTitle);
       return;
     }
-    onClose();
+    requestClose();
   }
 
   async function sendComment() {
@@ -610,23 +613,21 @@ function TaskDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative h-full w-full max-w-md overflow-y-auto bg-[var(--card)] p-5">
+    <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close} panelClassName="max-w-md overflow-y-auto p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">{task ? t.task.edit : t.task.create}</h2>
-          <Button type="button" variant="ghost" onClick={onClose}>{t.common.close}</Button>
+          <Button type="button" variant="ghost" onClick={requestClose}>{t.common.close}</Button>
         </div>
 
         {task && (callHref || zalo) ? (
           <div className="mt-3 flex gap-2">
             {callHref ? (
-              <a href={callHref} className={cn("crm-outline inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[5px] border-[1.5px] border-[var(--brand-500)] bg-white text-sm font-semibold text-[var(--brand-500)]")}>
+              <a href={callHref} className={cn("crm-outline inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--brand-500)] bg-white text-sm font-semibold text-[var(--brand-500)]")}>
                 {t.task.call}
               </a>
             ) : null}
             {zalo ? (
-              <a href={zalo} target="_blank" rel="noreferrer" className={cn("inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[5px] bg-[var(--brand-500)] text-sm font-semibold text-white")}>
+              <a href={zalo} target="_blank" rel="noreferrer" className={cn("inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--brand-500)] text-sm font-semibold text-white")}>
                 {t.task.zalo}
               </a>
             ) : null}
@@ -647,7 +648,7 @@ function TaskDrawer({
           </Field>
           {canEdit ? (
             addingParent ? (
-              <div className="grid gap-2 rounded-[5px] border border-[var(--border)] bg-slate-50 p-3">
+              <div className="grid gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3">
                 <Field label={t.task.parentName}>
                   <input className={inputClass} value={newParentName} onChange={(e) => setNewParentName(e.target.value)} />
                 </Field>
@@ -700,7 +701,7 @@ function TaskDrawer({
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
           {canEdit ? (
             <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose}>{t.common.cancel}</Button>
+              <Button type="button" variant="outline" onClick={requestClose}>{t.common.cancel}</Button>
               <Button type="button" onClick={() => void save()}>{t.common.save}</Button>
             </div>
           ) : (
@@ -716,7 +717,7 @@ function TaskDrawer({
                 <li className="text-sm text-slate-400">{t.task.noComments}</li>
               ) : (
                 comments.map((c) => (
-                  <li key={c.id} className="rounded-[5px] border border-[var(--border)] bg-slate-50 px-3 py-2">
+                  <li key={c.id} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
                     <p className="text-xs text-slate-400">{c.day} · {staffName(c.actorId)}</p>
                     <p className="mt-1 text-sm text-slate-700">{c.text}</p>
                   </li>
@@ -740,7 +741,6 @@ function TaskDrawer({
             ) : null}
           </section>
         ) : null}
-      </aside>
-    </div>
+    </CrmDrawerShell>
   );
 }

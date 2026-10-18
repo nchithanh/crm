@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
+import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import { canManageCatalog } from "@/lib/access";
 import { cancelSession, setAttendance, updateSession } from "@/lib/actions";
 import { db } from "@/lib/db";
@@ -16,6 +17,7 @@ import type { AttendStatus } from "@/types";
 
 export function ClassDrawer({ classId, onClose }: { classId: string; onClose: () => void }) {
   const { t } = useI18n();
+  const { leaving, requestClose } = useOverlayClose(onClose);
   const user = useAuthStore((s) => s.user);
   const canEdit = canManageCatalog(user?.role);
   const klass = useLiveQuery(() => db.classes.get(classId), [classId]);
@@ -33,14 +35,6 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
   const [cancelReason, setCancelReason] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   useEffect(() => {
     if (!klass) return;
@@ -69,9 +63,9 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
 
   if (klass === undefined) {
     return (
-      <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-        <aside className="h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.common.loading}</aside>
-      </div>
+      <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
+        <div className="p-6 text-sm text-slate-500">{t.common.loading}</div>
+      </CrmDrawerShell>
     );
   }
   if (!klass) return null;
@@ -94,7 +88,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
     setBusy(true);
     await cancelSession(klass.id, user.id, cancelReason);
     setBusy(false);
-    onClose();
+    requestClose();
   }
 
   async function mark(studentId: string, status: AttendStatus) {
@@ -106,9 +100,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
   const statusTone = klass.status === "cancelled" ? "danger" : klass.status === "completed" ? "neutral" : klass.status === "ongoing" ? "ok" : "info";
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-[var(--card)]">
+    <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
         <header className="shrink-0 border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -121,7 +113,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
               <p className="mt-0.5 text-sm text-slate-500">{klass.start}–{klass.end}</p>
               <div className="mt-2"><Badge tone={statusTone}>{klass.status}</Badge></div>
             </div>
-            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+            <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-100" aria-label={t.common.close} onClick={requestClose}>
               <X size={18} />
             </button>
           </div>
@@ -129,7 +121,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
             <Link href={`/classes/${klass.id}`} className="text-sm font-semibold text-[var(--brand-600)] hover:underline">
               {t.common.next} →
             </Link>
-            <Link href={`/attendance?class=${klass.id}`} className="inline-flex h-9 items-center rounded-[5px] bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
+            <Link href={`/attendance?class=${klass.id}`} className="inline-flex h-9 items-center rounded-xl bg-[var(--brand-500)] px-3 text-sm font-semibold text-white">
               {t.nav.attendShort}
             </Link>
           </div>
@@ -137,7 +129,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4 text-sm">
           {conflict ? (
-            <p className="rounded-[5px] border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">{conflict}</p>
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">{conflict}</p>
           ) : null}
           {msg ? <p className="text-rose-700">{msg}</p> : null}
 
@@ -171,7 +163,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
                 if (!s) return null;
                 const markRow = attendance.find((a) => a.subject === "student" && a.personId === s.id);
                 return (
-                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-[var(--border)] px-3 py-2">
+                  <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                     <Link href={`/students/${s.id}`} className="flex items-center gap-2 font-semibold text-[var(--brand-600)] hover:underline">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: s.avatarColor }}>{initials(s.name)}</span>
                       {s.name}
@@ -193,7 +185,7 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
           </section>
 
           {canEdit && klass.status !== "cancelled" ? (
-            <section className="space-y-2 rounded-[5px] border border-rose-100 bg-rose-50/50 p-3">
+            <section className="space-y-2 rounded-xl border border-rose-100 bg-rose-50/50 p-3">
               <h3 className="text-xs font-semibold tracking-wide text-rose-700 uppercase">{t.status.cancelled}</h3>
               <input className={inputClass} placeholder={t.schedule.cancelReason} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
               <p className="text-xs text-rose-700">{t.schedule.cancelKeep}</p>
@@ -203,7 +195,6 @@ export function ClassDrawer({ classId, onClose }: { classId: string; onClose: ()
             </section>
           ) : null}
         </div>
-      </aside>
-    </div>
+    </CrmDrawerShell>
   );
 }

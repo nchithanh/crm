@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { X } from "lucide-react";
 import { Badge, Button, Field, inputClass } from "@/components/ui";
+import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import { canManageCatalog } from "@/lib/access";
 import {
   clearTeacherAbsence,
@@ -50,6 +51,7 @@ export function TeacherDrawer({
   onEdit?: (id: string) => void;
 }) {
   const { t } = useI18n();
+  const { leaving, requestClose } = useOverlayClose(onClose);
   const canEdit = canManageCatalog(useAuthStore((s) => s.user?.role));
   const teacher = useLiveQuery(() => db.users.get(teacherId), [teacherId]);
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
@@ -65,14 +67,6 @@ export function TeacherDrawer({
   const [absenceNote, setAbsenceNote] = useState("");
   const [absenceMsg, setAbsenceMsg] = useState("");
   const [showBackup, setShowBackup] = useState(false);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   useEffect(() => {
     setTab("overview");
@@ -102,9 +96,9 @@ export function TeacherDrawer({
 
   if (teacher === undefined) {
     return (
-      <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
-        <aside className="h-full w-full max-w-[34rem] bg-white p-6 text-sm text-slate-500">{t.teachers.loading}</aside>
-      </div>
+      <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
+        <div className="p-6 text-sm text-slate-500">{t.teachers.loading}</div>
+      </CrmDrawerShell>
     );
   }
   if (!teacher || teacher.role !== "teacher") return null;
@@ -127,9 +121,7 @@ export function TeacherDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label={t.common.close} onClick={onClose} />
-      <aside className="relative flex h-full w-full max-w-[34rem] flex-col bg-[var(--card)]">
+    <CrmDrawerShell leaving={leaving} onClose={requestClose} closeLabel={t.common.close}>
         <header className="border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-start gap-3">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: teacher.avatarColor }}>
@@ -138,7 +130,7 @@ export function TeacherDrawer({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="text-lg font-bold text-slate-900">{teacher.name}</h2>
-                <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-[5px] hover:bg-slate-100" aria-label={t.common.close} onClick={onClose}>
+                <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-slate-100" aria-label={t.common.close} onClick={requestClose}>
                   <X size={18} />
                 </button>
               </div>
@@ -153,7 +145,7 @@ export function TeacherDrawer({
             {canEdit && onEdit ? (
               <Button type="button" onClick={() => onEdit(teacher.id)}>{t.catalog.edit}</Button>
             ) : null}
-            <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-[5px] border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+            <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-xl border-[1.5px] border-[var(--brand-500)] bg-white px-3.5 text-sm font-semibold text-[var(--brand-500)]">
               {t.teachers.viewSchedule}
             </Link>
             <Button type="button" variant="ghost" onClick={onClose}>{t.common.close}</Button>
@@ -204,7 +196,7 @@ export function TeacherDrawer({
                 <ul className="mt-1 space-y-1">
                   {teachingClasses.length === 0 ? <li className="text-slate-500">—</li> : null}
                   {teachingClasses.map((c) => (
-                    <li key={c.id} className="rounded-[5px] border border-[var(--border)] px-3 py-2 font-medium text-slate-800">{c.name}</li>
+                    <li key={c.id} className="rounded-xl border border-[var(--border)] px-3 py-2 font-medium text-slate-800">{c.name}</li>
                   ))}
                 </ul>
               </div>
@@ -221,7 +213,7 @@ export function TeacherDrawer({
                 const room = rooms.find((r) => r.id === s.roomId);
                 const b = branches.find((x) => x.id === s.branchId);
                 return (
-                  <div key={s.id} className="rounded-[5px] border border-[var(--border)] px-3 py-2.5">
+                  <div key={s.id} className="rounded-xl border border-[var(--border)] px-3 py-2.5">
                     <p className="font-semibold text-slate-900">{course?.name ?? s.courseId}</p>
                     <p className="mt-0.5 text-slate-600">{s.day} · {s.start}–{s.end}</p>
                     <p className="text-xs text-slate-400">{room?.name ?? "—"} · {b?.name ?? "—"} · {fill(t.teachers.capacity, { n: room?.capacity ?? 0 })}</p>
@@ -238,11 +230,11 @@ export function TeacherDrawer({
             <section className="space-y-4 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.workload}</h2> : null}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-[5px] border border-[var(--border)] p-3">
+                <div className="rounded-xl border border-[var(--border)] p-3">
                   <p className="text-slate-400">{t.teachers.weekLoad}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{weekSessions.length}</p>
                 </div>
-                <div className="rounded-[5px] border border-[var(--border)] p-3">
+                <div className="rounded-xl border border-[var(--border)] p-3">
                   <p className="text-slate-400">{t.teachers.monthLoad}</p>
                   <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{monthCount}</p>
                 </div>
@@ -259,7 +251,7 @@ export function TeacherDrawer({
                   />
                 </div>
               </div>
-              {overloaded ? <p className="rounded-[5px] bg-rose-50 px-3 py-2 text-rose-700">{t.teachers.overload}</p> : null}
+              {overloaded ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-rose-700">{t.teachers.overload}</p> : null}
               <p className="text-slate-500">{fill(t.teachers.classCount, { n: teachingClasses.length })}</p>
             </section>
           ) : null}
@@ -268,7 +260,7 @@ export function TeacherDrawer({
             <section className="space-y-4 text-sm">
               {tab === "overview" ? <h2 className="crm-section-title">{t.teachers.tabs.backup}</h2> : null}
               {canEdit ? (
-                <div className="space-y-2 rounded-[5px] border border-[var(--border)] p-3">
+                <div className="space-y-2 rounded-xl border border-[var(--border)] p-3">
                   <p className="font-semibold text-slate-800">{t.teachers.markAbsence}</p>
                   <Field label={t.schedule.day}>
                     <input type="date" className={inputClass} value={absenceDay} onChange={(e) => setAbsenceDay(e.target.value)} />
@@ -286,7 +278,7 @@ export function TeacherDrawer({
                 <ul className="mt-2 space-y-2">
                   {absences.length === 0 ? <li className="text-slate-500">{t.teachers.noAbsence}</li> : null}
                   {[...absences].sort((a, b) => a.day.localeCompare(b.day)).map((a) => (
-                    <li key={a.id} className="flex items-start justify-between gap-2 rounded-[5px] border border-[var(--border)] px-3 py-2">
+                    <li key={a.id} className="flex items-start justify-between gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                       <span>
                         <span className="font-medium text-slate-800">{a.day}</span>
                         {a.note ? <span className="mt-0.5 block text-slate-500">{a.note}</span> : null}
@@ -311,7 +303,7 @@ export function TeacherDrawer({
                   {needCover.map((s) => {
                     const course = courses.find((c) => c.id === s.courseId);
                     return (
-                      <li key={s.id} className="rounded-[5px] border border-amber-200 bg-amber-50 px-3 py-2">
+                      <li key={s.id} className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
                         <p className="font-medium text-slate-900">{course?.name ?? s.courseId}</p>
                         <p className="text-slate-600">{s.day} · {s.start}–{s.end}</p>
                       </li>
@@ -326,7 +318,7 @@ export function TeacherDrawer({
                   <ul className="mt-2 space-y-2">
                     {backups.length === 0 ? <li className="text-slate-500">{t.teachers.noBackup}</li> : null}
                     {backups.map((u: User) => (
-                      <li key={u.id} className="flex items-center gap-2 rounded-[5px] border border-[var(--border)] px-3 py-2">
+                      <li key={u.id} className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2">
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: u.avatarColor }}>
                           {initials(u.name)}
                         </span>
@@ -344,7 +336,6 @@ export function TeacherDrawer({
           ) : null}
           </div>
         </div>
-      </aside>
-    </div>
+    </CrmDrawerShell>
   );
 }

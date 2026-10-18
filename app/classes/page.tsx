@@ -99,7 +99,7 @@ export default function ClassesPage() {
 
       {openId ? <ClassDrawer classId={openId} onClose={() => setOpenId(null)} /> : null}
 
-      <div className="mt-4 overflow-auto rounded-[5px] border border-[var(--border)] bg-[var(--card)]">
+      <div className="mt-4 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--card)]">
         <table className="w-full min-w-[900px] text-sm">
           <thead className="sticky top-0 bg-slate-50 text-left">
             <tr>
@@ -168,12 +168,12 @@ export default function ClassesPage() {
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-1 text-xs text-slate-500">
             {t.students.pageSize}
-            <select className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
+            <select className="h-8 rounded-xl border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
               {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
-          <button type="button" className="h-8 rounded-[5px] border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
+          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
+          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
         </div>
       </div>
     </div>

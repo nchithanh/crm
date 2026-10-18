@@ -9,6 +9,38 @@ export function minutesOf(hhmm: string) {
   return (h || 0) * 60 + (m || 0);
 }
 
+/** Minutes since midnight for “now” (local). */
+export function nowMinutesOfDay(d = new Date()) {
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+/** UI phase from clock — independent of stored ClassStatus (today is often all “ongoing” in seed). */
+export type SessionTimePhase = "past" | "live" | "soon";
+
+export function sessionTimePhase(
+  day: string,
+  start: string,
+  end: string,
+  opts?: { today?: string; nowMin?: number },
+): SessionTimePhase {
+  const today = opts?.today ?? localDayKey();
+  const nowMin = opts?.nowMin ?? nowMinutesOfDay();
+  if (day < today) return "past";
+  if (day > today) return "soon";
+  const s = minutesOf(start);
+  const e = minutesOf(end);
+  if (nowMin >= e) return "past";
+  if (nowMin >= s && nowMin < e) return "live";
+  return "soon";
+}
+
+/** Fraction 0–1 within an hour row for the now line; null if outside this hour or grid. */
+export function nowLineInHour(hour: number, nowMin = nowMinutesOfDay()) {
+  if (nowMin < GRID_START * 60 || nowMin >= GRID_END * 60) return null;
+  if (nowMin < hour * 60 || nowMin >= (hour + 1) * 60) return null;
+  return (nowMin - hour * 60) / 60;
+}
+
 export function formatMinutes(total: number) {
   const h = Math.floor(total / 60);
   const m = total % 60;

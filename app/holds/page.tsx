@@ -86,15 +86,15 @@ export default function HoldsPage() {
     <div>
       <h1 className="crm-page-title">{t.hold.title}</h1>
       <p className="mt-1 text-sm text-slate-500">{t.hold.lead}</p>
-      {message ? <p className="mt-3 rounded-[5px] bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
+      {message ? <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p> : null}
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
             className={tab === item.id
-              ? "h-9 shrink-0 rounded-[5px] border border-transparent bg-[var(--brand-50)] px-4 text-sm font-semibold text-[var(--brand-600)]"
-              : "h-9 shrink-0 rounded-[5px] border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]"}
+              ? "h-9 shrink-0 rounded-xl border border-transparent bg-[var(--brand-50)] px-4 text-sm font-semibold text-[var(--brand-600)]"
+              : "h-9 shrink-0 rounded-xl border border-[var(--border)] bg-white px-4 text-sm font-semibold text-[var(--muted)]"}
             onClick={() => setTab(item.id)}
           >
             {item.label}
@@ -102,7 +102,7 @@ export default function HoldsPage() {
         ))}
       </div>
       <ul key={tab} className="crm-tab-panel mt-4 space-y-3">
-        {rows.length === 0 ? <li className="rounded-[5px] bg-white px-4 py-8 text-center text-sm text-[var(--muted)]">{t.hold.empty}</li> : null}
+        {rows.length === 0 ? <li className="rounded-xl bg-white px-4 py-8 text-center text-sm text-[var(--muted)]">{t.hold.empty}</li> : null}
         {rows.map((h) => {
           const student = students.find((s) => s.id === h.studentId);
           const pack = packForStudent(h.studentId);
@@ -110,7 +110,7 @@ export default function HoldsPage() {
             <li key={h.id}>
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-[5px] border border-[var(--border)] bg-[var(--card)] px-4 py-4 text-left"
+                className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-4 text-left"
                 onClick={() => { setOpenId(h.id); setMessage(""); setRejectReason(h.rejectReason ?? ""); }}
               >
                 <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: student?.avatarColor ?? "#111111" }}>
@@ -132,7 +132,7 @@ export default function HoldsPage() {
       {open ? (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40">
           <button className="absolute inset-0" aria-label={t.common.close} onClick={() => setOpenId(null)} />
-          <aside className="relative h-full w-full max-w-md overflow-y-auto bg-white p-5">
+          <aside className="relative h-full w-[80%] max-w-md overflow-y-auto bg-white p-5">
             {(() => {
               const student = students.find((s) => s.id === open.studentId);
               const pack = packForStudent(open.studentId);
