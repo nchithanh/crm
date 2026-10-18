@@ -9,7 +9,7 @@ import { canManagePromotions, canSeeContact } from "@/lib/access";
 import { db } from "@/lib/db";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
-import { leadStageLabel, leadStages } from "@/lib/labels";
+import { leadStageLabel, leadStages, leadStageTone } from "@/lib/labels";
 import { usePageQuery } from "@/lib/page-query";
 import { SharePreviewDialog, type SharePreviewInput } from "@/components/share-preview";
 import { CrmModalShell, CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
@@ -177,7 +177,7 @@ export default function LeadsPage() {
                   <td className="px-3 py-3">{l.source}</td>
                   <td className="px-3 py-3">{l.interest}</td>
                   <td className="px-3 py-3">{users.find((u) => u.id === l.ownerId)?.name}</td>
-                  <td className="px-3 py-3"><Badge tone={isCold(l) ? "warn" : "info"}>{leadStageLabel(l.stage, lang)}</Badge></td>
+                  <td className="px-3 py-3"><Badge tone={isCold(l) ? "warn" : leadStageTone(l.stage)}>{leadStageLabel(l.stage, lang)}</Badge></td>
                   <td className="px-3 py-3">{l.day}</td>
                   <td className="px-3 py-3">{lastTouch(l)}</td>
                 </tr>

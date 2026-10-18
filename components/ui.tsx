@@ -52,8 +52,8 @@ export function Badge({
         tone === "ok" && "bg-green-50 text-green-700",
         tone === "warn" && "bg-amber-50 text-amber-700",
         tone === "danger" && "bg-rose-50 text-rose-700",
-        tone === "info" && "bg-[var(--brand-50)] text-[var(--brand-600)]",
-        tone === "neutral" && "bg-[#F5F6FA] text-[var(--muted)]",
+        tone === "info" && "bg-sky-50 text-sky-700",
+        tone === "neutral" && "bg-slate-100 text-slate-600",
       )}
     >
       {children}

@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
 import { NAV_AI, NAV_GROUPS, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER } from "@/lib/nav";
-import { useNavBadges } from "@/lib/nav-badges";
+import { navBadgeClassDark, navBadgeClassLight, navBadgeKind, useNavBadges } from "@/lib/nav-badges";
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
@@ -82,12 +82,14 @@ function BottomTabFace({
   on,
   label,
   badge,
+  badgeKind = "count",
   children,
 }: {
   raised: boolean;
   on: boolean;
   label: string;
   badge?: number;
+  badgeKind?: "count" | "warn" | "danger";
   children: ReactNode;
 }) {
   return (
@@ -105,7 +107,7 @@ function BottomTabFace({
           <span
             className={cn(
               "absolute -top-1 -right-1 inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-4 tabular-nums",
-              raised ? "bg-white text-[var(--brand-600)]" : "bg-[var(--brand-500)] text-white",
+              raised ? "bg-white text-slate-700" : navBadgeClassLight(badgeKind),
             )}
           >
             {badge > 99 ? "99" : badge}
@@ -269,7 +271,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Icon size={18} strokeWidth={on ? 2.25 : 1.75} className={on ? "text-[var(--brand-300)]" : undefined} />
         <span className="min-w-0 flex-1 truncate">{t.nav[item.key]}</span>
         {(navBadges[item.href] ?? 0) > 0 ? (
-          <span className="inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand-500)] px-1.5 text-[11px] font-semibold text-white tabular-nums">
+          <span
+            className={cn(
+              "inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums",
+              navBadgeClassDark(navBadgeKind(item.href)),
+            )}
+          >
             {navBadges[item.href]}
           </span>
         ) : null}
@@ -500,7 +507,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const href = item.href === "/mid-course-enroll" ? `/mid-course-enroll${branchQuery}` : item.href;
             return (
               <Link key={item.href} href={href} className="relative h-16" aria-current={on ? "page" : undefined}>
-                <BottomTabFace raised={raised} on={on} label={label} badge={badge}>
+                <BottomTabFace raised={raised} on={on} label={label} badge={badge} badgeKind={navBadgeKind(item.href)}>
                   <Icon size={22} strokeWidth={raised || on ? 2.25 : 1.75} />
                 </BottomTabFace>
               </Link>
@@ -527,10 +534,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           title={t.shell.paletteFab}
           onClick={() => setPaletteOpen(true)}
         >
-          <span className="relative inline-flex">
-            <Search size={20} strokeWidth={2.25} aria-hidden />
-            <Sparkles size={10} className="crm-cmd-fab-spark" aria-hidden />
-          </span>
+          <Sparkles size={20} strokeWidth={2.25} aria-hidden />
         </button>
       ) : null}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

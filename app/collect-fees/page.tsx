@@ -438,12 +438,12 @@ export default function FinanceCollectPage() {
               </button>
             </div>
             <div className="mt-4 flex flex-col items-center text-center">
-              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-600">✓</span>
-              <p className="mt-3 text-sm font-bold uppercase tracking-wide">{t.money.collected}</p>
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-600">✓</span>
+              <p className="mt-3 text-sm font-bold uppercase tracking-wide text-green-700">{t.money.collected}</p>
               <p className="mt-1 text-sm text-slate-500">{receipt.studentName}</p>
               <p className="text-sm text-slate-500">{receipt.title}</p>
               {receipt.amount > 0 ? (
-                <p className="mt-2 text-3xl font-bold tabular-nums text-emerald-700">{formatVnd(receipt.amount)}</p>
+                <p className="mt-2 text-3xl font-bold tabular-nums text-green-700">{formatVnd(receipt.amount)}</p>
               ) : (
                 <p className="mt-2 text-sm text-amber-800">{t.money.debtNote}</p>
               )}

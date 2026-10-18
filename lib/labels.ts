@@ -16,6 +16,15 @@ export function leadStageLabel(stage: LeadStage, lang: Lang) {
   return leadStages(lang).find((s) => s.id === stage)?.label ?? stage;
 }
 
+/** Stage phễu — semantic, không brand. */
+export function leadStageTone(stage: LeadStage): "ok" | "warn" | "danger" | "neutral" | "info" {
+  if (stage === "won") return "ok";
+  if (stage === "lost") return "neutral";
+  if (stage === "trial") return "warn";
+  if (stage === "new") return "info";
+  return "neutral"; // contacted
+}
+
 export function studentStatusLabel(status: StudentStatus, lang: Lang) {
   const s = copy[lang].status;
   if (status === "active") return s.active;

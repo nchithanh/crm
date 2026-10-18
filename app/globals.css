@@ -47,14 +47,7 @@
   --cal-warm-swatch: #d0d0d6;
 }
 
-.bg-emerald-50 { background-color: var(--brand-50) !important; }
-.bg-emerald-100 { background-color: var(--brand-100) !important; }
-.bg-emerald-500 { background-color: var(--brand-500) !important; }
-.bg-emerald-600 { background-color: var(--brand-600) !important; }
-.text-emerald-600 { color: var(--brand-600) !important; }
-.text-emerald-700 { color: var(--brand-700) !important; }
-.border-emerald-500 { border-color: var(--brand-500) !important; }
-.ring-emerald-500 { --tw-ring-color: var(--brand-500) !important; }
+/* Không remap emerald→brand: success / semantic phải xanh thật (design-language). */
 
 * { box-sizing: border-box; }
 

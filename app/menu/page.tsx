@@ -13,7 +13,7 @@ import { roleLabel } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { NAV_AI, NAV_GROUPS, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER, type NavItem } from "@/lib/nav";
 import { useAccessStore } from "@/stores/access-store";
-import { useNavBadges } from "@/lib/nav-badges";
+import { navBadgeClassLight, navBadgeKind, useNavBadges } from "@/lib/nav-badges";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 
@@ -27,7 +27,12 @@ function Tile({ item, badge }: { item: NavItem; badge?: number }) {
       <span className="crm-icon-tile relative h-12 w-12 rounded-2xl transition group-hover:bg-[var(--brand-100)]">
         <Icon size={22} strokeWidth={1.75} />
         {(badge ?? 0) > 0 ? (
-          <span className="absolute -top-1 -right-1 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[10px] font-bold leading-4 text-white tabular-nums">
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 inline-flex min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-4 tabular-nums",
+              navBadgeClassLight(navBadgeKind(item.href)),
+            )}
+          >
             {badge! > 99 ? "99" : badge}
           </span>
         ) : null}

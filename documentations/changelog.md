@@ -2,6 +2,7 @@
 
 ## 2026-10-19
 
+- Semantic màu tách brand: bỏ remap `emerald→brand`; Badge `info` = sky; nav badge đếm = slate, nợ = rose, lead = amber; stage lead có tone riêng; modal thu thành công dùng green. Brand tím chỉ chrome (CTA/nav active).
 - Command Palette AI-style (Ctrl+K): popup giữa màn + neon viền; desktop FAB trên Zalo; **mobile bỏ FAB** — vuốt lên từ đáy mở palette (hoặc ô tìm header); Gợi ý · Hành động · Gần đây.
 - Tổng quan densify: hàng **3 cột** (task · HV mới · khóa sắp hết/khẩn); **6 KPI một hàng** `lg:grid-cols-6`. Typo KPI fluid `.crm-kpi-*` (`clamp` rem+svw — label~1rem / value~1.5rem max). Ask Dolphin thu gọn; bỏ search dưới greeting (Ctrl+K). Docs `design-language.md`.
 - Lịch `/schedule` và lịch phòng (`room-calendar`): palette **xám–trắng** (`--cal-*` / `.crm-cal-*`) — bỏ mint/lavender/sky; ô trống gần trắng, buổi xám nhạt, thẻ buổi nền trắng + viền xám. Không dùng `emerald-*` (remap brand).

@@ -512,7 +512,7 @@ export default function DashboardPage() {
       hint: fill(t.dash.attendHint, { arrow: model.rate - model.prevRate >= 0 ? "↑" : "↓", n: Math.abs(model.rate - model.prevRate) }),
       href: `/attendance${q}`,
       icon: Check,
-      tone: "bg-emerald-100 text-emerald-700",
+      tone: "bg-green-100 text-green-700",
       spark: model.attendSpark,
     },
     ...(showMoney
@@ -922,7 +922,7 @@ export default function DashboardPage() {
                     <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
                       <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: step.count === 0 ? "0%" : `${Math.max(8, (step.count / funnelMax) * 100)}%` }} />
                     </div>
-                    {conv !== null ? <p className="mt-1 text-sm font-semibold text-emerald-700 tabular-nums">{fill(t.dash.nextStep, { n: conv })}</p> : null}
+                    {conv !== null ? <p className="mt-1 text-sm font-semibold text-green-700 tabular-nums">{fill(t.dash.nextStep, { n: conv })}</p> : null}
                   </Link>
                 </li>
               );
