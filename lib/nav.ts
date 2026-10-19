@@ -9,6 +9,7 @@ import {
   Landmark,
   LayoutDashboard,
   LineChart,
+  Link2,
   ListTodo,
   Package,
   PauseCircle,
@@ -36,6 +37,7 @@ export type NavItemKey =
   | "midEnroll"
   | "promotion"
   | "care"
+  | "campaigns"
   | "financeOverview"
   | "collect"
   | "debts"
@@ -79,6 +81,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/mid-course-enroll", key: "midEnroll", icon: ClipboardCheck },
       { href: "/promotion", key: "promotion", icon: Tags },
       { href: "/follow-up", key: "care", icon: HeartHandshake },
+      { href: "/campaigns", key: "campaigns", icon: Link2 },
     ],
   },
   {

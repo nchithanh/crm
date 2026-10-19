@@ -2,6 +2,10 @@
 
 ## 2026-10-19
 
+- **Link CTA UI:** `/campaigns` lưới ô kiểu Overview (`crm-card-elev` + `crm-kpi-*`) — desktop **3 ô/hàng**; tile kênh, Click/Lead/%, Copy / Pause.
+- **Link CTA seed 17c:** 14 post; mỗi post sinh đúng `leadCount` lead gắn `postId`/`linkSlug`/`channel` (~127 lead CTA + 20 lead quầy). KPI list = số lead thật trên chi tiết / filter Chăm sóc.
+- **Link CTA list densify:** `/campaigns` dạng 1 dòng (tên · kênh · slug · metric · copy); số click/lead/% nổi (tabular, brand cho lead/%). Seed **17b** — 8 post đa kênh (1 paused).
+- **Link CTA / Social tracking (slice A):** tạo link tại `/campaigns` (Tuyển sinh), landing public `/r/[slug]` (không login, không shell), lead gắn `channel` / `postId` / `linkSlug`. Bảng Dexie `socialPosts` + `linkEvents` (v10), seed **17a** (2 post demo). Filter post trên Chăm sóc. Quyền: Boss / Quản lý / Marketing (`campaigns` trong ma trận).
 - Semantic màu tách brand: bỏ remap `emerald→brand`; Badge `info` = sky; nav badge đếm = slate, nợ = rose, lead = amber; stage lead có tone riêng; modal thu thành công dùng green. Brand tím chỉ chrome (CTA/nav active).
 - Command Palette AI-style (Ctrl+K): popup giữa màn + neon viền; desktop FAB trên Zalo; **mobile bỏ FAB** — vuốt lên từ đáy mở palette (hoặc ô tìm header); Gợi ý · Hành động · Gần đây.
 - Tổng quan densify: hàng **3 cột** (task · HV mới · khóa sắp hết/khẩn); **6 KPI một hàng** `lg:grid-cols-6`. Typo KPI fluid `.crm-kpi-*` (`clamp` rem+svw — label~1rem / value~1.5rem max). Ask Dolphin thu gọn; bỏ search dưới greeting (Ctrl+K). Docs `design-language.md`.

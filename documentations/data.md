@@ -33,7 +33,8 @@ Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). 
 | `students.json` | `courseId` + `subscriptionId` (không `classId`/`packageId`) |
 | `attendance.json` | `legacyClassId` + `personId` + `subject` — seed map sang class buổi |
 | `leads` `tasks` `holds` `bookings` `promotions` `teacher-absences` | Như trước |
+| `socialPosts` / `linkEvents` (Dexie, seed 17c) | 14 Link CTA + lead gắn attribution (`ld-cta-*`); KPI = số lead thật |
 
 Ngày JSON = `offset`. IndexedDB: `dolphin_crm_{id}`. Đổi lĩnh vực = đổi DB.
 
-Dexie **v7**: bảng `classes` (buổi), `classStudents`, `courseTeachers`, `courseRooms`, `subscriptionPlans`, `subscriptions`, `installments`. Drop `sessions` / `packages` / `enrollments` / `receivables`.
+Dexie **v10**: thêm `socialPosts`, `linkEvents`; index `leads` + `postId` / `linkSlug`. (v7: `classes` buổi, `classStudents`, …)

@@ -17,9 +17,14 @@ function pathOf(pathname: string) {
   return pathname;
 }
 
+function isPublicJoin(path: string) {
+  return path === "/r" || path.startsWith("/r/");
+}
+
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = pathOf(usePathname());
+  const publicJoin = isPublicJoin(path);
   const user = useAuthStore((s) => s.user);
   const hydrated = useAuthStore((s) => s.hydrated);
   const setHydrated = useAuthStore((s) => s.setHydrated);
@@ -40,12 +45,22 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = getStoredVertical();
-    setVertical(stored);
-    if (stored) applyVerticalTheme(stored);
-  }, [path, hydrated]);
+    if (stored) {
+      setVertical(stored);
+      applyVerticalTheme(stored);
+      return;
+    }
+    if (publicJoin) {
+      setVertical("nhay");
+      applyVerticalTheme("nhay");
+      return;
+    }
+    setVertical(null);
+  }, [path, hydrated, publicJoin]);
 
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
+    if (publicJoin) return;
     if (!vertical) {
       if (path !== "/choose-vertical") router.replace("/choose-vertical");
       return;
@@ -57,17 +72,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (user && (path === "/login" || path === "/choose-vertical")) {
       router.replace(homePathForRole(user.role));
     }
-  }, [hydrated, user, path, router, vertical]);
+  }, [hydrated, user, path, router, vertical, publicJoin]);
 
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
-    if (!vertical) {
+    if (!vertical && !publicJoin) {
       setReady(true);
       setSlow(false);
       return;
     }
+    const bootVertical = vertical ?? "nhay";
     let cancelled = false;
-    if (!user) setReady(true);
+    if (!user && !publicJoin) setReady(true);
     else setReady(false);
     setSlow(false);
     const slowTimer = window.setTimeout(() => {
@@ -76,8 +92,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     const cap = window.setTimeout(() => {
       if (!cancelled) setReady(true);
     }, 5000);
-    void bootStudio(vertical)
-      .then(() => useAccessStore.getState().hydrate())
+    void bootStudio(bootVertical)
+      .then(() => (publicJoin ? undefined : useAccessStore.getState().hydrate()))
       .then(() => {
         if (!cancelled) setReady(true);
       })
@@ -89,7 +105,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       window.clearTimeout(slowTimer);
       window.clearTimeout(cap);
     };
-  }, [hydrated, vertical, user, attempt]);
+  }, [hydrated, vertical, user, attempt, publicJoin]);
 
   if (!hydrated || vertical === undefined || !ready) {
     return (
@@ -111,7 +127,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return <I18nProvider>{children}</I18nProvider>;
+  if (!user || publicJoin) return <I18nProvider>{children}</I18nProvider>;
   return (
     <I18nProvider>
       <AppShell>{children}</AppShell>

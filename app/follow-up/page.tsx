@@ -35,6 +35,7 @@ export default function LeadsPage() {
   const { lang, t } = useI18n();
   const stages = leadStages(lang);
   const leads = useLiveQuery(() => db.leads.toArray(), []) ?? [];
+  const socialPosts = useLiveQuery(() => db.socialPosts.toArray(), []) ?? [];
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
@@ -44,6 +45,7 @@ export default function LeadsPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [source, setSource] = useState("all");
+  const [postId, setPostId] = useState("all");
   const [ownerId, setOwnerId] = useState("all");
   const [status, setStatus] = useState<LeadStage | "all">("all");
   const [fromDay, setFromDay] = useState("");
@@ -65,6 +67,7 @@ export default function LeadsPage() {
     const s = q.trim().toLowerCase();
     return leads.filter((l) => {
       if (source !== "all" && l.source !== source) return false;
+      if (postId !== "all" && l.postId !== postId) return false;
       if (ownerId !== "all" && l.ownerId !== ownerId) return false;
       if (status !== "all" && l.stage !== status) return false;
       if (fromDay && l.day < fromDay) return false;
@@ -72,7 +75,7 @@ export default function LeadsPage() {
       if (!s) return true;
       return `${l.name} ${l.phone} ${l.interest} ${l.source}`.toLowerCase().includes(s);
     });
-  }, [leads, q, source, ownerId, status, fromDay, toDay]);
+  }, [leads, q, source, postId, ownerId, status, fromDay, toDay]);
   const open = leads.find((l) => l.id === openId) ?? null;
   const chosen = filtered.filter((l) => picked.includes(l.id));
 
@@ -107,6 +110,14 @@ export default function LeadsPage() {
         <select className={inputClassInline} value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="all">{t.care.source}</option>
           {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select className={inputClassInline} value={postId} onChange={(e) => setPostId(e.target.value)} aria-label={t.campaigns.filterPost}>
+          <option value="all">{t.campaigns.allPosts}</option>
+          {socialPosts.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.title}
+            </option>
+          ))}
         </select>
         <select className={inputClassInline} value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
           <option value="all">{t.care.owner}</option>
@@ -148,6 +159,12 @@ export default function LeadsPage() {
                           <button type="button" draggable onDragStart={(e) => e.dataTransfer.setData("text/plain", l.id)} onClick={() => setOpenId(l.id)} className="min-w-0 flex-1 text-left">
                             <p className="font-semibold">{l.name}</p>
                             <p className="text-xs text-slate-500">{l.source} · {l.interest}</p>
+                            {l.channel ? (
+                              <p className="mt-1 text-xs font-medium text-[var(--brand-600)]">
+                                {fill(t.campaigns.chipFrom, { channel: l.channel })}
+                                {l.linkSlug ? ` · /r/${l.linkSlug}` : ""}
+                              </p>
+                            ) : null}
                             <p className="mt-1 text-xs text-slate-400">Liên hệ {lastTouch(l)} · {owner?.name ?? "—"}</p>
                             {cold ? <p className="mt-1 text-xs font-semibold text-amber-700">{t.care.cold}</p> : null}
                           </button>

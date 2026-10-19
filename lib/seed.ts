@@ -24,13 +24,328 @@ import type {
   Subscription,
   SubscriptionPlan,
   TaskParent,
+  LeadStage,
+  SocialChannel,
+  SocialPost,
   TeacherAbsence,
   User,
 } from "@/types";
 import { defaultAllRoleAccess } from "@/lib/access-defaults";
+import { sourceLabel } from "@/lib/social-cta";
 
 const SEED_KEY = "seedVersion";
-const SEED_VERSION = "16a";
+const SEED_VERSION = "17c";
+
+const CTA_LEAD_NAMES = [
+  "Nguyễn Hà My",
+  "Trần Minh Anh",
+  "Lê Bảo Ngọc",
+  "Phạm Gia Hân",
+  "Hoàng Nhật Nam",
+  "Vũ Khánh Linh",
+  "Đặng Thuỳ Dương",
+  "Bùi Quang Huy",
+  "Đỗ Mai Chi",
+  "Ngô Đức Anh",
+  "Phan Thanh Tú",
+  "Lý Phương Anh",
+  "Võ Hải Đăng",
+  "Trương Yến Nhi",
+  "Huỳnh Gia Bảo",
+  "Đinh Ngọc Lan",
+  "Cao Minh Quân",
+  "Mai Thảo Vy",
+  "Lương Hoàng Khang",
+  "Tạ Kim Ngân",
+];
+
+const CTA_STAGES: LeadStage[] = ["new", "new", "contacted", "contacted", "trial", "won", "lost", "new"];
+
+type SocialPostDef = {
+  id: string;
+  title: string;
+  channel: SocialChannel;
+  externalUrl: string;
+  slug: string;
+  headline: string;
+  subhead: string;
+  status: SocialPost["status"];
+  createdOffset: number;
+  clickCount: number;
+  formViewCount: number;
+  leadCount: number;
+  note: string;
+};
+
+function buildSocialCtaSeed(): { posts: SocialPost[]; leads: Lead[] } {
+  const defs: SocialPostDef[] = [
+    {
+      id: "sp-tiktok-hiphop",
+      title: "Hip-hop sáng · clip thử 15s",
+      channel: "tiktok",
+      externalUrl: "https://www.tiktok.com/",
+      slug: "hk2x9a",
+      headline: "Để lại SĐT — nhận lịch học thử Hip-hop",
+      subhead: "Studio Edu Dance sẽ liên hệ trong ngày làm việc.",
+      status: "active",
+      createdOffset: 0,
+      clickCount: 148,
+      formViewCount: 62,
+      leadCount: 12,
+      note: "Seed demo CTA TikTok",
+    },
+    {
+      id: "sp-fb-openday",
+      title: "Open day Q4",
+      channel: "facebook",
+      externalUrl: "",
+      slug: "fb7k2m",
+      headline: "Đăng ký Open day — giữ chỗ học thử",
+      subhead: "Điền SĐT để nhận lịch và địa chỉ cơ sở.",
+      status: "active",
+      createdOffset: -1,
+      clickCount: 96,
+      formViewCount: 41,
+      leadCount: 9,
+      note: "",
+    },
+    {
+      id: "sp-zalo-oa-trial",
+      title: "Zalo OA · học thử tuần này",
+      channel: "zalo",
+      externalUrl: "",
+      slug: "zl4n8p",
+      headline: "Nhận lịch học thử trong tuần",
+      subhead: "Lễ tân gọi lại trong 24 giờ làm việc.",
+      status: "active",
+      createdOffset: -2,
+      clickCount: 110,
+      formViewCount: 48,
+      leadCount: 11,
+      note: "CTA tin Zalo OA",
+    },
+    {
+      id: "sp-ig-reel-kpop",
+      title: "IG Reel · K-pop beginner",
+      channel: "instagram",
+      externalUrl: "https://www.instagram.com/",
+      slug: "ig9c2w",
+      headline: "Đăng ký lớp K-pop beginner",
+      subhead: "Để lại SĐT — nhận lịch và học phí gói thử.",
+      status: "active",
+      createdOffset: -3,
+      clickCount: 132,
+      formViewCount: 55,
+      leadCount: 10,
+      note: "",
+    },
+    {
+      id: "sp-tiktok-ballet",
+      title: "Ballet thiếu nhi · hook 9s",
+      channel: "tiktok",
+      externalUrl: "https://www.tiktok.com/",
+      slug: "bl3q7t",
+      headline: "Phụ huynh để lại SĐT — tư vấn Ballet",
+      subhead: "Có lớp thiếu nhi cuối tuần.",
+      status: "active",
+      createdOffset: -4,
+      clickCount: 210,
+      formViewCount: 88,
+      leadCount: 14,
+      note: "Top convert tuần trước",
+    },
+    {
+      id: "sp-fb-boost-summer",
+      title: "FB Boost · Summer pack",
+      channel: "facebook",
+      externalUrl: "",
+      slug: "sm5r1d",
+      headline: "Giữ chỗ gói hè — điền form nhanh",
+      subhead: "Ưu đãi có hạn — studio liên hệ xác nhận.",
+      status: "paused",
+      createdOffset: -8,
+      clickCount: 180,
+      formViewCount: 40,
+      leadCount: 7,
+      note: "Tắt sau hết budget ads",
+    },
+    {
+      id: "sp-tiktok-duet",
+      title: "TikTok duet GV · Contemporary",
+      channel: "tiktok",
+      externalUrl: "https://www.tiktok.com/",
+      slug: "ct6m4e",
+      headline: "Học thử Contemporary với GV",
+      subhead: "Form nhanh — nhận slot tuần tới.",
+      status: "active",
+      createdOffset: -5,
+      clickCount: 125,
+      formViewCount: 52,
+      leadCount: 10,
+      note: "",
+    },
+    {
+      id: "sp-other-qr-flyer",
+      title: "Flyer QR · Open house",
+      channel: "other",
+      externalUrl: "",
+      slug: "qr8h0k",
+      headline: "Quét QR — đăng ký Open house",
+      subhead: "In flyer + standee quầy.",
+      status: "active",
+      createdOffset: -6,
+      clickCount: 48,
+      formViewCount: 36,
+      leadCount: 8,
+      note: "Offline → online",
+    },
+    {
+      id: "sp-tiktok-jazz",
+      title: "Jazz Funk · trend audio",
+      channel: "tiktok",
+      externalUrl: "https://www.tiktok.com/",
+      slug: "jz1a9c",
+      headline: "Đăng ký Jazz Funk — lịch học thử",
+      subhead: "Studio gọi lại trong ngày.",
+      status: "active",
+      createdOffset: -1,
+      clickCount: 102,
+      formViewCount: 44,
+      leadCount: 9,
+      note: "",
+    },
+    {
+      id: "sp-zalo-story",
+      title: "Zalo Story · lớp tối CN",
+      channel: "zalo",
+      externalUrl: "",
+      slug: "zs2b7f",
+      headline: "Giữ chỗ lớp tối Chủ nhật",
+      subhead: "Điền SĐT — nhận xác nhận lịch.",
+      status: "active",
+      createdOffset: -3,
+      clickCount: 64,
+      formViewCount: 28,
+      leadCount: 6,
+      note: "",
+    },
+    {
+      id: "sp-fb-moms",
+      title: "FB nhóm phụ huynh · Kids",
+      channel: "facebook",
+      externalUrl: "",
+      slug: "fm3d5h",
+      headline: "Phụ huynh đăng ký lớp Kids",
+      subhead: "Tư vấn lịch và học phí gói tháng.",
+      status: "active",
+      createdOffset: -7,
+      clickCount: 88,
+      formViewCount: 39,
+      leadCount: 8,
+      note: "Group organic",
+    },
+    {
+      id: "sp-ig-adult",
+      title: "IG Story · Adult beginner",
+      channel: "instagram",
+      externalUrl: "https://www.instagram.com/",
+      slug: "ia4e6j",
+      headline: "Người lớn mới bắt đầu — để lại SĐT",
+      subhead: "Lớp tối trong tuần.",
+      status: "active",
+      createdOffset: -2,
+      clickCount: 76,
+      formViewCount: 33,
+      leadCount: 7,
+      note: "",
+    },
+    {
+      id: "sp-tiktok-challenge",
+      title: "Challenge #EduDanceWeek",
+      channel: "tiktok",
+      externalUrl: "https://www.tiktok.com/",
+      slug: "ch5g8k",
+      headline: "Tham gia challenge — nhận học thử",
+      subhead: "Form nhanh sau khi duet.",
+      status: "active",
+      createdOffset: 0,
+      clickCount: 165,
+      formViewCount: 70,
+      leadCount: 11,
+      note: "Hashtag campaign",
+    },
+    {
+      id: "sp-other-web",
+      title: "Landing web · CTA footer",
+      channel: "other",
+      externalUrl: "",
+      slug: "wb6h0m",
+      headline: "Đăng ký tư vấn từ website",
+      subhead: "Team tuyển sinh liên hệ sớm.",
+      status: "active",
+      createdOffset: -9,
+      clickCount: 40,
+      formViewCount: 22,
+      leadCount: 5,
+      note: "Site embed",
+    },
+  ];
+
+  const posts: SocialPost[] = [];
+  const leads: Lead[] = [];
+  let seq = 0;
+
+  for (const def of defs) {
+    posts.push({
+      id: def.id,
+      title: def.title,
+      channel: def.channel,
+      externalUrl: def.externalUrl,
+      slug: def.slug,
+      headline: def.headline,
+      subhead: def.subhead,
+      status: def.status,
+      createdDay: dayFromOffset(def.createdOffset),
+      clickCount: def.clickCount,
+      formViewCount: def.formViewCount,
+      leadCount: def.leadCount,
+      note: def.note,
+    });
+
+    const source = sourceLabel(def.channel, def.title);
+    for (let i = 0; i < def.leadCount; i++) {
+      seq += 1;
+      const stage = CTA_STAGES[i % CTA_STAGES.length];
+      const day = dayFromOffset(Math.min(0, def.createdOffset + (i % 4)));
+      const phoneCore = String(3000000 + seq).padStart(7, "0");
+      const ownerId = seq % 3 === 0 ? "u_reception" : "u_marketing";
+      leads.push({
+        id: `ld-cta-${def.slug}-${String(i + 1).padStart(2, "0")}`,
+        name: CTA_LEAD_NAMES[(seq - 1) % CTA_LEAD_NAMES.length],
+        phone: `09${phoneCore.slice(0, 3)} ${phoneCore.slice(3)}`,
+        email: seq % 4 === 0 ? `cta${seq}@mail.demo` : undefined,
+        source,
+        stage,
+        interest: def.title,
+        ownerId,
+        day,
+        note: "",
+        activities: [
+          {
+            day,
+            text: `Lead từ Link CTA · ${source}.`,
+            kind: "note",
+          },
+        ],
+        channel: def.channel,
+        postId: def.id,
+        linkSlug: def.slug,
+      });
+    }
+  }
+
+  return { posts, leads };
+}
 
 function birthFromYears(years: number) {
   const d = new Date();
@@ -231,7 +546,7 @@ export async function ensureSeed(id: VerticalId) {
     notes: s.notes.map((n) => ({ day: dayFromOffset(n.offset), text: n.text })),
   }));
 
-  const leadRows: Lead[] = raw.leads.map((l) => ({
+  const leadRowsBase: Lead[] = raw.leads.map((l) => ({
     id: l.id,
     name: l.name,
     phone: l.phone,
@@ -246,6 +561,9 @@ export async function ensureSeed(id: VerticalId) {
       text: a.text,
     })),
   }));
+
+  const { posts: socialPostRows, leads: ctaLeadRows } = buildSocialCtaSeed();
+  const leadRows: Lead[] = [...leadRowsBase, ...ctaLeadRows];
 
   const subscriptionRows: Subscription[] = (raw.subscriptions as {
     id: string;
@@ -487,6 +805,8 @@ export async function ensureSeed(id: VerticalId) {
       db.branches,
       db.teacherAbsences,
       db.roleAccess,
+      db.socialPosts,
+      db.linkEvents,
       db.meta,
     ],
     async () => {
@@ -515,6 +835,8 @@ export async function ensureSeed(id: VerticalId) {
       await db.bookings.clear();
       await db.branches.clear();
       await db.teacherAbsences.clear();
+      await db.socialPosts.clear();
+      await db.linkEvents.clear();
 
       await db.settings.add(raw.settings as StudioSettings);
       await db.users.bulkAdd(raw.users as User[]);
@@ -528,6 +850,7 @@ export async function ensureSeed(id: VerticalId) {
       await db.branches.bulkAdd(raw.branches);
       await db.students.bulkAdd(studentRows);
       await db.leads.bulkAdd(leadRows);
+      await db.socialPosts.bulkAdd(socialPostRows);
       await db.subscriptions.bulkAdd(subscriptionRows);
       await db.payments.bulkAdd(paymentRows);
       await db.paymentAccounts.bulkAdd(paymentAccounts);

@@ -5,7 +5,24 @@ import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { isSubscriptionValid } from "@/lib/subscription";
 import { quotePromotion } from "@/lib/promotions";
 import { isMinor, localDayKey, uid, weekdayShort } from "@/lib/utils";
-import type { AttendStatus, LeadStage, Level, PayMethod, Promotion, PromotionBenefit, PromotionCodeMode, Role, TaskPriority, TaskStatus, TeacherStatus, User } from "@/types";
+import { makeLinkSlug, sourceLabel } from "@/lib/social-cta";
+import type {
+  AttendStatus,
+  LeadStage,
+  Level,
+  LinkEventKind,
+  PayMethod,
+  Promotion,
+  PromotionBenefit,
+  PromotionCodeMode,
+  Role,
+  SocialChannel,
+  SocialPost,
+  TaskPriority,
+  TaskStatus,
+  TeacherStatus,
+  User,
+} from "@/types";
 
 export async function moveLead(id: string, stage: LeadStage) {
   const lead = await db.leads.get(id);
@@ -46,6 +63,129 @@ export async function addLead(input: {
     note: "",
     activities: [{ day, text: "Tạo lead tại quầy.", kind: "note" }],
   });
+}
+
+export async function createSocialPost(input: {
+  title: string;
+  channel: SocialChannel;
+  externalUrl?: string;
+  headline?: string;
+  subhead?: string;
+  note?: string;
+}): Promise<SocialPost | null> {
+  const title = input.title.trim();
+  if (!title) return null;
+  let slug = makeLinkSlug();
+  for (let i = 0; i < 8; i++) {
+    const clash = await db.socialPosts.where("slug").equals(slug).first();
+    if (!clash) break;
+    slug = makeLinkSlug();
+  }
+  const day = localDayKey();
+  const row: SocialPost = {
+    id: uid("sp"),
+    title,
+    channel: input.channel,
+    externalUrl: (input.externalUrl ?? "").trim(),
+    slug,
+    headline: (input.headline ?? "").trim() || "Để lại SĐT — nhận tư vấn lịch học",
+    subhead: (input.subhead ?? "").trim() || "Studio sẽ liên hệ trong ngày làm việc.",
+    status: "active",
+    createdDay: day,
+    clickCount: 0,
+    formViewCount: 0,
+    leadCount: 0,
+    note: (input.note ?? "").trim(),
+  };
+  await db.socialPosts.add(row);
+  return row;
+}
+
+export async function setSocialPostStatus(id: string, status: SocialPost["status"]) {
+  await db.socialPosts.update(id, { status });
+}
+
+async function recordLinkEvent(postId: string, slug: string, kind: LinkEventKind) {
+  await db.linkEvents.add({
+    id: uid("le"),
+    postId,
+    slug,
+    kind,
+    day: localDayKey(),
+    at: Date.now(),
+  });
+}
+
+export async function trackSocialClick(slug: string): Promise<SocialPost | null> {
+  const post = await db.socialPosts.where("slug").equals(slug).first();
+  if (!post || post.status !== "active") return post ?? null;
+  await db.socialPosts.update(post.id, { clickCount: post.clickCount + 1 });
+  await recordLinkEvent(post.id, slug, "click");
+  return { ...post, clickCount: post.clickCount + 1 };
+}
+
+export async function trackSocialFormView(slug: string): Promise<SocialPost | null> {
+  const post = await db.socialPosts.where("slug").equals(slug).first();
+  if (!post || post.status !== "active") return post ?? null;
+  await db.socialPosts.update(post.id, { formViewCount: post.formViewCount + 1 });
+  await recordLinkEvent(post.id, slug, "form_view");
+  return { ...post, formViewCount: post.formViewCount + 1 };
+}
+
+/** Landing submit — tạo lead hoặc gắn touch nếu SĐT trùng. */
+export async function submitSocialLead(input: {
+  slug: string;
+  name: string;
+  phone: string;
+  email?: string;
+}): Promise<{ ok: true; leadId: string } | { ok: false; reason: "missing" | "paused" | "not_found" }> {
+  const post = await db.socialPosts.where("slug").equals(input.slug).first();
+  if (!post) return { ok: false, reason: "not_found" };
+  if (post.status !== "active") return { ok: false, reason: "paused" };
+  const name = input.name.trim();
+  const phone = input.phone.trim().replace(/\s+/g, "");
+  if (!name || !phone) return { ok: false, reason: "missing" };
+  const email = (input.email ?? "").trim();
+  const day = localDayKey();
+  const source = sourceLabel(post.channel, post.title);
+
+  const existing = await db.leads.filter((l) => l.phone.replace(/\s+/g, "") === phone).first();
+  if (existing) {
+    await db.leads.update(existing.id, {
+      postId: post.id,
+      linkSlug: post.slug,
+      channel: post.channel,
+      email: email || existing.email,
+      source,
+      activities: [
+        ...existing.activities,
+        { day, text: `Click CTA lại từ ${source}.`, kind: "note" },
+      ],
+    });
+    await recordLinkEvent(post.id, post.slug, "submit");
+    return { ok: true, leadId: existing.id };
+  }
+
+  const leadId = uid("ld");
+  await db.leads.add({
+    id: leadId,
+    name,
+    phone,
+    email: email || undefined,
+    source,
+    stage: "new",
+    interest: post.title,
+    ownerId: "",
+    day,
+    note: "",
+    activities: [{ day, text: `Lead từ Link CTA · ${source}.`, kind: "note" }],
+    channel: post.channel,
+    postId: post.id,
+    linkSlug: post.slug,
+  });
+  await db.socialPosts.update(post.id, { leadCount: post.leadCount + 1 });
+  await recordLinkEvent(post.id, post.slug, "submit");
+  return { ok: true, leadId };
 }
 
 export async function addLeadTouch(id: string, kind: "call" | "zalo" | "note", text: string) {

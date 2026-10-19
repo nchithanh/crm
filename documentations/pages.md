@@ -17,7 +17,9 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/subscriptions` | Plan mẫu + list Subscription. Gate điểm danh |
 | `/mid-course-enroll` | Ghi danh giữa khóa → Sub + installment + roster |
 | `/promotion` | Chương trình giảm học phí. Điều kiện AND. Mã không / OR / AND. Áp lúc ghi danh và thu phí |
-| `/follow-up` | Pipeline lead / chăm sóc |
+| `/follow-up` | Pipeline lead / chăm sóc (lọc theo post CTA) |
+| `/campaigns` · `/campaigns/[id]` | Link CTA social — tạo link, copy `/r/{slug}`, KPI click/lead, tạm dừng |
+| `/r/[slug]` | Landing công khai (không login) — form SĐT/email → lead + attribution |
 | `/finance` | Tài chính — tổng quan |
 | `/collect-fees` | Thu học phí (POS). Mobile tab giữa = Học phí |
 | `/payment-accounts` | Tài khoản SePay nhận tiền theo khoảng subscription. Owner sửa; lễ tân xem |

@@ -64,6 +64,7 @@ export function pathToNavKey(pathname: string): AccessNavKey | null {
   if (path === "/mid-course-enroll" || path.startsWith("/mid-course-enroll/")) return "midEnroll";
   if (path === "/promotion" || path.startsWith("/promotion/")) return "promotion";
   if (path === "/follow-up" || path.startsWith("/follow-up/") || path === "/cham-soc") return "care";
+  if (path === "/campaigns" || path.startsWith("/campaigns/")) return "campaigns";
   if (path === "/finance" || path.startsWith("/finance/")) return "financeOverview";
   if (path === "/collect-fees" || path.startsWith("/collect-fees/")) return "collect";
   if (path === "/receivables" || path.startsWith("/receivables/") || path === "/cong-no") return "debts";

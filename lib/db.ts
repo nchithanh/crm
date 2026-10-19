@@ -24,6 +24,8 @@ import type {
   SubscriptionPlan,
   TaskParent,
   RoleAccess,
+  LinkEvent,
+  SocialPost,
   TeacherAbsence,
   User,
 } from "@/types";
@@ -59,6 +61,8 @@ export class DolphinCrmDB extends Dexie {
   branches!: EntityTable<Branch, "id">;
   teacherAbsences!: EntityTable<TeacherAbsence, "id">;
   roleAccess!: EntityTable<RoleAccess, "id">;
+  socialPosts!: EntityTable<SocialPost, "id">;
+  linkEvents!: EntityTable<LinkEvent, "id">;
   meta!: EntityTable<Meta, "key">;
 
   constructor(name: string) {
@@ -137,6 +141,11 @@ export class DolphinCrmDB extends Dexie {
     });
     this.version(9).stores({
       roleAccess: "id",
+    });
+    this.version(10).stores({
+      socialPosts: "id, slug, channel, status, createdDay",
+      linkEvents: "id, postId, slug, kind, day",
+      leads: "id, stage, day, postId, linkSlug",
     });
   }
 }

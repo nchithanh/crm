@@ -83,6 +83,45 @@ export type Lead = {
   nextAction?: string;
   reminderDay?: string;
   convertedStudentId?: string;
+  /** Attribution — Social CTA link */
+  email?: string;
+  channel?: SocialChannel;
+  postId?: string;
+  linkSlug?: string;
+};
+
+/** Kênh social cho Link CTA / tracking post. */
+export type SocialChannel = "tiktok" | "facebook" | "zalo" | "instagram" | "other";
+
+export type SocialPostStatus = "active" | "paused";
+
+/** 1 post / video gắn CTA đăng ký nhanh. */
+export type SocialPost = {
+  id: string;
+  title: string;
+  channel: SocialChannel;
+  /** URL video gốc (tuỳ chọn) */
+  externalUrl: string;
+  slug: string;
+  headline: string;
+  subhead: string;
+  status: SocialPostStatus;
+  createdDay: string;
+  clickCount: number;
+  formViewCount: number;
+  leadCount: number;
+  note: string;
+};
+
+export type LinkEventKind = "click" | "form_view" | "submit";
+
+export type LinkEvent = {
+  id: string;
+  postId: string;
+  slug: string;
+  kind: LinkEventKind;
+  day: string;
+  at: number;
 };
 
 export type StudentNote = {
