@@ -77,6 +77,7 @@ export function pathToNavKey(pathname: string): AccessNavKey | null {
   if (path === "/tasks" || path.startsWith("/tasks/") || path === "/tac-vu") return "tasks";
   if (path === "/room-bookings" || path.startsWith("/room-bookings/") || path === "/dat-phong") return "bookings";
   if (path === "/dolphin-ai" || path.startsWith("/dolphin-ai/") || path === "/ai") return "ai";
+  if (path === "/guide" || path.startsWith("/guide/")) return "guide";
   if (path === "/settings/access" || path.startsWith("/settings/access/")) return "access";
   if (path === "/receipt") return "ledger";
   return null;

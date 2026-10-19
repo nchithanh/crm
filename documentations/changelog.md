@@ -2,6 +2,7 @@
 
 ## 2026-10-19
 
+- **Hướng dẫn `/guide`:** sơ đồ **một workflow** liên tục (không chia 3 section) + rẽ Có/Không: mua Sub → còn nợ? → còn hiệu lực? → học/điểm danh → hết buổi? → renew.
 - **Link CTA static export:** `generateStaticParams` cho `/campaigns/[id]` + `/r/[slug]` (seed 17c) — fix Pages `output: export` build.
 - **Link CTA UI:** `/campaigns` lưới ô kiểu Overview (`crm-card-elev` + `crm-kpi-*`) — desktop **3 ô/hàng**; tile kênh, Click/Lead/%, Copy / Pause.
 - **Link CTA seed 17c:** 14 post; mỗi post sinh đúng `leadCount` lead gắn `postId`/`linkSlug`/`channel` (~127 lead CTA + 20 lead quầy). KPI list = số lead thật trên chi tiết / filter Chăm sóc.

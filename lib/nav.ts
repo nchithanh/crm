@@ -2,6 +2,7 @@ import {
   ArrowLeftRight,
   BookOpen,
   CalendarDays,
+  CircleHelp,
   ClipboardCheck,
   DoorOpen,
   GraduationCap,
@@ -50,6 +51,7 @@ export type NavItemKey =
   | "tasks"
   | "bookings"
   | "ai"
+  | "guide"
   | "access";
 
 export type NavGroupKey = "manage" | "enrollGroup" | "finance" | "ops" | "system";
@@ -111,7 +113,10 @@ export const NAV_AI: NavItem = { href: "/dolphin-ai", key: "ai", icon: Sparkles 
 
 export const NAV_SYSTEM: NavGroup = {
   title: "system",
-  items: [{ href: "/settings/access", key: "access", icon: Settings2 }],
+  items: [
+    { href: "/guide", key: "guide", icon: CircleHelp },
+    { href: "/settings/access", key: "access", icon: Settings2 },
+  ],
 };
 
 export const ZALO_FOUNDER = "https://zalo.me/0779937633";

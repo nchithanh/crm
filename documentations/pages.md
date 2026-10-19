@@ -31,6 +31,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/attendance` · `/qr-attendance` | Lễ tân điểm hộ · HV tự quét QR + geofence demo |
 | `/tasks` | Tác vụ |
 | `/room-bookings` · `/dolphin-ai` | Đặt phòng · Dolphin AI |
+| `/guide` | Hướng dẫn sử dụng — Course / Class / SKU / Subscription / flow. Menu Hệ thống |
 | `/settings/access` | Ma trận phân quyền (Boss / Quản lý). Menu Hệ thống |
 | `/menu` | Menu mobile — lưới nav theo quyền |
 

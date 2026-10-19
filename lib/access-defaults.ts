@@ -38,6 +38,7 @@ export const ACCESS_NAV_KEYS: AccessNavKey[] = [
   "tasks",
   "bookings",
   "ai",
+  "guide",
   "access",
 ];
 
@@ -72,6 +73,7 @@ export const DEFAULT_NAV: Record<MatrixRole, Record<AccessNavKey, boolean>> = {
     tasks: yes,
     bookings: yes,
     ai: yes,
+    guide: yes,
     access: no,
   },
   teacher: {
@@ -99,6 +101,7 @@ export const DEFAULT_NAV: Record<MatrixRole, Record<AccessNavKey, boolean>> = {
     tasks: yes,
     bookings: no,
     ai: yes,
+    guide: yes,
     access: no,
   },
   marketing: {
@@ -126,6 +129,7 @@ export const DEFAULT_NAV: Record<MatrixRole, Record<AccessNavKey, boolean>> = {
     tasks: yes,
     bookings: no,
     ai: yes,
+    guide: yes,
     access: no,
   },
 };
