@@ -2,6 +2,7 @@
 
 ## 2026-10-19
 
+- **Link CTA static export:** `generateStaticParams` cho `/campaigns/[id]` + `/r/[slug]` (seed 17c) — fix Pages `output: export` build.
 - **Link CTA UI:** `/campaigns` lưới ô kiểu Overview (`crm-card-elev` + `crm-kpi-*`) — desktop **3 ô/hàng**; tile kênh, Click/Lead/%, Copy / Pause.
 - **Link CTA seed 17c:** 14 post; mỗi post sinh đúng `leadCount` lead gắn `postId`/`linkSlug`/`channel` (~127 lead CTA + 20 lead quầy). KPI list = số lead thật trên chi tiết / filter Chăm sóc.
 - **Link CTA list densify:** `/campaigns` dạng 1 dòng (tên · kênh · slug · metric · copy); số click/lead/% nổi (tabular, brand cho lead/%). Seed **17b** — 8 post đa kênh (1 paused).

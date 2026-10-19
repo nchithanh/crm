@@ -67,3 +67,29 @@ export function classStaticParams() {
   }
   return asParams(ids);
 }
+
+/** Social CTA posts — keep in sync with `buildSocialCtaSeed` in `lib/seed.ts` (17c). */
+const SOCIAL_CTA_SEED = [
+  { id: "sp-tiktok-hiphop", slug: "hk2x9a" },
+  { id: "sp-fb-openday", slug: "fb7k2m" },
+  { id: "sp-zalo-oa-trial", slug: "zl4n8p" },
+  { id: "sp-ig-reel-kpop", slug: "ig9c2w" },
+  { id: "sp-tiktok-ballet", slug: "bl3q7t" },
+  { id: "sp-fb-boost-summer", slug: "sm5r1d" },
+  { id: "sp-tiktok-duet", slug: "ct6m4e" },
+  { id: "sp-other-qr-flyer", slug: "qr8h0k" },
+  { id: "sp-tiktok-jazz", slug: "jz1a9c" },
+  { id: "sp-zalo-story", slug: "zs2b7f" },
+  { id: "sp-fb-moms", slug: "fm3d5h" },
+  { id: "sp-ig-adult", slug: "ia4e6j" },
+  { id: "sp-tiktok-challenge", slug: "ch5g8k" },
+  { id: "sp-other-web", slug: "wb6h0m" },
+] as const;
+
+export function campaignStaticParams() {
+  return asParams(SOCIAL_CTA_SEED.map((p) => p.id));
+}
+
+export function socialSlugStaticParams() {
+  return uniq(SOCIAL_CTA_SEED.map((p) => p.slug)).map((slug) => ({ slug }));
+}
