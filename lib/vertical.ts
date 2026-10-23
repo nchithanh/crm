@@ -1,4 +1,4 @@
-export type VerticalId = "nhay" | "anh" | "nhac" | "boi";
+export type VerticalId = "nhay" | "anh" | "nhac" | "boi" | "spa" | "nails" | "salon" | "massage";
 
 export const VERTICAL_STORAGE_KEY = "dolphin-crm-vertical";
 
@@ -49,6 +49,38 @@ export const VERTICALS: VerticalOption[] = [
     color: "#5d5cc4",
     soft: "#f1f1f9",
   },
+  {
+    id: "spa",
+    label: "Spa",
+    emoji: "💆",
+    description: "Liệu trình spa, đặt lịch, khách, gói",
+    color: "#5d5cc4",
+    soft: "#f1f1f9",
+  },
+  {
+    id: "nails",
+    label: "Nails",
+    emoji: "💅",
+    description: "Nail gel, design, pedicure, gói buổi",
+    color: "#5d5cc4",
+    soft: "#f1f1f9",
+  },
+  {
+    id: "salon",
+    label: "Salon",
+    emoji: "💇",
+    description: "Cắt uốn nhuộm, ghế, khách, gói",
+    color: "#5d5cc4",
+    soft: "#f1f1f9",
+  },
+  {
+    id: "massage",
+    label: "Massage",
+    emoji: "🧘",
+    description: "Body, foot, liệu trình, phòng, gói",
+    color: "#5d5cc4",
+    soft: "#f1f1f9",
+  },
 ];
 
 const IDS = new Set<string>(VERTICALS.map((v) => v.id));
@@ -68,9 +100,15 @@ export function applyVerticalTheme(id: VerticalId) {
   document.documentElement.dataset.vertical = id;
 }
 
+/** CustomEvent name — AuthGate lắng nghe để boot lại DB khi đổi lĩnh vực trên /login. */
+export const VERTICAL_CHANGE_EVENT = "dolphin-crm-vertical";
+
 export function setStoredVertical(id: VerticalId) {
   localStorage.setItem(VERTICAL_STORAGE_KEY, id);
   applyVerticalTheme(id);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(VERTICAL_CHANGE_EVENT, { detail: id }));
+  }
 }
 
 export function dbNameForVertical(id: VerticalId) {

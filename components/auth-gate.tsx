@@ -6,7 +6,13 @@ import { AppShell } from "@/components/shell";
 import { BootSplash } from "@/components/boot-splash";
 import { I18nProvider } from "@/lib/i18n";
 import { bootStudio, resetBoot } from "@/lib/seed";
-import { applyVerticalTheme, getStoredVertical, type VerticalId } from "@/lib/vertical";
+import {
+  applyVerticalTheme,
+  getStoredVertical,
+  isVertical,
+  VERTICAL_CHANGE_EVENT,
+  type VerticalId,
+} from "@/lib/vertical";
 import { homePathForRole } from "@/lib/access";
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -19,6 +25,10 @@ function pathOf(pathname: string) {
 
 function isPublicJoin(path: string) {
   return path === "/r" || path.startsWith("/r/");
+}
+
+function isAuthEntry(path: string) {
+  return path === "/login" || path === "/choose-vertical";
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -59,17 +69,28 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [path, hydrated, publicJoin]);
 
   useEffect(() => {
+    function onVertical(e: Event) {
+      const id = (e as CustomEvent).detail;
+      if (!isVertical(id)) return;
+      setVertical(id);
+      applyVerticalTheme(id);
+    }
+    window.addEventListener(VERTICAL_CHANGE_EVENT, onVertical);
+    return () => window.removeEventListener(VERTICAL_CHANGE_EVENT, onVertical);
+  }, []);
+
+  useEffect(() => {
     if (!hydrated || vertical === undefined) return;
     if (publicJoin) return;
     if (!vertical) {
-      if (path !== "/choose-vertical") router.replace("/choose-vertical");
+      if (!isAuthEntry(path)) router.replace("/login");
       return;
     }
-    if (!user && path !== "/login" && path !== "/choose-vertical") {
+    if (!user && !isAuthEntry(path)) {
       router.replace("/login");
       return;
     }
-    if (user && (path === "/login" || path === "/choose-vertical")) {
+    if (user && isAuthEntry(path)) {
       router.replace(homePathForRole(user.role));
     }
   }, [hydrated, user, path, router, vertical, publicJoin]);
@@ -120,7 +141,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           }}
           onLogin={() => {
             setReady(true);
-            router.replace(vertical ? "/login" : "/choose-vertical");
+            router.replace("/login");
           }}
         />
       </I18nProvider>

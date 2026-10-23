@@ -1,0 +1,194 @@
+[
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s1",
+    "subject": "student",
+    "offset": -5,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s2",
+    "subject": "student",
+    "offset": -5,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s3",
+    "subject": "student",
+    "offset": -1,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s8",
+    "subject": "student",
+    "offset": -1,
+    "status": "excused",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s1",
+    "subject": "student",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s9",
+    "subject": "student",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s10",
+    "subject": "student",
+    "offset": 0,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s12",
+    "subject": "student",
+    "offset": 0,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s9",
+    "subject": "student",
+    "offset": -5,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s11",
+    "subject": "student",
+    "offset": -5,
+    "status": "excused",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-begin",
+    "personId": "s6",
+    "subject": "student",
+    "offset": -5,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s13",
+    "subject": "student",
+    "offset": -1,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s14",
+    "subject": "student",
+    "offset": -1,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s15",
+    "subject": "student",
+    "offset": -1,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s16",
+    "subject": "student",
+    "offset": -1,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-kp-inter",
+    "personId": "s17",
+    "subject": "student",
+    "offset": -1,
+    "status": "excused",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s5",
+    "subject": "student",
+    "offset": -3,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s22",
+    "subject": "student",
+    "offset": -3,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s23",
+    "subject": "student",
+    "offset": -3,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-hh-inter",
+    "personId": "s24",
+    "subject": "student",
+    "offset": -3,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "s4",
+    "subject": "student",
+    "offset": -4,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "s18",
+    "subject": "student",
+    "offset": -4,
+    "status": "present",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "s20",
+    "subject": "student",
+    "offset": -4,
+    "status": "absent",
+    "waived": false
+  },
+  {
+    "legacyClassId": "c-ct-adv",
+    "personId": "s21",
+    "subject": "student",
+    "offset": -4,
+    "status": "present",
+    "waived": false
+  }
+]

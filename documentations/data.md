@@ -1,6 +1,6 @@
 # Data
 
-Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`). Schema seed **v14** / version app **`14c`**.
+Mỗi lĩnh vực một thư mục `data/{id}/` (`nhay`, `anh`, `nhac`, `boi`, `spa`, `nails`, `salon`, `massage`). Schema seed **v14** / version app **`14c`** (+ beauty verticals clone từ `boi`, đổi tên studio/khóa/phòng).
 
 ### Test ghi danh (`nhay` only)
 

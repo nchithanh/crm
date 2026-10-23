@@ -221,6 +221,26 @@ a { text-decoration: none; }
   animation: crm-boot-ring 1.6s ease-in-out infinite;
 }
 
+/* Login: vòng progress 1s quanh logo Dolphin */
+@keyframes crm-login-ring {
+  from {
+    stroke-dashoffset: 251.3;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.crm-login-ring {
+  stroke: var(--brand-500);
+  stroke-linecap: round;
+  stroke-dasharray: 251.3;
+  stroke-dashoffset: 251.3;
+  animation: crm-login-ring 1s linear forwards;
+}
+.crm-login-ring-track {
+  stroke: color-mix(in srgb, var(--brand-500) 18%, transparent);
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--brand-500) 35%, transparent) transparent;

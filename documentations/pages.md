@@ -4,8 +4,8 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 
 | Path | Ghi chú |
 | --- | --- |
-| `/choose-vertical` | Chọn lĩnh vực trước login |
-| `/login` | PIN + Download App |
+| `/login` | Chọn lĩnh vực → loading Dolphin 1s (logo + vòng tròn) → PIN + Download App |
+| `/choose-vertical` | Redirect → `/login` (legacy) |
 | `/` | Redirect → `/overview` |
 | `/overview` | Tổng quan — chào + task gần nhất + KPI + ops strip + chart |
 | `/schedule` | Lịch = **Classes** (buổi). Kéo thả / điểm danh / đổi GV·phòng / hủy buổi. Bộ lọc drawer kiểu Google Calendar: checkbox màu multi-select theo GV / phòng (nhóm theo cơ sở) / khóa / trạng thái — không tick = tất cả |

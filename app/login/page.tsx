@@ -5,14 +5,20 @@ import { useRouter } from "next/navigation";
 import { Lock, X } from "lucide-react";
 import anhDemo from "@/data/anh/demo-accounts.json";
 import boiDemo from "@/data/boi/demo-accounts.json";
+import massageDemo from "@/data/massage/demo-accounts.json";
+import nailsDemo from "@/data/nails/demo-accounts.json";
 import nhacDemo from "@/data/nhac/demo-accounts.json";
 import nhayDemo from "@/data/nhay/demo-accounts.json";
+import salonDemo from "@/data/salon/demo-accounts.json";
+import spaDemo from "@/data/spa/demo-accounts.json";
 import { BrandMark } from "@/components/brand-mark";
 import { Button, inputClass } from "@/components/ui";
 import { fill } from "@/lib/copy";
+import { reopenDb } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { roleLabel } from "@/lib/labels";
-import { getStoredVertical, VERTICALS, type VerticalId } from "@/lib/vertical";
+import { bootStudio } from "@/lib/seed";
+import { setStoredVertical, VERTICALS, type VerticalId } from "@/lib/vertical";
 import { useAuthStore } from "@/stores/auth-store";
 
 const demos: Record<VerticalId, typeof nhayDemo> = {
@@ -20,7 +26,26 @@ const demos: Record<VerticalId, typeof nhayDemo> = {
   anh: anhDemo,
   nhac: nhacDemo,
   boi: boiDemo,
+  spa: spaDemo,
+  nails: nailsDemo,
+  salon: salonDemo,
+  massage: massageDemo,
 };
+
+type ChooseBlurb = "dance" | "english" | "music" | "swim" | "spa" | "nails" | "salon" | "massage";
+
+const blurbs: Record<VerticalId, ChooseBlurb> = {
+  nhay: "dance",
+  anh: "english",
+  nhac: "music",
+  boi: "swim",
+  spa: "spa",
+  nails: "nails",
+  salon: "salon",
+  massage: "massage",
+};
+
+const LOAD_MS = 1000;
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const guideSrc = `${basePath}/brand/download-app-guide.jpg`;
@@ -30,6 +55,8 @@ type InstallPrompt = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+type Step = "pick" | "loading" | "pin";
+
 function runningAsApp() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -37,19 +64,45 @@ function runningAsApp() {
   );
 }
 
+function DolphinCircleLoader({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center gap-4 py-10"
+      role="status"
+      aria-live="polite"
+      aria-busy
+      aria-label={title}
+    >
+      <div className="relative h-28 w-28">
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96" aria-hidden>
+          <circle className="crm-login-ring-track" cx="48" cy="48" r="40" fill="none" strokeWidth="5" />
+          <circle className="crm-login-ring" cx="48" cy="48" r="40" fill="none" strokeWidth="5" />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center rounded-full bg-[var(--brand-50)]">
+          <BrandMark className="h-12 w-12" />
+        </span>
+      </div>
+      <div className="text-center">
+        <p className="text-base font-semibold text-[var(--foreground)]">{title}</p>
+        <p className="mt-1 text-sm text-slate-500">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const loginWithPin = useAuthStore((s) => s.loginWithPin);
+  const [step, setStep] = useState<Step>("pick");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   const [hideInstall, setHideInstall] = useState(false);
   const { lang, t } = useI18n();
-  const [vertical, setVertical] = useState<VerticalId>("nhay");
+  const [vertical, setVertical] = useState<VerticalId | null>(null);
+
   useEffect(() => {
-    const stored = getStoredVertical();
-    if (stored) setVertical(stored);
     if (runningAsApp()) setHideInstall(true);
     const onPrompt = (event: Event) => {
       event.preventDefault();
@@ -63,18 +116,102 @@ export default function LoginPage() {
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
-  const option = VERTICALS.find((v) => v.id === vertical) ?? VERTICALS[0];
-  const demo = demos[option.id];
+
+  useEffect(() => {
+    if (step !== "loading" || !vertical) return;
+    let cancelled = false;
+    const started = Date.now();
+    void (async () => {
+      try {
+        await bootStudio(vertical);
+      } catch {
+        /* pin form vẫn mở — login sẽ báo lỗi nếu DB chưa sẵn */
+      }
+      const wait = Math.max(0, LOAD_MS - (Date.now() - started));
+      window.setTimeout(() => {
+        if (!cancelled) setStep("pin");
+      }, wait);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [step, vertical]);
+
+  const option = vertical ? VERTICALS.find((v) => v.id === vertical) ?? VERTICALS[0] : null;
+  const demo = option ? demos[option.id] : [];
+
+  function pickVertical(id: VerticalId) {
+    setStoredVertical(id);
+    reopenDb(id);
+    setVertical(id);
+    setPin("");
+    setError("");
+    setStep("loading");
+  }
+
+  function backToPick() {
+    setStep("pick");
+    setPin("");
+    setError("");
+  }
+
+  if (step === "pick") {
+    return (
+      <main className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center bg-[var(--background)] px-4 py-10">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandMark className="mb-3 h-14 w-14" />
+          <p className="text-sm font-semibold text-[var(--brand-600)]">{t.brand}</p>
+          <h1 className="crm-page-title mt-1">{t.choose.title}</h1>
+          <p className="crm-lead mt-2 max-w-md">{t.choose.lead}</p>
+        </div>
+        <ul className="flex w-full flex-col gap-3">
+          {VERTICALS.map((v) => (
+            <li key={v.id}>
+              <button
+                type="button"
+                className="crm-card-elev flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:border-[var(--brand-300)] hover:bg-[var(--brand-50)]"
+                onClick={() => pickVertical(v.id)}
+              >
+                <span
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl"
+                  style={{ backgroundColor: v.soft }}
+                  aria-hidden
+                >
+                  {v.emoji}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-base font-bold text-slate-900">{v.label}</span>
+                  <span className="mt-0.5 block text-sm text-slate-700">{t.choose[blurbs[v.id]]}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </main>
+    );
+  }
+
+  if (step === "loading") {
+    return (
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center bg-[var(--background)] px-4">
+        <DolphinCircleLoader title={t.login.loading} hint={option?.label ?? t.login.loadingHint} />
+      </main>
+    );
+  }
 
   return (
-    <main className={`mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8 ${hideInstall ? "" : "pb-28"}`}>
+    <main
+      className={`mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8 ${hideInstall ? "" : "pb-28"}`}
+    >
       <div className="crm-card-elev rounded-3xl px-5 py-8 sm:px-8">
         <div className="flex flex-col items-center text-center">
           <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[var(--brand-50)]">
             <BrandMark className="h-10 w-10" />
           </span>
           <h1 className="crm-page-title mt-4">{t.brand}</h1>
-          <p className="mt-1.5 text-sm text-[var(--muted)]">{fill(t.login.hint, { name: option.label })}</p>
+          <p className="mt-1.5 text-sm text-[var(--muted)]">
+            {fill(t.login.hint, { name: option?.label ?? t.brand })}
+          </p>
         </div>
 
         <form
@@ -97,14 +234,14 @@ export default function LoginPage() {
               <Lock size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--muted)]" />
               <input
                 className={`${inputClass} pl-9 tracking-[0.2em]`}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={4}
-              placeholder={t.login.pinPlaceholder}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              autoFocus
-            />
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={4}
+                placeholder={t.login.pinPlaceholder}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                autoFocus
+              />
             </span>
           </label>
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -114,9 +251,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-            {t.login.demoHeading}
-          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">{t.login.demoHeading}</p>
           <ul className="mt-3 space-y-2">
             {demo.map((a) => (
               <li key={a.pin}>
@@ -142,11 +277,10 @@ export default function LoginPage() {
         <button
           type="button"
           className="mt-6 w-full text-center text-sm font-semibold text-[var(--brand-500)]"
-          onClick={() => router.push("/choose-vertical")}
+          onClick={backToPick}
         >
           {t.login.switch}
         </button>
-
       </div>
 
       {hideInstall ? null : (
@@ -160,10 +294,14 @@ export default function LoginPage() {
                   setGuideOpen(true);
                   return;
                 }
-                void installPrompt.prompt().then(() => installPrompt.userChoice).then((choice) => {
-                  setInstallPrompt(null);
-                  if (choice.outcome === "accepted") setHideInstall(true);
-                }).catch(() => setGuideOpen(true));
+                void installPrompt
+                  .prompt()
+                  .then(() => installPrompt.userChoice)
+                  .then((choice) => {
+                    setInstallPrompt(null);
+                    if (choice.outcome === "accepted") setHideInstall(true);
+                  })
+                  .catch(() => setGuideOpen(true));
               }}
             >
               {t.login.downloadApp}
@@ -200,11 +338,7 @@ export default function LoginPage() {
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
-              <img
-                src={guideSrc}
-                alt={t.login.downloadGuideAlt}
-                className="h-auto w-full rounded-xl"
-              />
+              <img src={guideSrc} alt={t.login.downloadGuideAlt} className="h-auto w-full rounded-xl" />
             </div>
           </div>
         </div>

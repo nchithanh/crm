@@ -1,4 +1,4 @@
-export type VerticalId = "nhay";
+export type VerticalId = "nhay" | "anh" | "nhac" | "boi" | "spa" | "nails" | "salon" | "massage";
 
 export type Role = "boss" | "owner" | "reception" | "teacher" | "marketing";
 

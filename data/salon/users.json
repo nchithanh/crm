@@ -1,0 +1,96 @@
+[
+  {
+    "id": "u_boss",
+    "name": "Boss Demo",
+    "email": "boss@eduswim.demo",
+    "phone": "0900 100 000",
+    "role": "boss",
+    "pin": "9999",
+    "avatarColor": "#111111"
+  },
+  {
+    "id": "u_owner",
+    "name": "Quản lý Salon",
+    "email": "an@eduswim.demo",
+    "phone": "0900 100 001",
+    "role": "owner",
+    "pin": "1234",
+    "avatarColor": "#F97316"
+  },
+  {
+    "id": "u_reception",
+    "name": "Lễ tân Demo",
+    "email": "binh@eduswim.demo",
+    "phone": "0900 100 002",
+    "role": "reception",
+    "pin": "1111",
+    "avatarColor": "#0EA5E9"
+  },
+  {
+    "id": "u_bao",
+    "name": "Hoàng Đức",
+    "email": "chi@eduswim.demo",
+    "phone": "0900 100 003",
+    "role": "teacher",
+    "pin": "2222",
+    "avatarColor": "#7C3AED",
+    "branchId": "b-a",
+    "styles": [
+      "Tự do",
+      "Bơi ếch"
+    ],
+    "levels": [
+      "begin",
+      "inter"
+    ],
+    "teacherStatus": "active",
+    "note": ""
+  },
+  {
+    "id": "u_phuong",
+    "name": "Mai Thanh",
+    "email": "dung@eduswim.demo",
+    "phone": "0900 100 004",
+    "role": "teacher",
+    "pin": "3333",
+    "avatarColor": "#DB2777",
+    "branchId": "b-b",
+    "styles": [
+      "Bơi ngửa",
+      "Bơi bướm"
+    ],
+    "levels": [
+      "inter",
+      "advance"
+    ],
+    "teacherStatus": "active",
+    "note": ""
+  },
+  {
+    "id": "u_nam",
+    "name": "Lý Quỳnh",
+    "email": "em@eduswim.demo",
+    "phone": "0900 100 005",
+    "role": "teacher",
+    "pin": "4444",
+    "avatarColor": "#059669",
+    "branchId": "b-a",
+    "styles": [
+      "Tự do"
+    ],
+    "levels": [
+      "begin"
+    ],
+    "teacherStatus": "paused",
+    "note": ""
+  },
+  {
+    "id": "u_marketing",
+    "name": "Marketing Demo",
+    "email": "mai@eduswim.demo",
+    "phone": "0900 100 009",
+    "role": "marketing",
+    "pin": "5555",
+    "avatarColor": "#EC4899"
+  }
+]

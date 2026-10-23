@@ -1,0 +1,26 @@
+[
+  {
+    "id": "b-a",
+    "name": "Massage Mai",
+    "address": "Quận 1 · Demo",
+    "lat": 21.0285,
+    "lng": 105.8542,
+    "checkInRadiusM": 150
+  },
+  {
+    "id": "b-b",
+    "name": "Massage Đào",
+    "address": "Quận 3 · Demo",
+    "lat": 21.029,
+    "lng": 105.855,
+    "checkInRadiusM": 150
+  },
+  {
+    "id": "b-c",
+    "name": "Massage Lý",
+    "address": "Thủ Đức · Demo",
+    "lat": 21.0278,
+    "lng": 105.8535,
+    "checkInRadiusM": 150
+  }
+]

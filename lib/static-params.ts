@@ -14,6 +14,18 @@ import nhac_users from "@/data/nhac/users.json";
 import boi_courses from "@/data/boi/courses.json";
 import boi_students from "@/data/boi/students.json";
 import boi_users from "@/data/boi/users.json";
+import spa_courses from "@/data/spa/courses.json";
+import spa_students from "@/data/spa/students.json";
+import spa_users from "@/data/spa/users.json";
+import nails_courses from "@/data/nails/courses.json";
+import nails_students from "@/data/nails/students.json";
+import nails_users from "@/data/nails/users.json";
+import salon_courses from "@/data/salon/courses.json";
+import salon_students from "@/data/salon/students.json";
+import salon_users from "@/data/salon/users.json";
+import massage_courses from "@/data/massage/courses.json";
+import massage_students from "@/data/massage/students.json";
+import massage_users from "@/data/massage/users.json";
 
 type CourseSeed = { id: string; sessionCount?: number };
 type IdRow = { id: string; role?: string };
@@ -31,6 +43,10 @@ const allCourses = [
   ...(anh_courses as CourseSeed[]),
   ...(nhac_courses as CourseSeed[]),
   ...(boi_courses as CourseSeed[]),
+  ...(spa_courses as CourseSeed[]),
+  ...(nails_courses as CourseSeed[]),
+  ...(salon_courses as CourseSeed[]),
+  ...(massage_courses as CourseSeed[]),
 ];
 
 const allStudents = [
@@ -38,6 +54,10 @@ const allStudents = [
   ...(anh_students as IdRow[]),
   ...(nhac_students as IdRow[]),
   ...(boi_students as IdRow[]),
+  ...(spa_students as IdRow[]),
+  ...(nails_students as IdRow[]),
+  ...(salon_students as IdRow[]),
+  ...(massage_students as IdRow[]),
 ];
 
 const allUsers = [
@@ -45,6 +65,10 @@ const allUsers = [
   ...(anh_users as IdRow[]),
   ...(nhac_users as IdRow[]),
   ...(boi_users as IdRow[]),
+  ...(spa_users as IdRow[]),
+  ...(nails_users as IdRow[]),
+  ...(salon_users as IdRow[]),
+  ...(massage_users as IdRow[]),
 ];
 
 export function courseStaticParams() {

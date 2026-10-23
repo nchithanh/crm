@@ -1,0 +1,136 @@
+[
+  {
+    "id": "k-hh-begin",
+    "name": "Massage body 60'",
+    "style": "Body60",
+    "level": "begin",
+    "slot": "T2 · T4 · 18:00",
+    "teacherId": "u_bao",
+    "branchId": "b-a",
+    "roomId": "r1",
+    "startOffset": -14,
+    "weekdays": [
+      1,
+      3
+    ],
+    "start": "18:00",
+    "end": "19:30",
+    "cancelIndex": 2,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  },
+  {
+    "id": "k-kp-inter",
+    "name": "Massage body 90'",
+    "style": "Body90",
+    "level": "inter",
+    "slot": "T3 · T5 · 19:00",
+    "teacherId": "u_nam",
+    "branchId": "b-b",
+    "roomId": "r4",
+    "startOffset": -7,
+    "weekdays": [
+      2,
+      4
+    ],
+    "start": "19:00",
+    "end": "20:30",
+    "cancelIndex": 0,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  },
+  {
+    "id": "k-ct-adv",
+    "name": "Foot massage",
+    "style": "Foot",
+    "level": "advance",
+    "slot": "T7 · CN · 09:00",
+    "teacherId": "u_phuong",
+    "branchId": "b-c",
+    "roomId": "r6",
+    "startOffset": 0,
+    "weekdays": [
+      6,
+      0
+    ],
+    "start": "09:00",
+    "end": "10:30",
+    "cancelIndex": 0,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  },
+  {
+    "id": "k-hh-inter",
+    "name": "Massage đá nóng",
+    "style": "Stone",
+    "level": "inter",
+    "slot": "T6 · CN · 17:00",
+    "teacherId": "u_bao",
+    "branchId": "b-a",
+    "roomId": "r2",
+    "startOffset": -21,
+    "weekdays": [
+      5,
+      0
+    ],
+    "start": "17:00",
+    "end": "18:30",
+    "cancelIndex": 0,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  },
+  {
+    "id": "k-am-7",
+    "name": "Massage cặp đôi",
+    "style": "Couple",
+    "level": "begin",
+    "slot": "T2 · T4 · T7 · 07:00",
+    "teacherId": "u_bao",
+    "branchId": "b-a",
+    "roomId": "r3",
+    "startOffset": -14,
+    "weekdays": [
+      1,
+      3,
+      6
+    ],
+    "start": "07:00",
+    "end": "08:30",
+    "cancelIndex": 0,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  },
+  {
+    "id": "k-am-8",
+    "name": "Trị liệu cổ vai gáy",
+    "style": "Neck",
+    "level": "begin",
+    "slot": "T3 · T5 · CN · 08:00",
+    "teacherId": "u_nam",
+    "branchId": "b-b",
+    "roomId": "r5",
+    "startOffset": -14,
+    "weekdays": [
+      2,
+      4,
+      0
+    ],
+    "start": "08:00",
+    "end": "09:30",
+    "cancelIndex": 0,
+    "description": "Liệu trình theo phòng. Đặt lịch trước.",
+    "active": true,
+    "sessionCount": 8,
+    "durationMonths": 1
+  }
+]

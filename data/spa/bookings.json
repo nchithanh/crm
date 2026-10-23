@@ -1,0 +1,57 @@
+[
+  {
+    "id": "b1",
+    "roomId": "r3",
+    "renter": "Nhóm tập cuối tuần",
+    "phone": "0988 221 100",
+    "offset": 2,
+    "start": "14:00",
+    "end": "16:00",
+    "fee": 500000,
+    "status": "booked"
+  },
+  {
+    "id": "b2",
+    "roomId": "r2",
+    "renter": "Giáo viên tập riêng",
+    "phone": "0903 111 009",
+    "offset": -3,
+    "start": "20:30",
+    "end": "21:30",
+    "fee": 250000,
+    "status": "done"
+  },
+  {
+    "id": "b3",
+    "roomId": "r5",
+    "renter": "Nhóm Bơi ngửa ngoài",
+    "phone": "0912 440 218",
+    "offset": 1,
+    "start": "20:30",
+    "end": "22:00",
+    "fee": 400000,
+    "status": "booked"
+  },
+  {
+    "id": "b4",
+    "roomId": "r7",
+    "renter": "Workshop cuối tuần",
+    "phone": "0981 330 772",
+    "offset": 5,
+    "start": "13:00",
+    "end": "16:00",
+    "fee": 900000,
+    "status": "booked"
+  },
+  {
+    "id": "b5",
+    "roomId": "r3",
+    "renter": "Lớp tập riêng thầy khách",
+    "phone": "0909 551 004",
+    "offset": -6,
+    "start": "18:00",
+    "end": "19:30",
+    "fee": 350000,
+    "status": "done"
+  }
+]
