@@ -34,6 +34,7 @@ import { navBadgeClassDark, navBadgeClassLight, navBadgeKind, useNavBadges } fro
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
+import { useChromeStore } from "@/stores/chrome-store";
 import type { Role } from "@/types";
 
 type MobileItem = {
@@ -139,7 +140,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-  const [navHidden, setNavHidden] = useState(false);
+  const navHidden = useChromeStore((s) => s.navHidden);
+  const setNavHidden = useChromeStore((s) => s.setNavHidden);
   const accessRev = useAccessStore((s) => s.revision);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
 
@@ -167,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
-  }, [path]);
+  }, [path, setNavHidden]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -371,38 +373,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-white/10 bg-[#030a12] lg:flex">
         <NavPanel showBrand />
       </aside>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-[56px] max-h-[56px] shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--card)] px-3 lg:hidden">
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-3 text-left text-sm text-[var(--muted)]"
-            aria-label={t.shell.search}
-          >
-            <Search size={16} className="shrink-0" />
-            <span className="min-w-0 flex-1 truncate">{t.shell.searchShort}</span>
-          </button>
-          <div
-            role="group"
-            aria-label={t.common.language}
-            className="inline-flex h-8 shrink-0 items-center rounded-xl border border-[var(--border)] bg-white p-0.5 text-[11px] font-bold"
-          >
-            {(["vi", "en"] as const).map((code) => (
-              <button
-                key={code}
-                type="button"
-                aria-pressed={lang === code}
-                onClick={() => setLang(code)}
-                className={cn(
-                  "h-7 rounded-lg px-1.5",
-                  lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500",
-                )}
-              >
-                {code.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </header>
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 flex-col max-lg:transition-[padding] max-lg:duration-200",
+          navHidden ? "max-lg:pt-0" : "max-lg:pt-[48px]",
+        )}
+      >
         <header className={cn("z-30 hidden shrink-0 flex-wrap items-center gap-2 px-5 py-2.5 lg:flex", path === "/overview" ? "bg-[var(--card)]" : "bg-[var(--background)]")}>
           <button
             type="button"
@@ -496,6 +472,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </footer>
         </main>
       </div>
+      {/* Mobile search AI — cùng cấp bottom nav, ẩn/hiện theo navHidden */}
+      <header
+        className={cn(
+          "crm-mobile-top fixed inset-x-0 top-0 z-40 flex h-[48px] items-center gap-2 border-b border-[var(--border)] bg-[var(--card)] px-3 lg:hidden",
+          navHidden && "is-hidden",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-3 text-left text-sm text-[var(--muted)]"
+          aria-label={t.shell.search}
+        >
+          <Search size={16} className="shrink-0" />
+          <span className="min-w-0 flex-1 truncate">{t.shell.searchShort}</span>
+        </button>
+        <div
+          role="group"
+          aria-label={t.common.language}
+          className="inline-flex h-8 shrink-0 items-center rounded-xl border border-[var(--border)] bg-white p-0.5 text-[11px] font-bold"
+        >
+          {(["vi", "en"] as const).map((code) => (
+            <button
+              key={code}
+              type="button"
+              aria-pressed={lang === code}
+              onClick={() => setLang(code)}
+              className={cn(
+                "h-7 rounded-lg px-1.5",
+                lang === code ? "bg-[var(--brand-500)] text-white" : "text-slate-500",
+              )}
+            >
+              {code.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </header>
       <nav className={cn("crm-bottom-nav fixed inset-x-3 bottom-[max(10px,env(safe-area-inset-bottom))] z-40 pt-[24px] lg:hidden", navHidden && "is-hidden")}>
         <div className="crm-bottom-pill grid h-16 grid-cols-5">
           {mobile.map((item, index) => {
@@ -505,10 +518,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             const label = t.nav[item.key];
             const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : 0;
             const href = item.href === "/mid-course-enroll" ? `/mid-course-enroll${branchQuery}` : item.href;
+            const isOverview = item.href === "/overview";
             return (
               <Link key={item.href} href={href} className="relative h-16" aria-current={on ? "page" : undefined}>
                 <BottomTabFace raised={raised} on={on} label={label} badge={badge} badgeKind={navBadgeKind(item.href)}>
-                  <Icon size={22} strokeWidth={raised || on ? 2.25 : 1.75} />
+                  {isOverview ? (
+                    <BrandMark className={cn("h-[22px] w-[22px]", !on && "opacity-70")} />
+                  ) : (
+                    <Icon size={22} strokeWidth={raised || on ? 2.25 : 1.75} />
+                  )}
                 </BottomTabFace>
               </Link>
             );
@@ -525,11 +543,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <SupportIcon className="h-6 w-6" />
       </a>
-      {/* FAB chỉ desktop — mobile: vuốt lên từ đáy / ô tìm header */}
+      {/* FAB palette — mobile ẩn/hiện cùng bottom nav; desktop cố định trên Zalo */}
       {!paletteOpen ? (
         <button
           type="button"
-          className="crm-cmd-fab fixed right-5 bottom-[4.75rem] z-50 hidden lg:inline-flex"
+          className={cn(
+            "crm-cmd-fab fixed right-5 z-50 inline-flex",
+            "bottom-[max(5.75rem,calc(env(safe-area-inset-bottom)+5.5rem))] lg:bottom-[4.75rem]",
+            navHidden && "max-lg:is-hidden",
+          )}
           aria-label={t.shell.paletteFab}
           title={t.shell.paletteFab}
           onClick={() => setPaletteOpen(true)}

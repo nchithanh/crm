@@ -2,6 +2,9 @@
 
 ## 2026-10-23
 
+- **FAB palette mobile:** hiện trên mobile (trên bottom nav), **ẩn/hiện cùng** menu khi scroll; desktop giữ cố định. `.crm-cmd-fab` không set `display` (tránh ghi đè utility).
+- **Ask Dolphin mobile:** sticky dưới search trên Tổng quan; ẩn/hiện cùng search + bottom nav (`stores/chrome-store.ts` + `.crm-mobile-ask`).
+- **Mobile chrome:** tab Tổng quan = logo Dolphin; thanh search AI nhích lên nhẹ và **ẩn/hiện cùng** bottom nav khi scroll.
 - **Lĩnh vực beauty:** thêm `spa` · `nails` · `salon` · `massage` (seed `data/{id}/`, DB riêng, chọn trên `/login`).
 - **Login gộp chọn lĩnh vực:** `/login` một trang — chọn lĩnh vực → loading Dolphin ~1s (logo + vòng progress) → form PIN. `/choose-vertical` redirect. AuthGate cho vào `/login` khi chưa có vertical; event `dolphin-crm-vertical` khi đổi lĩnh vực.
 

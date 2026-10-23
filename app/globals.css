@@ -384,9 +384,8 @@ a { text-decoration: none; }
   overflow: hidden;
   box-shadow: none;
 }
-/* FAB mở palette — position do utility `fixed` (không set relative ở đây) */
+/* FAB mở palette — display do utility `inline-flex`; mobile ẩn cùng bottom nav qua `translate` (không đụng hover transform) */
 .crm-cmd-fab {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 3rem;
@@ -398,13 +397,20 @@ a { text-decoration: none; }
   box-shadow:
     0 0.5rem 1.25rem rgba(15, 23, 42, 0.12),
     0 0 1rem color-mix(in srgb, var(--brand-500) 22%, transparent);
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  translate: 0 0;
+  transition: transform 160ms ease, box-shadow 160ms ease, translate 200ms ease-out;
 }
 .crm-cmd-fab:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0.65rem 1.5rem rgba(15, 23, 42, 0.14),
     0 0 1.25rem color-mix(in srgb, var(--brand-500) 35%, transparent);
+}
+@media (max-width: 1023px) {
+  .crm-cmd-fab.is-hidden {
+    translate: 0 calc(100% + 6rem);
+    pointer-events: none;
+  }
 }
 .crm-cmd-fab .crm-cmd-fab-spark {
   position: absolute;
@@ -519,6 +525,27 @@ a { text-decoration: none; }
 }
 .crm-bottom-nav.is-hidden {
   translate: 0 calc(100% + 16px);
+}
+/* Mobile search / AI bar — ẩn hiện cùng bottom nav khi scroll (transform để không bị utility Tailwind đè) */
+.crm-mobile-top {
+  transform: translate3d(0, 0, 0);
+  transition: transform 200ms ease-out;
+  will-change: transform;
+}
+.crm-mobile-top.is-hidden {
+  transform: translate3d(0, calc(-100% - 12px), 0);
+  pointer-events: none;
+}
+/* Ask Dolphin (inner của sticky) — cùng nhịp ẩn với search / bottom nav; không gắn transform lên wrapper sticky */
+.crm-mobile-ask {
+  transition: transform 200ms ease-out;
+  will-change: transform;
+}
+@media (max-width: 1023px) {
+  .crm-mobile-ask.is-hidden {
+    transform: translate3d(0, calc(-100% - 56px), 0);
+    pointer-events: none;
+  }
 }
 .crm-bottom-pill {
   border-radius: 9999px;
@@ -686,7 +713,10 @@ a { text-decoration: none; }
   .crm-cmd-icon.is-sparkle,
   .crm-cmd-icon.is-sparkle svg:last-child,
   .crm-cmd-fab .crm-cmd-fab-spark { animation: none; }
-  .crm-bottom-nav { transition: none; }
+  .crm-cmd-fab,
+  .crm-bottom-nav,
+  .crm-mobile-top,
+  .crm-mobile-ask { transition: none; }
 }
 
 button.bg-emerald-500,
