@@ -111,6 +111,14 @@ export function setStoredVertical(id: VerticalId) {
   }
 }
 
+/** Xóa lĩnh vực demo — dùng khi chọn login MA (không gắn vertical Dexie). */
+export function clearStoredVertical() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(VERTICAL_STORAGE_KEY);
+  document.documentElement.removeAttribute("data-vertical");
+  window.dispatchEvent(new CustomEvent(VERTICAL_CHANGE_EVENT, { detail: null }));
+}
+
 export function dbNameForVertical(id: VerticalId) {
   return `dolphin_crm_${id}`;
 }

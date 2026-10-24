@@ -4,7 +4,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 
 | Path | Ghi chú |
 | --- | --- |
-| `/login` | Chọn lĩnh vực → loading Dolphin 1s (logo + vòng tròn) → PIN + Download App |
+| `/login` | Pick: **MA** → user/pass → `POST /crm/login`; hoặc lĩnh vực demo → PIN Dexie |
 | `/choose-vertical` | Redirect → `/login` (legacy) |
 | `/` | Redirect → `/overview` |
 | `/overview` | Tổng quan — chào + task gần nhất + KPI + ops strip + chart |
@@ -29,7 +29,8 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/receipt` | Phiếu xác nhận học phí A4 (tiếng Việt, print-ready, số phiếu `{MÃ}{yy}.{mm}.{seq}`). Nguồn: Payment + Subscription + Installment |
 | `/holds` | Bảo lưu (Ops) |
 | `/attendance` · `/qr-attendance` | Lễ tân điểm hộ · HV tự quét QR + geofence demo |
-| `/tasks` | Tác vụ |
+| `/tasks` | Tác vụ — demo Dexie; **MA** → API (`ma-tasks-api.md`) |
+| `/staff` | **MA boss only** — quản lý TK (tạo/sửa/đổi MK/khóa/chi nhánh/share) (`ma-staff.md`) |
 | `/room-bookings` · `/dolphin-ai` | Đặt phòng · Dolphin AI |
 | `/guide` | Hướng dẫn sử dụng — Course / Class / SKU / Subscription / flow. Menu Hệ thống |
 | `/settings/access` | Ma trận phân quyền (Boss / Quản lý). Menu Hệ thống |

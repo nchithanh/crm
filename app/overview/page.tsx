@@ -33,7 +33,6 @@ import { useAuthStore } from "@/stores/auth-store";
 import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { useStudioBranch } from "@/stores/branch-store";
-import { useChromeStore } from "@/stores/chrome-store";
 import type { LucideIcon } from "lucide-react";
 import type { StudioTask } from "@/types";
 
@@ -217,7 +216,6 @@ export default function DashboardPage() {
   const audits = useLiveQuery(() => Promise.resolve([] as { id: string; day: string; text: string; sessionId?: string }[]), []) ?? []
   const settings = useLiveQuery(() => db.settings.toCollection().first());
   const { branchId } = useStudioBranch();
-  const navHidden = useChromeStore((s) => s.navHidden);
   const [aiOpen, setAiOpen] = useState(false);
 
   const ready = Boolean(
@@ -729,29 +727,27 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="order-5 max-lg:sticky max-lg:top-[48px] max-lg:z-[35]">
-        <div className={cn("max-lg:crm-mobile-ask", navHidden && "max-lg:is-hidden")}>
-          <button
-            type="button"
-            onClick={() => setAiOpen((v) => !v)}
-            className="crm-gradient flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left max-lg:shadow-md"
-            aria-expanded={aiOpen}
-          >
-            <span>
-              <span className="block text-sm font-semibold text-white">{t.shell.askDolphin}</span>
-              {!aiOpen ? <span className="mt-0.5 block text-xs text-white/75">{t.dash.aiBarHint}</span> : null}
-            </span>
-            <ChevronDown size={18} className={cn("shrink-0 text-white/90 transition-transform", aiOpen && "rotate-180")} aria-hidden />
-          </button>
-          {aiOpen ? (
-            <div className="mt-2 rounded-xl border border-[var(--border)] bg-white p-3">
-              <p className="text-sm text-slate-600">{t.pages.aiLead}</p>
-              <Link href="/dolphin-ai" className="mt-2 inline-flex text-sm font-semibold text-[var(--brand-600)] hover:underline">
-                {t.dash.aiBarOpen} →
-              </Link>
-            </div>
-          ) : null}
-        </div>
+      <div className="order-5">
+        <button
+          type="button"
+          onClick={() => setAiOpen((v) => !v)}
+          className="crm-gradient flex w-full items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-left"
+          aria-expanded={aiOpen}
+        >
+          <span>
+            <span className="block text-sm font-semibold text-white">{t.shell.askDolphin}</span>
+            {!aiOpen ? <span className="mt-0.5 block text-xs text-white/75">{t.dash.aiBarHint}</span> : null}
+          </span>
+          <ChevronDown size={18} className={cn("shrink-0 text-white/90 transition-transform", aiOpen && "rotate-180")} aria-hidden />
+        </button>
+        {aiOpen ? (
+          <div className="mt-2 rounded-xl border border-[var(--border)] bg-white p-3">
+            <p className="text-sm text-slate-600">{t.pages.aiLead}</p>
+            <Link href="/dolphin-ai" className="mt-2 inline-flex text-sm font-semibold text-[var(--brand-600)] hover:underline">
+              {t.dash.aiBarOpen} →
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className="order-4 grid grid-cols-2 gap-3 lg:order-7">

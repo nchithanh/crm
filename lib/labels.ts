@@ -53,6 +53,7 @@ export function roleLabel(role: string, lang: Lang) {
   if (role === "owner") return r.owner;
   if (role === "reception") return r.reception;
   if (role === "marketing") return r.marketing;
+  if (role === "accountant") return r.accountant;
   return r.teacher;
 }
 

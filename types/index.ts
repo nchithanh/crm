@@ -1,6 +1,6 @@
 export type VerticalId = "nhay" | "anh" | "nhac" | "boi" | "spa" | "nails" | "salon" | "massage";
 
-export type Role = "boss" | "owner" | "reception" | "teacher" | "marketing";
+export type Role = "boss" | "owner" | "reception" | "teacher" | "marketing" | "accountant";
 
 /** Ma trận phân quyền theo role — Dexie `roleAccess`. */
 export type RoleAccess = {
@@ -423,6 +423,8 @@ export type StudioTask = {
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId: string;
+  /** Người kiểm tra — 0/"" = chưa gán. */
+  verifierId: string;
   branchId: string;
   parentId: string;
   dueDay: string;

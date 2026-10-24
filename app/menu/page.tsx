@@ -6,12 +6,13 @@ import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { LogOut } from "lucide-react";
 import { SupportIcon } from "@/components/support-icon";
-import { canSeeNavHref } from "@/lib/access";
+import { ProfileSheet } from "@/components/profile-sheet";
+import { canSeeNavHref, isMaStudioMode } from "@/lib/access";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { roleLabel } from "@/lib/labels";
 import { cn } from "@/lib/utils";
-import { NAV_AI, NAV_GROUPS, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER, type NavItem } from "@/lib/nav";
+import { NAV_AI, NAV_GROUPS, NAV_MA_STAFF, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER, type NavItem } from "@/lib/nav";
 import { useAccessStore } from "@/stores/access-store";
 import { navBadgeClassLight, navBadgeKind, useNavBadges } from "@/lib/nav-badges";
 import { useAuthStore } from "@/stores/auth-store";
@@ -19,7 +20,13 @@ import { useStudioBranch } from "@/stores/branch-store";
 
 type Tab = "main" | "support";
 
-function Tile({ item, badge }: { item: NavItem; badge?: number }) {
+function Tile({
+  item,
+  badge,
+}: {
+  item: { href: string; key: keyof typeof import("@/lib/copy").copy.vi.nav; icon: NavItem["icon"] };
+  badge?: number;
+}) {
   const Icon = item.icon;
   const { t } = useI18n();
   return (
@@ -54,23 +61,86 @@ export default function MenuPage() {
   const navBadges = useNavBadges();
   const { lang, t } = useI18n();
   const [tab, setTab] = useState<Tab>("main");
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const accessRev = useAccessStore((s) => s.revision);
+  const maMode = isMaStudioMode();
   const topItems = NAV_TOP.filter((item) => canSeeNavHref(user?.role, item.href));
   const groups = [...NAV_GROUPS, NAV_SYSTEM].map((group) => ({
     ...group,
     items: group.items.filter((item) => canSeeNavHref(user?.role, item.href)),
   })).filter((group) => group.items.length > 0);
-  const showAi = canSeeNavHref(user?.role, NAV_AI.href);
+  const showAi = !maMode && canSeeNavHref(user?.role, NAV_AI.href);
   void accessRev;
+
+  if (maMode) {
+    const taskItem = groups.flatMap((g) => g.items).find((i) => i.href === "/tasks")
+      ?? NAV_GROUPS.flatMap((g) => g.items).find((i) => i.href === "/tasks");
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-3">
+        {user ? (
+          <button
+            type="button"
+            onClick={() => setProfileOpen(true)}
+            className="crm-card-elev flex w-full items-center gap-3 p-4 text-left hover:bg-[var(--brand-50)]"
+            aria-label={t.common.editProfile}
+          >
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold text-white"
+              style={{ background: user.avatarColor || "var(--brand-500)" }}
+              aria-hidden
+            >
+              {user.name.trim().charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-base font-bold text-[var(--foreground)]">{user.name}</span>
+              <span className="block truncate text-xs text-[var(--muted)]">
+                {roleLabel(user.role, lang)} · Ma Dance Studio
+              </span>
+            </span>
+          </button>
+        ) : null}
+        {taskItem || canSeeNavHref(user?.role, NAV_MA_STAFF.href) ? (
+          <section className="crm-card-elev p-4" aria-label={t.nav.tasks}>
+            <h2 className="crm-section-title">{t.nav.menu}</h2>
+            <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-5">
+              {taskItem ? <Tile item={taskItem} badge={navBadges[taskItem.href]} /> : null}
+              {canSeeNavHref(user?.role, NAV_MA_STAFF.href) ? (
+                <Tile item={NAV_MA_STAFF} badge={navBadges[NAV_MA_STAFF.href]} />
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            router.replace("/login");
+          }}
+          className="crm-card-elev flex items-center gap-3 px-4 py-3 text-left hover:bg-rose-50"
+        >
+          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+            <LogOut size={20} strokeWidth={1.75} />
+          </span>
+          <span className="text-sm font-semibold text-rose-600">{t.common.logout}</span>
+        </button>
+        <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-3">
       {user ? (
-        <div className="crm-card-elev flex items-center gap-3 p-4">
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          className="crm-card-elev flex w-full items-center gap-3 p-4 text-left hover:bg-[var(--brand-50)]"
+          aria-label={t.common.editProfile}
+        >
           <span
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold text-white"
-            style={{ background: "var(--brand-500)" }}
+            style={{ background: user.avatarColor || "var(--brand-500)" }}
             aria-hidden
           >
             {user.name.trim().charAt(0).toUpperCase()}
@@ -81,7 +151,7 @@ export default function MenuPage() {
               {roleLabel(user.role, lang)} · {settings?.name || "Edu Dance"}
             </span>
           </span>
-        </div>
+        </button>
       ) : null}
 
       <div className="crm-card-elev p-3">
@@ -186,6 +256,7 @@ export default function MenuPage() {
           </section>
         </div>
       )}
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 }

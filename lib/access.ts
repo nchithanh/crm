@@ -1,8 +1,37 @@
 import type { AccessNavKey } from "@/lib/access-defaults";
 import { ACCESS_NAV_KEYS } from "@/lib/access-defaults";
+import { getStoredAuthMode } from "@/lib/auth-mode";
 import type { TabKey } from "@/lib/tabs";
 import { useAccessStore } from "@/stores/access-store";
 import type { Role } from "@/types";
+
+function normalizePath(pathname: string) {
+  if (!pathname) return "/";
+  if (pathname.length > 1 && pathname.endsWith("/")) return pathname.slice(0, -1);
+  return pathname;
+}
+
+/** Login Ma Dance (API) — Tác vụ (+ boss: tạo tài khoản). */
+export function isMaStudioMode() {
+  return getStoredAuthMode() === "ma";
+}
+
+function isMaTasksPath(pathname: string) {
+  const path = normalizePath(pathname);
+  return path === "/tasks" || path.startsWith("/tasks/") || path === "/tac-vu";
+}
+
+function isMaStaffPath(pathname: string) {
+  const path = normalizePath(pathname);
+  return path === "/staff" || path.startsWith("/staff/");
+}
+
+/** Path MA được phép theo role. */
+export function isMaAllowedPath(pathname: string, role?: Role) {
+  if (isMaTasksPath(pathname)) return true;
+  if (isMaStaffPath(pathname) && role === "boss") return true;
+  return false;
+}
 
 export function canSeeContact(role: Role | undefined) {
   return role === "boss" || role === "owner" || role === "reception" || role === "marketing";
@@ -32,6 +61,17 @@ export function canManageTasks(role: Role | undefined) {
   return role === "boss" || role === "owner" || role === "reception" || role === "marketing";
 }
 
+/** Boss / Quản lý xem mọi tác vụ. */
+export function canSeeAllTasks(role: Role | undefined) {
+  return role === "boss" || role === "owner";
+}
+
+export function canTouchTask(role: Role | undefined, task: { assigneeId: string; verifierId?: string }, userId?: string) {
+  if (canManageTasks(role)) return true;
+  if (!userId) return false;
+  return task.assigneeId === userId || task.verifierId === userId;
+}
+
 export function canManagePaymentAccounts(role: Role | undefined) {
   return role === "boss" || role === "owner";
 }
@@ -42,12 +82,6 @@ export function canManagePromotions(role: Role | undefined) {
 
 export function canEditAccessMatrix(role: Role | undefined) {
   return useAccessStore.getState().canEditMatrix(role);
-}
-
-function normalizePath(pathname: string) {
-  if (!pathname) return "/";
-  if (pathname.length > 1 && pathname.endsWith("/")) return pathname.slice(0, -1);
-  return pathname;
 }
 
 /** Map path → nav key trong ma trận. null = luôn cho phép nếu đã đăng nhập (vd /menu). */
@@ -89,9 +123,15 @@ export function hrefToNavKey(href: string): AccessNavKey | null {
 
 export function canAccessPath(role: Role | undefined, pathname: string) {
   if (!role) return false;
-  if (role === "boss") return true;
   const path = normalizePath(pathname);
-  if (path === "/menu" || path === "/login" || path === "/choose-vertical") return true;
+  if (path === "/login" || path === "/choose-vertical") return true;
+  if (isMaStudioMode()) {
+    if (path === "/menu") return true;
+    return isMaAllowedPath(path, role);
+  }
+  if (role === "boss") return true;
+  if (path === "/menu") return true;
+  if (isMaStaffPath(path)) return false;
   const key = pathToNavKey(path);
   if (!key) return true;
   return useAccessStore.getState().hasNav(role, key);
@@ -99,6 +139,8 @@ export function canAccessPath(role: Role | undefined, pathname: string) {
 
 export function canSeeNavHref(role: Role | undefined, href: string) {
   if (!role) return false;
+  if (isMaStudioMode()) return isMaAllowedPath(href, role);
+  if (isMaStaffPath(href)) return false;
   if (role === "boss") return true;
   const key = hrefToNavKey(href);
   if (!key) return true;
@@ -112,6 +154,7 @@ export function canSeeTab(role: Role | undefined, key: TabKey) {
 /** Trang về khi role không vào được path hiện tại. */
 export function homePathForRole(role: Role | undefined) {
   if (!role) return "/login";
+  if (isMaStudioMode()) return "/tasks";
   for (const key of ACCESS_NAV_KEYS) {
     if (key === "access") continue;
     if (!useAccessStore.getState().hasNav(role, key)) continue;

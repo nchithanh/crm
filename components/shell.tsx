@@ -22,14 +22,22 @@ import {
 import { AppBreadcrumb } from "@/components/breadcrumb";
 import { BrandMark } from "@/components/brand-mark";
 import { CommandPalette } from "@/components/command-palette";
+import { ProfileSheet } from "@/components/profile-sheet";
 import { SupportIcon } from "@/components/support-icon";
-import { canAccessPath, canCollect, canSeeMoney, canSeeNavHref, homePathForRole } from "@/lib/access";
+import {
+  canAccessPath,
+  canCollect,
+  canSeeMoney,
+  canSeeNavHref,
+  homePathForRole,
+  isMaStudioMode,
+} from "@/lib/access";
 import { db } from "@/lib/db";
 import { ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
-import { NAV_AI, NAV_GROUPS, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER } from "@/lib/nav";
+import { NAV_AI, NAV_GROUPS, NAV_MA_STAFF, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER } from "@/lib/nav";
 import { navBadgeClassDark, navBadgeClassLight, navBadgeKind, useNavBadges } from "@/lib/nav-badges";
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -39,11 +47,18 @@ import type { Role } from "@/types";
 
 type MobileItem = {
   href: string;
-  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "menu" | "care";
+  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "staff" | "menu" | "care";
   icon: typeof LayoutDashboard;
 };
 
 function mobileForRole(role: Role | undefined): MobileItem[] {
+  if (isMaStudioMode()) {
+    const items: MobileItem[] = [{ href: "/tasks", key: "tasks", icon: ListTodo }];
+    if (role === "boss") {
+      items.push({ href: "/staff", key: "staff", icon: UserPlus });
+    }
+    return items;
+  }
   if (role === "teacher") {
     return [
       { href: "/overview", key: "overview", icon: LayoutDashboard },
@@ -134,19 +149,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const logout = useAuthStore((s) => s.logout);
   const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const { branchId, setBranchId } = useStudioBranch();
-  const seeReport = canSeeMoney(user?.role);
-  const canEnroll = user?.role === "boss" || user?.role === "owner" || user?.role === "reception";
-  const collect = canCollect(user?.role);
+  const maMode = isMaStudioMode();
+  const seeReport = !maMode && canSeeMoney(user?.role);
+  const canEnroll = !maMode && (user?.role === "boss" || user?.role === "owner" || user?.role === "reception");
+  const collect = !maMode && canCollect(user?.role);
   const branchQuery = branchId !== "all" ? `?branch=${branchId}` : "";
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const navHidden = useChromeStore((s) => s.navHidden);
   const setNavHidden = useChromeStore((s) => s.setNavHidden);
   const accessRev = useAccessStore((s) => s.revision);
-  const mobile = useMemo(() => mobileForRole(user?.role), [user?.role]);
+  const mobile = useMemo(() => mobileForRole(user?.role), [user?.role, accessRev]);
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
-  const studio = settings?.name || "Edu Dance";
+  const studio = maMode ? "Ma Dance Studio" : settings?.name || "Edu Dance";
   const navBadges = useNavBadges();
   const { lang, t, setLang } = useI18n();
 
@@ -172,6 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [path, setNavHidden]);
 
   useEffect(() => {
+    if (maMode) return;
     function onKey(e: KeyboardEvent) {
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k") return;
       e.preventDefault();
@@ -179,11 +197,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [maMode]);
 
   /** Mobile: vuốt lên từ vùng đáy → mở Command Palette */
   useEffect(() => {
-    if (paletteOpen) return;
+    if (maMode || paletteOpen) return;
     let startY = 0;
     let startX = 0;
     let startT = 0;
@@ -223,7 +241,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       window.removeEventListener("touchstart", onStart);
       window.removeEventListener("touchend", onEnd);
     };
-  }, [paletteOpen]);
+  }, [paletteOpen, maMode]);
 
   useEffect(() => {
     if (!user?.role) return;
@@ -335,21 +353,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           {canSeeNavHref(user?.role, NAV_AI.href) ? renderNavLink(NAV_AI) : null}
+          {canSeeNavHref(user?.role, NAV_MA_STAFF.href) ? (
+            <div className="border-t border-white/10 pt-3">
+              <div className="space-y-0.5">{renderNavLink(NAV_MA_STAFF)}</div>
+            </div>
+          ) : null}
         </nav>
         {user ? (
           <div className="shrink-0 border-t border-white/10 bg-[#030a12] p-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ background: "var(--brand-500)" }}
-                aria-hidden
+              <button
+                type="button"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-offset-2 ring-offset-[#030a12] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-300)]"
+                style={{ background: user.avatarColor || "var(--brand-500)" }}
+                aria-label={t.common.editProfile}
+                onClick={() => setProfileOpen(true)}
               >
                 {user.name.trim().charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
+              </button>
+              <button
+                type="button"
+                className="min-w-0 flex-1 rounded-xl px-1 py-0.5 text-left hover:bg-white/5"
+                onClick={() => setProfileOpen(true)}
+              >
                 <p className="truncate text-sm font-semibold leading-tight text-white">{user.name}</p>
                 <p className="truncate text-xs text-white/50">{roleLabel(user.role, lang)}</p>
-              </div>
+              </button>
               <button
                 type="button"
                 className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/60 transition-colors hover:bg-white/10 hover:text-white"
@@ -380,18 +409,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <header className={cn("z-30 hidden shrink-0 flex-wrap items-center gap-2 px-5 py-2.5 lg:flex", path === "/overview" ? "bg-[var(--card)]" : "bg-[var(--background)]")}>
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-4 text-left text-sm text-[var(--muted)] hover:bg-[var(--brand-100)] lg:max-w-md"
-            aria-label={t.shell.search}
-          >
-            <Search size={16} className="shrink-0" />
-            <span className="min-w-0 flex-1 truncate">{t.shell.search}</span>
-            <kbd className="shrink-0 rounded-lg border border-[var(--border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
-              {t.shell.searchHint}
-            </kbd>
-          </button>
+          {!maMode ? (
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-4 text-left text-sm text-[var(--muted)] hover:bg-[var(--brand-100)] lg:max-w-md"
+              aria-label={t.shell.search}
+            >
+              <Search size={16} className="shrink-0" />
+              <span className="min-w-0 flex-1 truncate">{t.shell.search}</span>
+              <kbd className="shrink-0 rounded-lg border border-[var(--border)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
+                {t.shell.searchHint}
+              </kbd>
+            </button>
+          ) : (
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--foreground)] lg:max-w-md">
+              {t.nav.tasks}
+            </p>
+          )}
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
             <div
@@ -436,13 +471,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             {user ? (
               <div className="hidden items-center gap-2 xl:flex">
-                <span
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ background: "var(--brand-500)" }}
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white hover:opacity-90"
+                  style={{ background: user.avatarColor || "var(--brand-500)" }}
                   title={user.name}
+                  aria-label={t.common.editProfile}
+                  onClick={() => setProfileOpen(true)}
                 >
                   {user.name.trim().charAt(0).toUpperCase()}
-                </span>
+                </button>
               </div>
             ) : null}
             <button
@@ -479,15 +517,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           navHidden && "is-hidden",
         )}
       >
-        <button
-          type="button"
-          onClick={() => setPaletteOpen(true)}
-          className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-3 text-left text-sm text-[var(--muted)]"
-          aria-label={t.shell.search}
-        >
-          <Search size={16} className="shrink-0" />
-          <span className="min-w-0 flex-1 truncate">{t.shell.searchShort}</span>
-        </button>
+        {!maMode ? (
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-transparent bg-[var(--search)] px-3 text-left text-sm text-[var(--muted)]"
+            aria-label={t.shell.search}
+          >
+            <Search size={16} className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{t.shell.searchShort}</span>
+          </button>
+        ) : (
+          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--foreground)]">{t.nav.tasks}</p>
+        )}
         <div
           role="group"
           aria-label={t.common.language}
@@ -508,12 +550,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-[var(--brand-50)]"
+          aria-label={t.common.logout}
+          onClick={() => {
+            logout();
+            router.replace("/login");
+          }}
+        >
+          <LogOut size={18} />
+        </button>
       </header>
       <nav className={cn("crm-bottom-nav fixed inset-x-3 bottom-[max(10px,env(safe-area-inset-bottom))] z-40 pt-[24px] lg:hidden", navHidden && "is-hidden")}>
-        <div className="crm-bottom-pill grid h-16 grid-cols-5">
+        <div
+          className={cn(
+            "crm-bottom-pill grid h-16",
+            mobile.length === 1
+              ? "grid-cols-1"
+              : mobile.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-5",
+          )}
+        >
           {mobile.map((item, index) => {
             const Icon = item.icon;
-            const raised = index === 2;
+            const raised =
+              mobile.length === 1 ? true : mobile.length === 2 ? false : index === 2;
             const on = active(item.href, path);
             const label = t.nav[item.key];
             const badge = item.href === "/students" ? navBadges["/students"] ?? 0 : 0;
@@ -533,18 +596,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
-      <a
-        href={ZALO_FOUNDER}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={t.nav.support}
-        title={t.nav.support}
-        className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] hover:bg-slate-50 lg:inline-flex"
-      >
-        <SupportIcon className="h-6 w-6" />
-      </a>
-      {/* FAB palette — mobile ẩn/hiện cùng bottom nav; desktop cố định trên Zalo */}
-      {!paletteOpen ? (
+      {!maMode ? (
+        <a
+          href={ZALO_FOUNDER}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={t.nav.support}
+          title={t.nav.support}
+          className="fixed right-5 bottom-5 z-40 hidden h-12 w-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] hover:bg-slate-50 lg:inline-flex"
+        >
+          <SupportIcon className="h-6 w-6" />
+        </a>
+      ) : null}
+      {/* FAB palette — ẩn khi MA (chỉ Tác vụ); mobile ẩn/hiện cùng bottom nav */}
+      {!maMode && !paletteOpen ? (
         <button
           type="button"
           className={cn(
@@ -560,6 +625,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </button>
       ) : null}
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 }

@@ -5,10 +5,11 @@ import { Layers, ListFilter, Search, UserRound } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
-import { canManageTasks } from "@/lib/access";
+import { canManageTasks, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
+import { useMaTasksData } from "@/lib/hooks/use-ma-tasks-data";
 import { useI18n } from "@/lib/i18n";
 import { taskPriorities, taskPriorityLabel, taskStatusLabel, taskStatuses } from "@/lib/labels";
 import { cn, initials, localDayKey, zaloHref } from "@/lib/utils";
@@ -42,12 +43,42 @@ export default function TasksPage() {
   const { lang, t } = useI18n();
   const me = useAuthStore((s) => s.user);
   const canEdit = canManageTasks(me?.role);
-  const tasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
-  const parents = useLiveQuery(() => db.taskParents.toArray(), []) ?? [];
+  const seeAll = canSeeAllTasks(me?.role);
+  const maMode = isMaStudioMode();
+  const ma = useMaTasksData(maMode);
+  const dexieTasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
+  const dexieParents = useLiveQuery(() => db.taskParents.toArray(), []) ?? [];
   const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
-  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
+  const dexieBranches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const { branchId: studioBranch } = useStudioBranch();
-  const staff = users.filter((u) => u.role === "owner" || u.role === "reception" || u.role === "teacher");
+  const rawTasks = maMode ? ma.tasks : dexieTasks;
+  const tasks = seeAll || maMode
+    ? rawTasks
+    : rawTasks.filter((task) => canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id));
+  const parents = maMode ? ma.parents : dexieParents;
+  const branches = maMode ? ma.branches : dexieBranches;
+  const staff = maMode
+    ? ma.staff.filter(
+        (u) =>
+          u.role === "boss" ||
+          u.role === "owner" ||
+          u.role === "reception" ||
+          u.role === "teacher" ||
+          u.role === "marketing" ||
+          u.role === "accountant",
+      )
+    : users.filter((u) => u.role === "owner" || u.role === "reception" || u.role === "teacher" || u.role === "accountant");
+  /** Chip filter user — cùng scope xem task (boss/owner = all). */
+  const filterStaff = useMemo(() => {
+    if (seeAll) return staff;
+    const ids = new Set<string>();
+    if (me?.id) ids.add(me.id);
+    for (const task of tasks) {
+      if (task.assigneeId) ids.add(task.assigneeId);
+      if (task.verifierId) ids.add(task.verifierId);
+    }
+    return staff.filter((u) => ids.has(u.id));
+  }, [seeAll, staff, tasks, me?.id]);
   const today = localDayKey();
   const soonDay = addDays(today, 2);
   const statuses = taskStatuses(lang);
@@ -129,13 +160,15 @@ export default function TasksPage() {
     if (groupBy === "assignee") {
       const ids = new Set(visible.map((task) => task.assigneeId || ""));
       for (const id of assignees) ids.add(id);
-      const people = staff.filter((person) => ids.has(person.id)).map((person) => ({ id: person.id, label: person.name }));
+      const people = filterStaff
+        .filter((person) => ids.has(person.id))
+        .map((person) => ({ id: person.id, label: person.name }));
       return ids.has("") ? [...people, { id: "", label: t.task.unassigned }] : people;
     }
     const ids = new Set(visible.map((task) => task.parentId || ""));
     const groups = parents.filter((parent) => ids.has(parent.id)).map((parent) => ({ id: parent.id, label: parent.name }));
     return ids.has("") ? [...groups, { id: "", label: t.task.noParent }] : groups;
-  }, [groupBy, statuses, visible, assignees, staff, parents, t.task.unassigned, t.task.noParent]);
+  }, [groupBy, statuses, visible, assignees, filterStaff, parents, t.task.unassigned, t.task.noParent]);
 
   function columnMatch(task: StudioTask, columnId: string) {
     if (groupBy === "assignee") return (task.assigneeId || "") === columnId;
@@ -151,7 +184,7 @@ export default function TasksPage() {
 
   function staffName(id: string) {
     if (!id) return t.task.unassigned;
-    return users.find((u) => u.id === id)?.name ?? id;
+    return staff.find((u) => u.id === id)?.name ?? id;
   }
 
   function branchName(id: string) {
@@ -167,8 +200,9 @@ export default function TasksPage() {
   async function onDrop(status: TaskStatus, taskId: string) {
     const task = tasks.find((row) => row.id === taskId);
     if (!task || task.status === status) return;
-    if (!canEdit && task.assigneeId !== me?.id) return;
+    if (!canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)) return;
     await moveTaskStatus(taskId, status);
+    if (maMode) await ma.reload();
   }
 
   return (
@@ -177,6 +211,8 @@ export default function TasksPage() {
         <div>
           <h1 className="crm-page-title">{t.task.title}</h1>
           <p className="mt-1 text-sm text-slate-500">{t.task.subtitle}</p>
+          {maMode && ma.loading ? <p className="mt-1 text-xs text-slate-400">…</p> : null}
+          {maMode && ma.error ? <p className="mt-1 text-xs text-rose-600">{ma.error}</p> : null}
           {!canEdit ? <p className="mt-1 text-xs text-slate-400">{t.task.viewOnly}</p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -218,7 +254,7 @@ export default function TasksPage() {
           >
             <UserRound size={16} />
           </button>
-          {staff.map((person, index) => {
+          {filterStaff.map((person, index) => {
             const on = assignees.includes(person.id);
             return (
               <button
@@ -392,8 +428,8 @@ export default function TasksPage() {
                       <select
                         className="h-9 rounded-xl border border-[var(--border)] bg-white px-2 text-sm"
                         value={task.status}
-                        disabled={!canEdit && task.assigneeId !== me?.id}
-                        onChange={(e) => void moveTaskStatus(task.id, e.target.value as TaskStatus)}
+                        disabled={!canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)}
+                        onChange={(e) => void onDrop(e.target.value as TaskStatus, task.id)}
                       >
                         {statuses.map((s) => (
                           <option key={s.id} value={s.id}>{s.label}</option>
@@ -411,7 +447,7 @@ export default function TasksPage() {
                     <td className="px-3 py-3">
                       <span className="inline-flex items-center gap-2 text-slate-600">
                         {(() => {
-                          const person = users.find((u) => u.id === task.assigneeId);
+                          const person = staff.find((u) => u.id === task.assigneeId);
                           return person ? (
                             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: person.avatarColor }}>{initials(person.name)}</span>
                           ) : (
@@ -464,7 +500,9 @@ export default function TasksPage() {
                     const overdue = task.status !== "done" && task.dueDay < today;
                     const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                     const assignee = users.find((u) => u.id === task.assigneeId);
-                    const movable = groupBy === "status" && (canEdit || task.assigneeId === me?.id);
+                    const movable =
+                      groupBy === "status" &&
+                      canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id);
                     const group = parentName(task.parentId);
                     return (
                       <li key={task.id}>
@@ -519,8 +557,13 @@ export default function TasksPage() {
           branches={branches}
           parents={parents}
           me={me}
-          canEdit={canEdit || (!!open && open.assigneeId === me?.id)}
+          canEdit={
+            canEdit ||
+            (!!open &&
+              canTouchTask(me?.role, { assigneeId: open.assigneeId, verifierId: open.verifierId ?? "" }, me?.id))
+          }
           onClose={() => { setCreating(false); setOpenId(null); }}
+          onMutated={() => { if (maMode) void ma.reload(); }}
         />
       ) : null}
     </div>
@@ -535,6 +578,7 @@ function TaskDrawer({
   me,
   canEdit,
   onClose,
+  onMutated,
 }: {
   task?: StudioTask;
   staff: User[];
@@ -543,14 +587,24 @@ function TaskDrawer({
   me: User | null | undefined;
   canEdit: boolean;
   onClose: () => void;
+  onMutated?: () => void;
 }) {
   const { lang, t } = useI18n();
-  const liveTask = useLiveQuery(() => (task ? db.tasks.get(task.id) : undefined), [task?.id]);
-  const current = liveTask ?? task;
+  const maMode = isMaStudioMode();
+  const liveTask = useLiveQuery(
+    () => (!maMode && task ? db.tasks.get(task.id) : undefined),
+    [task?.id, maMode],
+  );
+  const [maDetail, setMaDetail] = useState(task);
+  useEffect(() => {
+    setMaDetail(task);
+  }, [task]);
+  const current = maMode ? maDetail ?? task : liveTask ?? task;
   const [title, setTitle] = useState(task?.title ?? "");
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? "todo");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "medium");
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? "");
+  const [verifierId, setVerifierId] = useState(task?.verifierId ?? "");
   const { branchId: studioBranch } = useStudioBranch();
   const [branchId, setBranchId] = useState(task?.branchId ?? (studioBranch !== "all" ? studioBranch : ""));
   const [parentId, setParentId] = useState(task?.parentId ?? "");
@@ -574,12 +628,24 @@ function TaskDrawer({
   async function save() {
     if (!canEdit) return;
     const code = task
-      ? await updateTask({ id: task.id, title, status, priority, assigneeId, branchId, parentId, dueDay, note })
-      : await createTask({ title, status, priority, assigneeId, branchId, parentId, dueDay, note });
+      ? await updateTask({
+          id: task.id,
+          title,
+          status,
+          priority,
+          assigneeId,
+          verifierId,
+          branchId,
+          parentId,
+          dueDay,
+          note,
+        })
+      : await createTask({ title, status, priority, assigneeId, verifierId, branchId, parentId, dueDay, note });
     if (code) {
       setError(t.task.needTitle);
       return;
     }
+    onMutated?.();
     requestClose();
   }
 
@@ -592,6 +658,15 @@ function TaskDrawer({
     }
     setComment("");
     setCommentError("");
+    if (maMode) {
+      const { fetchMaTask } = await import("@/lib/api/crm-tasks");
+      try {
+        setMaDetail(await fetchMaTask(task.id));
+      } catch {
+        /* ignore */
+      }
+      onMutated?.();
+    }
   }
 
   async function addParent() {
@@ -605,6 +680,7 @@ function TaskDrawer({
     setNewParentName("");
     setParentError("");
     setAddingParent(false);
+    onMutated?.();
   }
 
   function staffName(id: string) {
@@ -679,6 +755,14 @@ function TaskDrawer({
           <Field label={t.task.assignee}>
             <select className={inputClass} value={assigneeId} disabled={!canEdit} onChange={(e) => setAssigneeId(e.target.value)}>
               <option value="">{t.task.unassigned}</option>
+              {staff.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t.task.verifier}>
+            <select className={inputClass} value={verifierId} disabled={!canEdit} onChange={(e) => setVerifierId(e.target.value)}>
+              <option value="">{t.task.unassignedVerifier}</option>
               {staff.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}

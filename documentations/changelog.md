@@ -1,9 +1,26 @@
 # Changelog
 
+## 2026-10-25
+
+- **Avatar màu:** staff CRM `avatar_color` (palette Jira) gán lúc tạo; login/staff/me trả về; shell/menu/tasks dùng màu đó.
+- **Login MA:** logo `public/brand/ma-dance-studio.jpg` trên form ma-login + ô chọn MA.
+- **Role kế toán** (`accountant`); task **người kiểm tra** (`verifierId`); list task: boss/owner xem all, còn lại assignee|verifier; profile MA `PATCH /me`.
+- **Profile:** click avatar (sidebar / header / `/menu`) → modal sửa họ tên · SĐT · email. MA gọi API; demo local.
+- **MA Staff quản lý:** `/staff` — sửa · đổi mật khẩu · khóa (`inactive`) · gán `branch_id` · chia sẻ sheet; nút **Tạo nhanh** mật khẩu `ma@`+4 số. Docs `ma-staff.md`.
+- **MA Boss tạo TK:** menu `/staff` chỉ boss (`authMode=ma`); form tạo username/password/role → `POST /crm/{org}/staff`. Nav sidebar + bottom 2 tab. Docs `ma-staff.md`.
+- **MA Tasks API:** `/tasks` khi `authMode=ma` gọi BE `/crm/{org}/tasks|task-parents|staff|branches` (JWT); demo vertical vẫn Dexie. Actions nhánh MA trong `lib/actions.ts`.
+
+## 2026-10-24
+
+- **MA nav:** `authMode=ma` → chỉ **Tác vụ** (sidebar / bottom / menu / guard path); ẩn CTA header, Zalo FAB, command palette; home = `/tasks`.
+- **Login MA → API:** form username/password gọi `POST /crm/login` (`NEXT_PUBLIC_CRM_API_URL`); bỏ checklist tài khoản nhanh. Lưu JWT + org localStorage. Vertical demo vẫn PIN Dexie.
+- **Login MA (UI):** ô **MA** trên màn pick; `authMode` `demo`|`ma`; AuthGate cho MA không cần vertical (tạm boot shell `nhay`).
+
 ## 2026-10-23
 
+- **Header mobile:** thêm CTA logout (icon) cạnh VI/EN.
+- **Ask Dolphin overview:** bỏ sticky / ẩn khi scroll — nằm cố định trong flow trang; chrome scroll chỉ còn search + bottom nav + FAB palette.
 - **FAB palette mobile:** hiện trên mobile (trên bottom nav), **ẩn/hiện cùng** menu khi scroll; desktop giữ cố định. `.crm-cmd-fab` không set `display` (tránh ghi đè utility).
-- **Ask Dolphin mobile:** sticky dưới search trên Tổng quan; ẩn/hiện cùng search + bottom nav (`stores/chrome-store.ts` + `.crm-mobile-ask`).
 - **Mobile chrome:** tab Tổng quan = logo Dolphin; thanh search AI nhích lên nhẹ và **ẩn/hiện cùng** bottom nav khi scroll.
 - **Lĩnh vực beauty:** thêm `spa` · `nails` · `salon` · `massage` (seed `data/{id}/`, DB riêng, chọn trên `/login`).
 - **Login gộp chọn lĩnh vực:** `/login` một trang — chọn lĩnh vực → loading Dolphin ~1s (logo + vòng progress) → form PIN. `/choose-vertical` redirect. AuthGate cho vào `/login` khi chưa có vertical; event `dolphin-crm-vertical` khi đổi lĩnh vực.

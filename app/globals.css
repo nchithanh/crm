@@ -536,17 +536,6 @@ a { text-decoration: none; }
   transform: translate3d(0, calc(-100% - 12px), 0);
   pointer-events: none;
 }
-/* Ask Dolphin (inner của sticky) — cùng nhịp ẩn với search / bottom nav; không gắn transform lên wrapper sticky */
-.crm-mobile-ask {
-  transition: transform 200ms ease-out;
-  will-change: transform;
-}
-@media (max-width: 1023px) {
-  .crm-mobile-ask.is-hidden {
-    transform: translate3d(0, calc(-100% - 56px), 0);
-    pointer-events: none;
-  }
-}
 .crm-bottom-pill {
   border-radius: 9999px;
   background: #fff;
@@ -715,8 +704,7 @@ a { text-decoration: none; }
   .crm-cmd-fab .crm-cmd-fab-spark { animation: none; }
   .crm-cmd-fab,
   .crm-bottom-nav,
-  .crm-mobile-top,
-  .crm-mobile-ask { transition: none; }
+  .crm-mobile-top { transition: none; }
 }
 
 button.bg-emerald-500,

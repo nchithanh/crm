@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell";
 import { BootSplash } from "@/components/boot-splash";
 import { I18nProvider } from "@/lib/i18n";
+import { getStoredAuthMode } from "@/lib/auth-mode";
 import { bootStudio, resetBoot } from "@/lib/seed";
 import {
   applyVerticalTheme,
@@ -71,6 +72,11 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function onVertical(e: Event) {
       const id = (e as CustomEvent).detail;
+      if (id == null || id === "") {
+        setVertical(null);
+        document.documentElement.removeAttribute("data-vertical");
+        return;
+      }
       if (!isVertical(id)) return;
       setVertical(id);
       applyVerticalTheme(id);
@@ -82,7 +88,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
     if (publicJoin) return;
-    if (!vertical) {
+    const maMode = getStoredAuthMode() === "ma";
+    // demo cần vertical; MA chỉ cần authMode (chưa gắn Dexie vertical).
+    if (!vertical && !maMode) {
       if (!isAuthEntry(path)) router.replace("/login");
       return;
     }
@@ -97,11 +105,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
-    if (!vertical && !publicJoin) {
+    const maMode = getStoredAuthMode() === "ma";
+    if (!vertical && !publicJoin && !maMode) {
       setReady(true);
       setSlow(false);
       return;
     }
+    // MA tạm boot shell `nhay` tới khi API CRM thay Dexie.
     const bootVertical = vertical ?? "nhay";
     let cancelled = false;
     if (!user && !publicJoin) setReady(true);

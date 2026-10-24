@@ -1,3 +1,11 @@
+import {
+  apiAddComment,
+  apiCreateParent,
+  apiCreateTask,
+  apiMoveTaskStatus,
+  apiUpdateTask,
+} from "@/lib/api/crm-tasks";
+import { isMaStudioMode } from "@/lib/access";
 import { db } from "@/lib/db";
 import { canJoinAtSession, deductsCredit } from "@/lib/rules";
 import { nextReceiptNo } from "@/lib/receipt";
@@ -328,6 +336,14 @@ export async function toggleTask(id: string, done: boolean) {
 export async function createTaskParent(name: string) {
   const trimmed = name.trim();
   if (!trimmed) return { error: "fields" as const };
+  if (isMaStudioMode()) {
+    try {
+      const row = await apiCreateParent(trimmed);
+      return { id: row.id };
+    } catch {
+      return { error: "fields" as const };
+    }
+  }
   const id = uid("tp");
   await db.taskParents.add({ id, name: trimmed });
   return { id };
@@ -338,6 +354,7 @@ export async function createTask(input: {
   status?: TaskStatus;
   priority?: TaskPriority;
   assigneeId?: string;
+  verifierId?: string;
   branchId?: string;
   parentId?: string;
   dueDay?: string;
@@ -345,12 +362,31 @@ export async function createTask(input: {
 }) {
   const title = input.title.trim();
   if (!title) return "fields";
+  if (isMaStudioMode()) {
+    try {
+      await apiCreateTask({
+        title,
+        status: input.status ?? "todo",
+        priority: input.priority ?? "medium",
+        assigneeId: input.assigneeId,
+        verifierId: input.verifierId,
+        branchId: input.branchId,
+        parentId: input.parentId,
+        dueDay: input.dueDay || localDayKey(),
+        note: (input.note ?? "").trim(),
+      });
+      return "";
+    } catch {
+      return "fields";
+    }
+  }
   await db.tasks.add({
     id: uid("tk"),
     title,
     status: input.status ?? "todo",
     priority: input.priority ?? "medium",
     assigneeId: input.assigneeId ?? "",
+    verifierId: input.verifierId ?? "",
     branchId: input.branchId ?? "",
     parentId: input.parentId ?? "",
     dueDay: input.dueDay || localDayKey(),
@@ -361,9 +397,18 @@ export async function createTask(input: {
 }
 
 export async function addTaskComment(input: { taskId: string; actorId: string; text: string }) {
-  const task = await db.tasks.get(input.taskId);
   const text = input.text.trim();
-  if (!task || !text || !input.actorId) return "fields";
+  if (!text || !input.actorId) return "fields";
+  if (isMaStudioMode()) {
+    try {
+      await apiAddComment(input.taskId, text);
+      return "";
+    } catch {
+      return "fields";
+    }
+  }
+  const task = await db.tasks.get(input.taskId);
+  if (!task) return "fields";
   await db.tasks.update(input.taskId, {
     comments: [
       ...(task.comments ?? []),
@@ -379,6 +424,7 @@ export async function updateTask(input: {
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId: string;
+  verifierId: string;
   branchId: string;
   parentId: string;
   dueDay: string;
@@ -386,11 +432,20 @@ export async function updateTask(input: {
 }) {
   const title = input.title.trim();
   if (!title || !input.dueDay) return "fields";
+  if (isMaStudioMode()) {
+    try {
+      await apiUpdateTask({ ...input, title, note: input.note.trim() });
+      return "";
+    } catch {
+      return "fields";
+    }
+  }
   await db.tasks.update(input.id, {
     title,
     status: input.status,
     priority: input.priority,
     assigneeId: input.assigneeId,
+    verifierId: input.verifierId,
     branchId: input.branchId,
     parentId: input.parentId,
     dueDay: input.dueDay,
@@ -400,6 +455,10 @@ export async function updateTask(input: {
 }
 
 export async function moveTaskStatus(id: string, status: TaskStatus) {
+  if (isMaStudioMode()) {
+    await apiMoveTaskStatus(id, status);
+    return;
+  }
   await db.tasks.update(id, { status });
 }
 

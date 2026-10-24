@@ -6,9 +6,9 @@ import type { Role, RoleAccess } from "@/types";
 /** Role có cột trong ma trận (Boss luôn bật, không lưu override). */
 export type MatrixRole = Exclude<Role, "boss">;
 
-export const MATRIX_ROLES: MatrixRole[] = ["owner", "reception", "teacher", "marketing"];
+export const MATRIX_ROLES: MatrixRole[] = ["owner", "reception", "teacher", "marketing", "accountant"];
 
-export const ALL_ROLES: Role[] = ["boss", "owner", "reception", "teacher", "marketing"];
+export const ALL_ROLES: Role[] = ["boss", "owner", "reception", "teacher", "marketing", "accountant"];
 
 /** Nav keys trong ma trận — gồm Phân quyền. */
 export type AccessNavKey = NavItemKey | "access";
@@ -132,10 +132,38 @@ export const DEFAULT_NAV: Record<MatrixRole, Record<AccessNavKey, boolean>> = {
     guide: yes,
     access: no,
   },
+  accountant: {
+    overview: yes,
+    schedule: no,
+    students: yes,
+    courses: no,
+    classes: no,
+    teachers: no,
+    rooms: no,
+    packages: no,
+    midEnroll: no,
+    promotion: no,
+    care: no,
+    campaigns: no,
+    financeOverview: yes,
+    collect: yes,
+    debts: yes,
+    revenue: yes,
+    ledger: yes,
+    payAccounts: yes,
+    attend: no,
+    attendQr: no,
+    holds: no,
+    tasks: yes,
+    bookings: no,
+    ai: yes,
+    guide: yes,
+    access: no,
+  },
 };
 
 function moneyRoles(role: MatrixRole) {
-  return role === "owner" || role === "reception";
+  return role === "owner" || role === "reception" || role === "accountant";
 }
 
 /** Mặc định tab trong trang. */

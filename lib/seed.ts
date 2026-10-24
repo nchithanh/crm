@@ -665,6 +665,7 @@ export async function ensureSeed(id: VerticalId) {
       status,
       priority: row.priority ?? "medium",
       assigneeId: row.assigneeId ?? "",
+      verifierId: (row as { verifierId?: string }).verifierId ?? "",
       branchId: row.branchId ?? "",
       parentId: row.parentId ?? "",
       dueDay: dayFromOffset(row.offset),

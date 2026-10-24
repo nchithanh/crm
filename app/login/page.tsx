@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, X } from "lucide-react";
+import { Lock, UserRound, X } from "lucide-react";
 import anhDemo from "@/data/anh/demo-accounts.json";
 import boiDemo from "@/data/boi/demo-accounts.json";
 import massageDemo from "@/data/massage/demo-accounts.json";
@@ -13,12 +13,18 @@ import salonDemo from "@/data/salon/demo-accounts.json";
 import spaDemo from "@/data/spa/demo-accounts.json";
 import { BrandMark } from "@/components/brand-mark";
 import { Button, inputClass } from "@/components/ui";
+import { getStoredAuthMode, setStoredAuthMode } from "@/lib/auth-mode";
 import { fill } from "@/lib/copy";
 import { reopenDb } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { roleLabel } from "@/lib/labels";
 import { bootStudio } from "@/lib/seed";
-import { setStoredVertical, VERTICALS, type VerticalId } from "@/lib/vertical";
+import {
+  clearStoredVertical,
+  setStoredVertical,
+  VERTICALS,
+  type VerticalId,
+} from "@/lib/vertical";
 import { useAuthStore } from "@/stores/auth-store";
 
 const demos: Record<VerticalId, typeof nhayDemo> = {
@@ -49,13 +55,14 @@ const LOAD_MS = 1000;
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const guideSrc = `${basePath}/brand/download-app-guide.jpg`;
+const maLogoSrc = `${basePath}/brand/ma-dance-studio.jpg`;
 
 type InstallPrompt = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Step = "pick" | "loading" | "pin";
+type Step = "pick" | "loading" | "pin" | "ma-login";
 
 function runningAsApp() {
   return (
@@ -93,14 +100,21 @@ function DolphinCircleLoader({ title, hint }: { title: string; hint: string }) {
 export default function LoginPage() {
   const router = useRouter();
   const loginWithPin = useAuthStore((s) => s.loginWithPin);
+  const loginWithMaCredentials = useAuthStore((s) => s.loginWithMaCredentials);
   const [step, setStep] = useState<Step>("pick");
   const [pin, setPin] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   const [hideInstall, setHideInstall] = useState(false);
   const { lang, t } = useI18n();
   const [vertical, setVertical] = useState<VerticalId | null>(null);
+
+  useEffect(() => {
+    if (getStoredAuthMode() === "ma") setStep("ma-login");
+  }, []);
 
   useEffect(() => {
     if (runningAsApp()) setHideInstall(true);
@@ -141,6 +155,7 @@ export default function LoginPage() {
   const demo = option ? demos[option.id] : [];
 
   function pickVertical(id: VerticalId) {
+    setStoredAuthMode("demo");
     setStoredVertical(id);
     reopenDb(id);
     setVertical(id);
@@ -149,9 +164,21 @@ export default function LoginPage() {
     setStep("loading");
   }
 
+  function pickMa() {
+    setStoredAuthMode("ma");
+    clearStoredVertical();
+    setVertical(null);
+    setUsername("");
+    setPassword("");
+    setError("");
+    setStep("ma-login");
+  }
+
   function backToPick() {
     setStep("pick");
     setPin("");
+    setUsername("");
+    setPassword("");
     setError("");
   }
 
@@ -165,6 +192,27 @@ export default function LoginPage() {
           <p className="crm-lead mt-2 max-w-md">{t.choose.lead}</p>
         </div>
         <ul className="flex w-full flex-col gap-3">
+          <li>
+            <button
+              type="button"
+              className="crm-card-elev flex w-full items-center gap-3 border-[var(--brand-300)] px-4 py-3.5 text-left transition hover:border-[var(--brand-500)] hover:bg-[var(--brand-50)]"
+              onClick={pickMa}
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-[var(--border)]">
+                <img
+                  src={maLogoSrc}
+                  alt=""
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 object-contain"
+                />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-base font-bold text-slate-900">{t.choose.maLabel}</span>
+                <span className="mt-0.5 block text-sm text-slate-700">{t.choose.ma}</span>
+              </span>
+            </button>
+          </li>
           {VERTICALS.map((v) => (
             <li key={v.id}>
               <button
@@ -195,6 +243,86 @@ export default function LoginPage() {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center bg-[var(--background)] px-4">
         <DolphinCircleLoader title={t.login.loading} hint={option?.label ?? t.login.loadingHint} />
+      </main>
+    );
+  }
+
+  if (step === "ma-login") {
+    return (
+      <main
+        className={`mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-[var(--background)] px-4 py-8 ${hideInstall ? "" : "pb-28"}`}
+      >
+        <div className="crm-card-elev rounded-3xl px-5 py-8 sm:px-8">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src={maLogoSrc}
+              alt="MA Dance Studio"
+              width={200}
+              height={200}
+              className="h-auto w-[min(11rem,55vw)] object-contain"
+            />
+            <h1 className="crm-page-title mt-5">{t.login.maTitle}</h1>
+            <p className="mt-1.5 text-sm text-[var(--muted)]">{t.login.maHint}</p>
+          </div>
+
+          <form
+            className="mt-8 space-y-3"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setError("");
+              try {
+                await loginWithMaCredentials(username, password);
+                router.replace("/tasks");
+              } catch (err) {
+                const message = err instanceof Error ? err.message : "";
+                if (message === "bad-credentials") setError(t.login.badCredentials);
+                else if (message === "network") setError(t.login.networkFail);
+                else setError(t.login.fail);
+              }
+            }}
+          >
+            <label className="block min-w-0 text-sm">
+              <span className="text-slate-500">{t.login.usernameLabel}</span>
+              <span className="relative mt-1 block">
+                <UserRound size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--muted)]" />
+                <input
+                  className={`${inputClass} pl-9`}
+                  autoComplete="username"
+                  placeholder={t.login.usernamePlaceholder}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoFocus
+                />
+              </span>
+            </label>
+            <label className="block min-w-0 text-sm">
+              <span className="text-slate-500">{t.login.passwordLabel}</span>
+              <span className="relative mt-1 block">
+                <Lock size={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--muted)]" />
+                <input
+                  className={`${inputClass} pl-9`}
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder={t.login.passwordPlaceholder}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </span>
+            </label>
+            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+            <Button className="w-full" type="submit">
+              {t.login.enter}
+            </Button>
+          </form>
+
+          <button
+            type="button"
+            className="mt-6 w-full text-center text-sm font-semibold text-[var(--brand-500)]"
+            onClick={backToPick}
+          >
+            {t.login.switch}
+          </button>
+        </div>
       </main>
     );
   }

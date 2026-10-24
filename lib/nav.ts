@@ -19,6 +19,7 @@ import {
   Settings2,
   Sparkles,
   Tags,
+  UserPlus,
   UserRound,
   Users,
   Wallet,
@@ -110,6 +111,9 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 export const NAV_AI: NavItem = { href: "/dolphin-ai", key: "ai", icon: Sparkles };
+
+/** MA only — hiện qua canSeeNavHref (boss). Không đưa vào NavItemKey / ma trận demo. */
+export const NAV_MA_STAFF = { href: "/staff", key: "staff" as const, icon: UserPlus };
 
 export const NAV_SYSTEM: NavGroup = {
   title: "system",
