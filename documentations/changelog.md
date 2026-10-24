@@ -2,6 +2,7 @@
 
 ## 2026-10-25
 
+- **ENV prod:** `.env.production` → `NEXT_PUBLIC_CRM_API_URL=https://api.dolphin-software.io.vn` (bake lúc build). Local vẫn `.env.local` / `.env.example` → localhost.
 - **Avatar màu:** staff CRM `avatar_color` (palette Jira) gán lúc tạo; login/staff/me trả về; shell/menu/tasks dùng màu đó.
 - **Login MA:** logo `public/brand/ma-dance-studio.jpg` trên form ma-login + ô chọn MA.
 - **Role kế toán** (`accountant`); task **người kiểm tra** (`verifierId`); list task: boss/owner xem all, còn lại assignee|verifier; profile MA `PATCH /me`.
