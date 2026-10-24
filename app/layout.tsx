@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthGate } from "@/components/auth-gate";
+import { BuildUpdateGuard } from "@/components/build-update-guard";
 import "./globals.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
+        <BuildUpdateGuard />
         <AuthGate>{children}</AuthGate>
       </body>
     </html>

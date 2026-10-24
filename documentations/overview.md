@@ -8,4 +8,6 @@ Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Nền app tin
 
 Live custom domain: https://crm.dolphin-software.io.vn/ (Pages root, không `basePath`). CI: `.github/workflows/deploy-pages.yml`.
 
+**Cache / app ghim màn hình chính:** GitHub Pages không cho set `Cache-Control` HTML. Build ghi `public/build-id.json` (SHA); client `BuildUpdateGuard` fetch `cache: no-store` khi mở/focus — đổi id thì `location.reload()`. Lần đầu ghim sau deploy mới có thể cần mở app 1 lần (hoặc xóa icon rồi Add to Home Screen lại).
+
 PIN: Boss `9999` · quản lý `1234` · lễ tân `1111` · giáo viên `2222` · Marketing `5555`. Phân quyền: `/settings/access` (`context/access.md`).
