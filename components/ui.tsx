@@ -9,12 +9,29 @@ export const ctaOutline =
 export const ctaGhost =
   "inline-flex h-12 min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-[var(--muted)] hover:bg-[var(--brand-50)] active:opacity-90";
 
+/** Spinner brand — dùng trên nút `busy` / chỗ đang gọi API. design-language.md Loading / API */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent",
+        className,
+      )}
+      aria-hidden
+    />
+  );
+}
+
 export function Button({
   className,
   variant = "primary",
+  busy = false,
+  disabled,
+  children,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "outline" | "ghost";
+  busy?: boolean;
 }) {
   return (
     <button
@@ -25,8 +42,13 @@ export function Button({
         variant === "ghost" && ctaGhost,
         className,
       )}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
       {...props}
-    />
+    >
+      {busy ? <Spinner /> : null}
+      {children}
+    </button>
   );
 }
 

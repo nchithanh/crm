@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Share2 } from "lucide-react";
-import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
+import { Badge, Button, Card, Field, Spinner, inputClass } from "@/components/ui";
 import { isMaStudioMode } from "@/lib/access";
 import {
   apiCreateStaff,
@@ -314,8 +314,8 @@ export default function StaffPage() {
             </Field>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
             {ok ? <p className="text-sm text-green-700">{ok}</p> : null}
-            <Button type="submit" disabled={saving}>
-              {t.staffPage.submit}
+            <Button type="submit" busy={saving}>
+              {saving ? t.common.saving : t.staffPage.submit}
             </Button>
           </form>
         </Card>
@@ -366,12 +366,13 @@ export default function StaffPage() {
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
             {ok ? <p className="text-sm text-green-700">{ok}</p> : null}
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={saving}>
-                {t.staffPage.save}
+              <Button type="submit" busy={saving}>
+                {saving ? t.common.saving : t.staffPage.save}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                disabled={saving}
                 onClick={() => {
                   setEditingId(null);
                   setDraft(emptyDraft);
@@ -411,12 +412,13 @@ export default function StaffPage() {
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
             {ok ? <p className="text-sm text-green-700">{ok}</p> : null}
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={saving}>
-                {t.staffPage.save}
+              <Button type="submit" busy={saving}>
+                {saving ? t.common.saving : t.staffPage.save}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                disabled={saving}
                 onClick={() => {
                   setPasswordId(null);
                   setNewPassword("");
@@ -434,7 +436,9 @@ export default function StaffPage() {
           {t.staffPage.listTitle}
         </h2>
         {loading ? (
-          <p className="mt-3 text-sm text-slate-400">…</p>
+          <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-slate-400">
+            <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
+          </p>
         ) : staff.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">{t.staffPage.empty}</p>
         ) : (
@@ -510,7 +514,7 @@ export default function StaffPage() {
                         type="button"
                         variant="ghost"
                         className="h-9 min-h-9 px-3 text-xs"
-                        disabled={saving}
+                        busy={saving}
                         onClick={() => void onToggleLock(u)}
                       >
                         {u.status === "active" ? t.staffPage.lock : t.staffPage.unlock}

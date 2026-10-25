@@ -107,10 +107,10 @@ export function ProfileSheet({ open, onClose }: { open: boolean; onClose: () => 
         {error ? <p className="text-sm text-rose-600">{error}</p> : null}
         {saved ? <p className="text-sm text-green-700">{t.profile.saved}</p> : null}
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button type="submit" disabled={saving}>
-            {t.common.save}
+          <Button type="submit" busy={saving}>
+            {saving ? t.common.saving : t.common.save}
           </Button>
-          <Button type="button" variant="outline" onClick={requestClose}>
+          <Button type="button" variant="outline" disabled={saving} onClick={requestClose}>
             {t.common.close}
           </Button>
         </div>

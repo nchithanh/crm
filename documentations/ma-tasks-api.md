@@ -17,7 +17,8 @@ SoT endpoint BE: `products/saas/backend/context/crm/tasks.md` (+ `branches.md`, 
 
 ## Hành vi UI
 
-- List/board + drawer: data từ hook; sau save/comment/drag status → `reload` (comment thêm `GET /tasks/{id}` để có comments).
+- List/board + drawer: data từ hook; **mở drawer** MA `GET /tasks/{id}` để lấy comments (list không embed). Sau save/comment/drag status → `reload`; gửi comment → fetch lại detail.
+- **Nhóm việc:** `TaskParentDrawer` — POST/PATCH/DELETE `/task-parents`. Comment: textarea (ảnh R2 TODO).
 - Demo vertical (`authMode=demo`): vẫn IndexedDB như cũ.
 - Boss thêm menu tạo TK: xem `ma-staff.md`.
 - Task có `verifier_id` (Người kiểm tra). Scope list: boss/owner = all; role khác = assignee hoặc verifier = mình.

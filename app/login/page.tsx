@@ -106,6 +106,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [signingIn, setSigningIn] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   const [hideInstall, setHideInstall] = useState(false);
@@ -269,7 +270,9 @@ export default function LoginPage() {
             className="mt-8 space-y-3"
             onSubmit={async (e) => {
               e.preventDefault();
+              if (signingIn) return;
               setError("");
+              setSigningIn(true);
               try {
                 await loginWithMaCredentials(username, password);
                 router.replace("/tasks");
@@ -278,6 +281,8 @@ export default function LoginPage() {
                 if (message === "bad-credentials") setError(t.login.badCredentials);
                 else if (message === "network") setError(t.login.networkFail);
                 else setError(t.login.fail);
+              } finally {
+                setSigningIn(false);
               }
             }}
           >
@@ -290,6 +295,7 @@ export default function LoginPage() {
                   autoComplete="username"
                   placeholder={t.login.usernamePlaceholder}
                   value={username}
+                  disabled={signingIn}
                   onChange={(e) => setUsername(e.target.value)}
                   autoFocus
                 />
@@ -305,13 +311,14 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   placeholder={t.login.passwordPlaceholder}
                   value={password}
+                  disabled={signingIn}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </span>
             </label>
             {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-            <Button className="w-full" type="submit">
-              {t.login.enter}
+            <Button className="w-full" type="submit" busy={signingIn}>
+              {signingIn ? t.common.working : t.login.enter}
             </Button>
           </form>
 

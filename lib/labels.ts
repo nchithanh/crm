@@ -89,6 +89,15 @@ export function taskStatusLabel(status: TaskStatus, lang: Lang) {
   return taskStatuses(lang).find((s) => s.id === status)?.label ?? status;
 }
 
+/** Nền/viền/chữ theo status — List select, Board header, drawer. */
+export function taskStatusClass(status: TaskStatus) {
+  if (status === "inprogress") return "border-sky-300 bg-sky-50 text-sky-700";
+  if (status === "verify") return "border-[var(--brand-300)] bg-[var(--brand-50)] text-[var(--brand-700)]";
+  if (status === "feedback") return "border-amber-300 bg-amber-50 text-amber-800";
+  if (status === "done") return "border-green-300 bg-green-50 text-green-700";
+  return "border-slate-300 bg-slate-50 text-slate-600";
+}
+
 export function taskPriorities(lang: Lang) {
   const t = copy[lang].task;
   return [
@@ -100,4 +109,17 @@ export function taskPriorities(lang: Lang) {
 
 export function taskPriorityLabel(priority: TaskPriority, lang: Lang) {
   return taskPriorities(lang).find((p) => p.id === priority)?.label ?? priority;
+}
+
+export function taskPriorityClass(priority: TaskPriority) {
+  if (priority === "high") return "border-rose-300 bg-rose-50 text-rose-700";
+  if (priority === "medium") return "border-amber-300 bg-amber-50 text-amber-800";
+  return "border-slate-300 bg-slate-50 text-slate-600";
+}
+
+export function taskDueClass(status: TaskStatus, dueDay: string, today: string, soonDay: string) {
+  if (status === "done") return "border-slate-200 bg-slate-50 text-slate-500";
+  if (dueDay < today) return "border-rose-300 bg-rose-50 text-rose-700";
+  if (dueDay <= soonDay) return "border-amber-300 bg-amber-50 text-amber-800";
+  return "";
 }

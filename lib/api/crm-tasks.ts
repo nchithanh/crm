@@ -135,6 +135,18 @@ export async function apiCreateParent(name: string): Promise<TaskParent> {
   return mapApiParent(res.data);
 }
 
+export async function apiUpdateParent(id: string, name: string): Promise<TaskParent> {
+  const res = await crmFetch<{ data: ApiParent }>(`/task-parents/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+  return mapApiParent(res.data);
+}
+
+export async function apiDeleteParent(id: string): Promise<void> {
+  await crmFetch(`/task-parents/${id}`, { method: "DELETE" });
+}
+
 export async function apiCreateTask(input: {
   title: string;
   status?: TaskStatus;

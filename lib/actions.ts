@@ -1,6 +1,8 @@
 import {
   apiAddComment,
   apiCreateParent,
+  apiDeleteParent,
+  apiUpdateParent,
   apiCreateTask,
   apiMoveTaskStatus,
   apiUpdateTask,
@@ -347,6 +349,37 @@ export async function createTaskParent(name: string) {
   const id = uid("tp");
   await db.taskParents.add({ id, name: trimmed });
   return { id };
+}
+
+export async function updateTaskParent(id: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || !id) return { error: "fields" as const };
+  if (isMaStudioMode()) {
+    try {
+      const row = await apiUpdateParent(id, trimmed);
+      return { id: row.id };
+    } catch {
+      return { error: "fields" as const };
+    }
+  }
+  await db.taskParents.update(id, { name: trimmed });
+  return { id };
+}
+
+export async function deleteTaskParent(id: string) {
+  if (!id) return { error: "fields" as const };
+  if (isMaStudioMode()) {
+    try {
+      await apiDeleteParent(id);
+      return {};
+    } catch {
+      return { error: "fields" as const };
+    }
+  }
+  const tasks = await db.tasks.where("parentId").equals(id).toArray();
+  await Promise.all(tasks.map((row) => db.tasks.update(row.id, { parentId: "" })));
+  await db.taskParents.delete(id);
+  return {};
 }
 
 export async function createTask(input: {

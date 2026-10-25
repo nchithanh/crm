@@ -1,24 +1,33 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Layers, ListFilter, Search, UserRound } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { FolderKanban, ListFilter, Search } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Badge, Button, Card, Field, inputClass } from "@/components/ui";
+import { Button, Card, Field, Spinner, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
+import {
+  TASK_FILTER_NONE_PARENT,
+  TaskFilterDrawer,
+  emptyTaskFilter,
+  taskFilterGroupCount,
+  type TaskFilterSelection,
+} from "@/components/task-filter-drawer";
+import { filterColorOf } from "@/components/filter-checklist";
+import { ParentChip, TaskParentDrawer } from "@/components/task-parent-drawer";
 import { canManageTasks, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
+import { fetchMaTask } from "@/lib/api/crm-tasks";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useMaTasksData } from "@/lib/hooks/use-ma-tasks-data";
 import { useI18n } from "@/lib/i18n";
-import { taskPriorities, taskPriorityLabel, taskStatusLabel, taskStatuses } from "@/lib/labels";
+import { taskDueClass, taskPriorities, taskPriorityClass, taskPriorityLabel, taskStatusClass, taskStatusLabel, taskStatuses } from "@/lib/labels";
 import { cn, initials, localDayKey, zaloHref } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type Mode = "list" | "board";
-type GroupBy = "status" | "assignee" | "parent";
 
 function addDays(base: string, delta: number) {
   const d = new Date(`${base}T12:00:00`);
@@ -31,12 +40,6 @@ function dueTone(status: TaskStatus, dueDay: string, today: string, soonDay: str
   if (dueDay < today) return "font-semibold text-rose-600";
   if (dueDay <= soonDay) return "font-semibold text-amber-600";
   return "text-slate-600";
-}
-
-function priorityTone(priority: TaskPriority): "danger" | "warn" | "neutral" {
-  if (priority === "high") return "danger";
-  if (priority === "medium") return "warn";
-  return "neutral";
 }
 
 export default function TasksPage() {
@@ -82,32 +85,15 @@ export default function TasksPage() {
   const today = localDayKey();
   const soonDay = addDays(today, 2);
   const statuses = taskStatuses(lang);
-  const priorities = taskPriorities(lang);
 
   const [mode, setMode] = useState<Mode>("board");
   const [q, setQ] = useState("");
-  const [assignees, setAssignees] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">("all");
-  const [parentFilter, setParentFilter] = useState("all");
-  const [overdueOnly, setOverdueOnly] = useState(false);
-  const [groupBy, setGroupBy] = useState<GroupBy>("status");
+  const [filters, setFilters] = useState<TaskFilterSelection>(emptyTaskFilter);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [groupOpen, setGroupOpen] = useState(false);
+  const [parentOpen, setParentOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onDoc(event: MouseEvent) {
-      if (!barRef.current?.contains(event.target as Node)) {
-        setFilterOpen(false);
-        setGroupOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
+  const [movingId, setMovingId] = useState<string | null>(null);
 
   const parentMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -115,30 +101,35 @@ export default function TasksPage() {
     return map;
   }, [parents]);
 
+  const branchTasks = useMemo(
+    () => tasks.filter((task) => studioBranch === "all" || !task.branchId || task.branchId === studioBranch),
+    [tasks, studioBranch],
+  );
+
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return tasks
+    return branchTasks
       .filter((task) => {
-        if (assignees.length > 0 && !assignees.includes(task.assigneeId)) return false;
+        if (filters.assignees.length > 0 && !filters.assignees.includes(task.assigneeId || "")) return false;
         if (needle && !task.title.toLowerCase().includes(needle)) return false;
-        if (statusFilter !== "all" && task.status !== statusFilter) return false;
-        if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
-        if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
-        if (parentFilter === "none" && task.parentId) return false;
-        if (parentFilter !== "all" && parentFilter !== "none" && task.parentId !== parentFilter) return false;
-        if (overdueOnly && !(task.status !== "done" && task.dueDay < today)) return false;
+        if (filters.statuses.length > 0 && !filters.statuses.includes(task.status)) return false;
+        if (filters.priorities.length > 0 && !filters.priorities.includes(task.priority)) return false;
+        if (filters.parents.length > 0) {
+          const parentKey = task.parentId || TASK_FILTER_NONE_PARENT;
+          if (!filters.parents.includes(parentKey)) return false;
+        }
+        if (filters.overdueOnly && !(task.status !== "done" && task.dueDay < today)) return false;
         return true;
       })
       .sort((a, b) => {
         if (a.dueDay !== b.dueDay) return a.dueDay.localeCompare(b.dueDay);
         return a.title.localeCompare(b.title);
       });
-  }, [tasks, q, assignees, statusFilter, priorityFilter, studioBranch, parentFilter, overdueOnly, today]);
+  }, [branchTasks, q, filters, today]);
 
   const parentProgress = useMemo(() => {
-    const source = tasks.filter((task) => {
-      if (studioBranch !== "all" && task.branchId && task.branchId !== studioBranch) return false;
-      if (assignees.length > 0 && !assignees.includes(task.assigneeId)) return false;
+    const source = branchTasks.filter((task) => {
+      if (filters.assignees.length > 0 && !filters.assignees.includes(task.assigneeId || "")) return false;
       return Boolean(task.parentId);
     });
     return parents
@@ -149,35 +140,18 @@ export default function TasksPage() {
         const pool = openRows.length ? openRows : rows;
         const earliest = pool.map((task) => task.dueDay).sort()[0] ?? "";
         return { id: parent.id, name: parent.name, total: rows.length, done, earliest };
-      })
-      .filter((group) => (parentFilter === "all" ? group.total > 0 : group.id === parentFilter));
-  }, [tasks, parents, studioBranch, assignees, parentFilter]);
+      });
+  }, [branchTasks, parents, filters.assignees]);
 
-  const filterCount = (statusFilter !== "all" ? 1 : 0) + (priorityFilter !== "all" ? 1 : 0) + (parentFilter !== "all" ? 1 : 0) + (overdueOnly ? 1 : 0);
+  const filterCount = taskFilterGroupCount(filters);
+  const columns = statuses;
 
-  const columns = useMemo(() => {
-    if (groupBy === "status") return statuses.map((col) => ({ id: col.id, label: col.label }));
-    if (groupBy === "assignee") {
-      const ids = new Set(visible.map((task) => task.assigneeId || ""));
-      for (const id of assignees) ids.add(id);
-      const people = filterStaff
-        .filter((person) => ids.has(person.id))
-        .map((person) => ({ id: person.id, label: person.name }));
-      return ids.has("") ? [...people, { id: "", label: t.task.unassigned }] : people;
-    }
-    const ids = new Set(visible.map((task) => task.parentId || ""));
-    const groups = parents.filter((parent) => ids.has(parent.id)).map((parent) => ({ id: parent.id, label: parent.name }));
-    return ids.has("") ? [...groups, { id: "", label: t.task.noParent }] : groups;
-  }, [groupBy, statuses, visible, assignees, filterStaff, parents, t.task.unassigned, t.task.noParent]);
-
-  function columnMatch(task: StudioTask, columnId: string) {
-    if (groupBy === "assignee") return (task.assigneeId || "") === columnId;
-    if (groupBy === "parent") return (task.parentId || "") === columnId;
-    return task.status === columnId;
-  }
-
-  function toggleAssignee(id: string) {
-    setAssignees((cur) => (cur.includes(id) ? cur.filter((item) => item !== id) : [...cur, id]));
+  function toggleFilter(group: keyof Omit<TaskFilterSelection, "overdueOnly">, id: string) {
+    setFilters((cur) => {
+      const list = cur[group] as string[];
+      const next = list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+      return { ...cur, [group]: next };
+    });
   }
 
   const open = tasks.find((task) => task.id === openId) ?? null;
@@ -199,10 +173,15 @@ export default function TasksPage() {
 
   async function onDrop(status: TaskStatus, taskId: string) {
     const task = tasks.find((row) => row.id === taskId);
-    if (!task || task.status === status) return;
+    if (!task || task.status === status || movingId) return;
     if (!canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)) return;
-    await moveTaskStatus(taskId, status);
-    if (maMode) await ma.reload();
+    setMovingId(taskId);
+    try {
+      await moveTaskStatus(taskId, status);
+      if (maMode) await ma.reload();
+    } finally {
+      setMovingId(null);
+    }
   }
 
   return (
@@ -211,7 +190,11 @@ export default function TasksPage() {
         <div>
           <h1 className="crm-page-title">{t.task.title}</h1>
           <p className="mt-1 text-sm text-slate-500">{t.task.subtitle}</p>
-          {maMode && ma.loading ? <p className="mt-1 text-xs text-slate-400">…</p> : null}
+          {maMode && ma.loading ? (
+            <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-slate-400">
+              <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
+            </p>
+          ) : null}
           {maMode && ma.error ? <p className="mt-1 text-xs text-rose-600">{ma.error}</p> : null}
           {!canEdit ? <p className="mt-1 text-xs text-slate-400">{t.task.viewOnly}</p> : null}
         </div>
@@ -223,6 +206,12 @@ export default function TasksPage() {
             {t.task.board}
           </Button>
           {canEdit ? (
+            <Button type="button" variant="outline" onClick={() => { setParentOpen(true); setFilterOpen(false); }}>
+              <FolderKanban size={16} />
+              {t.task.parentManage}
+            </Button>
+          ) : null}
+          {canEdit ? (
             <Button type="button" onClick={() => { setCreating(true); setOpenId(null); }}>
               {t.task.create}
             </Button>
@@ -230,7 +219,7 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <div ref={barRef} className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <label className="flex h-10 min-w-[12rem] flex-1 items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 sm:max-w-xs sm:flex-none">
           <Search size={16} className="shrink-0 text-slate-400" aria-hidden />
           <input
@@ -241,152 +230,45 @@ export default function TasksPage() {
             onChange={(e) => setQ(e.target.value)}
           />
         </label>
-        <div className="flex min-w-0 items-center" role="group" aria-label={t.task.assignee}>
-          <button
-            type="button"
-            title={t.task.allStaff}
-            aria-pressed={assignees.length === 0}
-            onClick={() => setAssignees([])}
-            className={cn(
-              "relative z-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white bg-slate-200 text-slate-500",
-              assignees.length === 0 && "z-10 ring-2 ring-[var(--brand-500)]",
-            )}
-          >
-            <UserRound size={16} />
-          </button>
-          {filterStaff.map((person, index) => {
-            const on = assignees.includes(person.id);
-            return (
-              <button
-                key={person.id}
-                type="button"
-                title={person.name}
-                aria-pressed={on}
-                onClick={() => toggleAssignee(person.id)}
-                className={cn(
-                  "relative -ml-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white text-[10px] font-bold text-white",
-                  on && "z-10 ring-2 ring-[var(--brand-500)]",
-                )}
-                style={{ background: person.avatarColor, zIndex: on ? 10 : index }}
-              >
-                {initials(person.name)}
-              </button>
-            );
-          })}
-        </div>
-        <div className="relative">
-          <button
-            type="button"
-            aria-expanded={filterOpen}
-            onClick={() => { setFilterOpen((v) => !v); setGroupOpen(false); }}
-            className={cn(
-              "inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold",
-              filterOpen || filterCount > 0 ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
-            )}
-          >
+        <span className="relative">
+          <Button type="button" variant="outline" onClick={() => setFilterOpen(true)}>
             <ListFilter size={16} />
             {t.task.filter}
-            {filterCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[11px] font-bold text-white tabular-nums">{filterCount}</span>
-            ) : null}
-          </button>
-          {filterOpen ? (
-            <div className="absolute left-0 z-30 mt-1 w-64 rounded-xl border border-[var(--border)] bg-white p-3">
-              <label className="block text-xs font-semibold text-slate-500">
-                {t.task.status}
-                <select className={`${inputClass} mt-1`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "all")}>
-                  <option value="all">{t.task.status}</option>
-                  {statuses.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                </select>
-              </label>
-              <label className="mt-2 block text-xs font-semibold text-slate-500">
-                {t.task.priority}
-                <select className={`${inputClass} mt-1`} value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "all")}>
-                  <option value="all">{t.task.priority}</option>
-                  {priorities.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </label>
-              <label className="mt-2 block text-xs font-semibold text-slate-500">
-                {t.task.parent}
-                <select className={`${inputClass} mt-1`} value={parentFilter} onChange={(e) => setParentFilter(e.target.value)}>
-                  <option value="all">{t.task.allParents}</option>
-                  <option value="none">{t.task.noParent}</option>
-                  {parents.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </label>
-              <button
-                type="button"
-                onClick={() => setOverdueOnly((v) => !v)}
-                className={cn(
-                  "mt-3 h-10 w-full rounded-xl border text-sm font-semibold",
-                  overdueOnly ? "border-[var(--brand-500)] bg-[var(--brand-50)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-600",
-                )}
-              >
-                {t.task.overdueOnly}
-              </button>
-            </div>
+          </Button>
+          {filterCount ? (
+            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-[11px] font-bold text-white tabular-nums">{filterCount}</span>
           ) : null}
-        </div>
-        <div className="relative">
-          <button
-            type="button"
-            aria-expanded={groupOpen}
-            onClick={() => { setGroupOpen((v) => !v); setFilterOpen(false); }}
-            className={cn(
-              "inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-3 text-sm font-semibold",
-              groupOpen ? "border-[var(--brand-500)] text-[var(--brand-600)]" : "border-[var(--border)] text-slate-700",
-            )}
-          >
-            <Layers size={16} />
-            {t.task.group}
-          </button>
-          {groupOpen ? (
-            <div className="absolute left-0 z-30 mt-1 w-52 rounded-xl border border-[var(--border)] bg-white p-1" role="menu">
-              {([
-                ["status", t.task.groupStatus],
-                ["assignee", t.task.groupAssignee],
-                ["parent", t.task.groupParent],
-              ] as const).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={groupBy === id}
-                  onClick={() => { setGroupBy(id); setGroupOpen(false); }}
-                  className={cn(
-                    "block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold",
-                    groupBy === id ? "bg-[var(--brand-50)] text-[var(--brand-700)]" : "text-slate-700 hover:bg-slate-50",
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        </span>
       </div>
 
-      {(groupBy === "parent" || (parentFilter !== "all" && parentFilter !== "none")) && parentProgress.length > 0 ? (
+      {parents.length > 0 ? (
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {parentProgress.map((group) => {
-            const pct = group.total === 0 ? 0 : Math.round((group.done / group.total) * 100);
+          {parents.map((parent) => {
+            const group = parentProgress.find((row) => row.id === parent.id);
+            const total = group?.total ?? 0;
+            const done = group?.done ?? 0;
+            const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+            const on = filters.parents.includes(parent.id);
             return (
               <button
-                key={group.id}
+                key={parent.id}
                 type="button"
-                onClick={() => setParentFilter(group.id)}
-                className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left"
+                onClick={() => toggleFilter("parents", parent.id)}
+                className={cn(
+                  "rounded-xl border bg-[var(--card)] px-3 py-2.5 text-left",
+                  on ? "border-[var(--brand-500)]" : "border-[var(--border)]",
+                )}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-800">{group.name}</p>
-                  <p className="text-xs tabular-nums text-slate-500">{fill(t.task.progressCount, { done: group.done, total: group.total })}</p>
+                  <ParentChip id={parent.id} name={parent.name} />
+                  <p className="text-xs tabular-nums text-slate-500">{fill(t.task.progressCount, { done, total })}</p>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-[var(--brand-500)]" style={{ width: `${pct}%` }} />
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: filterColorOf(parent.id) }} />
                 </div>
                 <p className="mt-1 text-xs text-slate-400">
                   {t.task.progress} · {pct}%
-                  {group.earliest ? ` · ${fill(t.task.earliestDue, { day: group.earliest })}` : ""}
+                  {group?.earliest ? ` · ${fill(t.task.earliestDue, { day: group.earliest })}` : ""}
                 </p>
               </button>
             );
@@ -408,7 +290,7 @@ export default function TasksPage() {
             </thead>
             <tbody>
               {columns.map((col) => {
-                const rows = visible.filter((task) => columnMatch(task, col.id));
+                const rows = visible.filter((task) => task.status === col.id);
                 if (rows.length === 0) return null;
                 return (
                 <Fragment key={col.id}>
@@ -420,15 +302,24 @@ export default function TasksPage() {
                   <Fragment key={task.id}>
                   {index === 0 ? (
                     <tr>
-                      <td colSpan={7} className="bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">{col.label}</td>
+                      <td colSpan={7} className="bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500">
+                        <span className={cn("inline-flex rounded-full border px-2 py-0.5", taskStatusClass(col.id))}>{col.label}</span>
+                      </td>
                     </tr>
                   ) : null}
-                  <tr className="border-t border-slate-100 hover:bg-slate-50">
-                    <td className="px-3 py-3">
+                  <tr
+                    className="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+                    onClick={() => { setOpenId(task.id); setCreating(false); }}
+                  >
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                       <select
-                        className="h-9 rounded-xl border border-[var(--border)] bg-white px-2 text-sm"
+                        className={cn("h-9 rounded-xl border px-2 text-sm font-semibold", taskStatusClass(task.status))}
                         value={task.status}
-                        disabled={!canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)}
+                        disabled={
+                          Boolean(movingId) ||
+                          !canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)
+                        }
+                        aria-busy={movingId === task.id || undefined}
                         onChange={(e) => void onDrop(e.target.value as TaskStatus, task.id)}
                       >
                         {statuses.map((s) => (
@@ -437,12 +328,10 @@ export default function TasksPage() {
                       </select>
                     </td>
                     <td className="px-3 py-3">
-                      <button type="button" className="text-left font-medium text-slate-900" onClick={() => { setOpenId(task.id); setCreating(false); }}>
-                        {task.title}
-                      </button>
+                      <span className="font-medium text-[var(--brand-600)]">{task.title}</span>
                     </td>
                     <td className="px-3 py-3">
-                      {group ? <Badge tone="neutral">{group}</Badge> : <span className="text-slate-400">—</span>}
+                      {task.parentId ? <ParentChip id={task.parentId} name={group} /> : <span className="text-slate-400">—</span>}
                     </td>
                     <td className="px-3 py-3">
                       <span className="inline-flex items-center gap-2 text-slate-600">
@@ -458,7 +347,9 @@ export default function TasksPage() {
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <Badge tone={priorityTone(task.priority)}>{taskPriorityLabel(task.priority, lang)}</Badge>
+                      <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", taskPriorityClass(task.priority))}>
+                        {taskPriorityLabel(task.priority, lang)}
+                      </span>
                     </td>
                     <td className={cn("px-3 py-3 tabular-nums", dueTone(task.status, task.dueDay, today, soonDay))}>
                       {t.task.due}: {task.dueDay}
@@ -478,21 +369,20 @@ export default function TasksPage() {
       ) : (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
           {columns.map((col) => {
-            const rows = visible.filter((task) => columnMatch(task, col.id));
+            const rows = visible.filter((task) => task.status === col.id);
             return (
               <section
                 key={col.id}
                 className="w-[272px] shrink-0 rounded-xl border border-[var(--border)] bg-slate-50 p-2"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
-                  if (groupBy !== "status") return;
                   e.preventDefault();
                   const id = e.dataTransfer.getData("text/task");
-                  if (id) void onDrop(col.id as TaskStatus, id);
+                  if (id) void onDrop(col.id, id);
                 }}
               >
                 <div className="flex items-center justify-between px-2 py-2">
-                  <h2 className="text-sm font-bold text-slate-700">{col.label}</h2>
+                  <h2 className={cn("text-sm font-bold inline-flex rounded-full border px-2 py-0.5", taskStatusClass(col.id))}>{col.label}</h2>
                   <span className="rounded-xl bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
                 </div>
                 <ul className="space-y-2">
@@ -500,28 +390,35 @@ export default function TasksPage() {
                     const overdue = task.status !== "done" && task.dueDay < today;
                     const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
                     const assignee = users.find((u) => u.id === task.assigneeId);
-                    const movable =
-                      groupBy === "status" &&
-                      canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id);
+                    const movable = canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id);
                     const group = parentName(task.parentId);
                     return (
                       <li key={task.id}>
                         <button
                           type="button"
-                          draggable={movable}
+                          draggable={movable && !movingId}
                           onDragStart={(e) => {
                             e.dataTransfer.setData("text/task", task.id);
                             e.dataTransfer.effectAllowed = "move";
                           }}
                           onClick={() => { setOpenId(task.id); setCreating(false); }}
-                          className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left"
+                          className={cn(
+                            "w-full rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left",
+                            movingId === task.id && "opacity-60",
+                          )}
+                          aria-busy={movingId === task.id || undefined}
                         >
-                          {group ? (
-                            <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--brand-600)]">{group}</p>
+                          {task.parentId ? (
+                            <p className="mb-1"><ParentChip id={task.parentId} name={group} /></p>
                           ) : null}
-                          <p className="text-sm font-semibold text-slate-900">{task.title}</p>
+                          <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                            {movingId === task.id ? <Spinner className="text-[var(--brand-500)]" /> : null}
+                            {task.title}
+                          </p>
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                            <Badge tone={priorityTone(task.priority)}>{taskPriorityLabel(task.priority, lang)}</Badge>
+                            <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", taskPriorityClass(task.priority))}>
+                              {taskPriorityLabel(task.priority, lang)}
+                            </span>
                             <span className={cn("text-xs tabular-nums", dueTone(task.status, task.dueDay, today, soonDay))}>
                               {t.task.due}: {task.dueDay}{overdue ? ` · ${t.pages.overdue}` : soon ? ` · ${t.task.dueSoon}` : ""}
                             </span>
@@ -549,6 +446,30 @@ export default function TasksPage() {
           })}
         </div>
       )}
+
+      {parentOpen ? (
+        <TaskParentDrawer
+          parents={parents}
+          tasks={branchTasks}
+          canEdit={canEdit}
+          onClose={() => setParentOpen(false)}
+          onChanged={() => { if (maMode) void ma.reload(); }}
+        />
+      ) : null}
+
+      {filterOpen ? (
+        <TaskFilterDrawer
+          tasks={branchTasks}
+          staff={filterStaff}
+          parents={parents}
+          selection={filters}
+          onToggle={toggleFilter}
+          onToggleOverdue={() => setFilters((cur) => ({ ...cur, overdueOnly: !cur.overdueOnly }))}
+          onClear={() => setFilters(emptyTaskFilter())}
+          onClose={() => setFilterOpen(false)}
+          visibleCount={visible.length}
+        />
+      ) : null}
 
       {creating || open ? (
         <TaskDrawer
@@ -596,9 +517,30 @@ function TaskDrawer({
     [task?.id, maMode],
   );
   const [maDetail, setMaDetail] = useState(task);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   useEffect(() => {
+    if (!maMode || !task?.id) {
+      setMaDetail(task);
+      setCommentsLoading(false);
+      return;
+    }
+    let cancelled = false;
     setMaDetail(task);
-  }, [task]);
+    setCommentsLoading(true);
+    void fetchMaTask(task.id)
+      .then((row) => {
+        if (!cancelled) setMaDetail(row);
+      })
+      .catch(() => {
+        /* giữ snapshot list */
+      })
+      .finally(() => {
+        if (!cancelled) setCommentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [maMode, task?.id]);
   const current = maMode ? maDetail ?? task : liveTask ?? task;
   const [title, setTitle] = useState(task?.title ?? "");
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? "todo");
@@ -616,71 +558,92 @@ function TaskDrawer({
   const [newParentName, setNewParentName] = useState("");
   const [parentError, setParentError] = useState("");
   const [addingParent, setAddingParent] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [parentBusy, setParentBusy] = useState(false);
 
   const assignee = staff.find((u) => u.id === (assigneeId || current?.assigneeId));
   const phone = assignee?.phone?.trim() ?? "";
   const callHref = phone ? `tel:${phone.replace(/\s/g, "")}` : "";
   const zalo = phone ? zaloHref(phone) : "";
-  const comments = [...(current?.comments ?? [])].sort((a, b) => b.day.localeCompare(a.day));
+  const comments = [...(current?.comments ?? [])].sort((a, b) => {
+    if (a.day !== b.day) return b.day.localeCompare(a.day);
+    return b.id.localeCompare(a.id, undefined, { numeric: true });
+  });
 
   const { leaving, requestClose } = useOverlayClose(onClose);
 
   async function save() {
-    if (!canEdit) return;
-    const code = task
-      ? await updateTask({
-          id: task.id,
-          title,
-          status,
-          priority,
-          assigneeId,
-          verifierId,
-          branchId,
-          parentId,
-          dueDay,
-          note,
-        })
-      : await createTask({ title, status, priority, assigneeId, verifierId, branchId, parentId, dueDay, note });
-    if (code) {
-      setError(t.task.needTitle);
-      return;
+    if (!canEdit || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const code = task
+        ? await updateTask({
+            id: task.id,
+            title,
+            status,
+            priority,
+            assigneeId,
+            verifierId,
+            branchId,
+            parentId,
+            dueDay,
+            note,
+          })
+        : await createTask({ title, status, priority, assigneeId, verifierId, branchId, parentId, dueDay, note });
+      if (code) {
+        setError(t.task.needTitle);
+        return;
+      }
+      onMutated?.();
+      requestClose();
+    } finally {
+      setSaving(false);
     }
-    onMutated?.();
-    requestClose();
   }
 
   async function sendComment() {
-    if (!task || !me?.id) return;
-    const code = await addTaskComment({ taskId: task.id, actorId: me.id, text: comment });
-    if (code) {
-      setCommentError(t.task.needComment);
-      return;
-    }
-    setComment("");
+    if (!task || !me?.id || commentBusy) return;
+    setCommentBusy(true);
     setCommentError("");
-    if (maMode) {
-      const { fetchMaTask } = await import("@/lib/api/crm-tasks");
-      try {
-        setMaDetail(await fetchMaTask(task.id));
-      } catch {
-        /* ignore */
+    try {
+      const code = await addTaskComment({ taskId: task.id, actorId: me.id, text: comment });
+      if (code) {
+        setCommentError(t.task.needComment);
+        return;
       }
-      onMutated?.();
+      setComment("");
+      if (maMode) {
+        try {
+          setMaDetail(await fetchMaTask(task.id));
+        } catch {
+          /* ignore */
+        }
+        onMutated?.();
+      }
+    } finally {
+      setCommentBusy(false);
     }
   }
 
   async function addParent() {
-    if (!canEdit) return;
-    const result = await createTaskParent(newParentName);
-    if ("error" in result) {
-      setParentError(t.task.needParentName);
-      return;
-    }
-    setParentId(result.id);
-    setNewParentName("");
+    if (!canEdit || parentBusy) return;
+    setParentBusy(true);
     setParentError("");
-    setAddingParent(false);
-    onMutated?.();
+    try {
+      const result = await createTaskParent(newParentName);
+      if ("error" in result) {
+        setParentError(t.task.needParentName);
+        return;
+      }
+      setParentId(result.id);
+      setNewParentName("");
+      setAddingParent(false);
+      onMutated?.();
+    } finally {
+      setParentBusy(false);
+    }
   }
 
   function staffName(id: string) {
@@ -712,10 +675,10 @@ function TaskDrawer({
 
         <div className="mt-4 grid gap-3">
           <Field label={t.task.titleField}>
-            <input className={inputClass} value={title} disabled={!canEdit} onChange={(e) => setTitle(e.target.value)} />
+            <input className={inputClass} value={title} disabled={!canEdit || saving} onChange={(e) => setTitle(e.target.value)} />
           </Field>
           <Field label={t.task.parent}>
-            <select className={inputClass} value={parentId} disabled={!canEdit} onChange={(e) => setParentId(e.target.value)}>
+            <select className={cn(inputClass, "font-semibold")} value={parentId} disabled={!canEdit || saving} onChange={(e) => setParentId(e.target.value)} style={parentId ? { borderColor: filterColorOf(parentId), color: filterColorOf(parentId) } : undefined}>
               <option value="">{t.task.noParent}</option>
               {parents.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -730,8 +693,8 @@ function TaskDrawer({
                 </Field>
                 {parentError ? <p className="text-sm text-rose-700">{parentError}</p> : null}
                 <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => { setAddingParent(false); setParentError(""); }}>{t.common.cancel}</Button>
-                  <Button type="button" onClick={() => void addParent()}>{t.task.createParent}</Button>
+                  <Button type="button" variant="outline" disabled={parentBusy} onClick={() => { setAddingParent(false); setParentError(""); }}>{t.common.cancel}</Button>
+                  <Button type="button" busy={parentBusy} onClick={() => void addParent()}>{parentBusy ? t.common.saving : t.task.createParent}</Button>
                 </div>
               </div>
             ) : (
@@ -739,21 +702,21 @@ function TaskDrawer({
             )
           ) : null}
           <Field label={t.task.status}>
-            <select className={inputClass} value={status} disabled={!canEdit} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
+            <select className={cn(inputClass, "font-semibold", taskStatusClass(status))} value={status} disabled={!canEdit || saving} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
               {taskStatuses(lang).map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
               ))}
             </select>
           </Field>
           <Field label={t.task.priority}>
-            <select className={inputClass} value={priority} disabled={!canEdit} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+            <select className={cn(inputClass, "font-semibold", taskPriorityClass(priority))} value={priority} disabled={!canEdit || saving} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
               {taskPriorities(lang).map((p) => (
                 <option key={p.id} value={p.id}>{p.label}</option>
               ))}
             </select>
           </Field>
           <Field label={t.task.assignee}>
-            <select className={inputClass} value={assigneeId} disabled={!canEdit} onChange={(e) => setAssigneeId(e.target.value)}>
+            <select className={inputClass} value={assigneeId} disabled={!canEdit || saving} onChange={(e) => setAssigneeId(e.target.value)}>
               <option value="">{t.task.unassigned}</option>
               {staff.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
@@ -761,7 +724,7 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.task.verifier}>
-            <select className={inputClass} value={verifierId} disabled={!canEdit} onChange={(e) => setVerifierId(e.target.value)}>
+            <select className={inputClass} value={verifierId} disabled={!canEdit || saving} onChange={(e) => setVerifierId(e.target.value)}>
               <option value="">{t.task.unassignedVerifier}</option>
               {staff.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
@@ -769,7 +732,7 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.common.branch}>
-            <select className={inputClass} value={branchId} disabled={!canEdit} onChange={(e) => setBranchId(e.target.value)}>
+            <select className={inputClass} value={branchId} disabled={!canEdit || saving} onChange={(e) => setBranchId(e.target.value)}>
               <option value="">—</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -777,16 +740,16 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.task.due}>
-            <input className={inputClass} type="date" value={dueDay} disabled={!canEdit} onChange={(e) => setDueDay(e.target.value)} />
+            <input className={cn(inputClass, "font-semibold", taskDueClass(status, dueDay, localDayKey(), addDays(localDayKey(), 2)))} type="date" value={dueDay} disabled={!canEdit || saving} onChange={(e) => setDueDay(e.target.value)} />
           </Field>
           <Field label={t.task.note}>
-            <input className={inputClass} value={note} disabled={!canEdit} onChange={(e) => setNote(e.target.value)} />
+            <input className={inputClass} value={note} disabled={!canEdit || saving} onChange={(e) => setNote(e.target.value)} />
           </Field>
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
           {canEdit ? (
             <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={requestClose}>{t.common.cancel}</Button>
-              <Button type="button" onClick={() => void save()}>{t.common.save}</Button>
+              <Button type="button" variant="outline" disabled={saving} onClick={requestClose}>{t.common.cancel}</Button>
+              <Button type="button" busy={saving} onClick={() => void save()}>{saving ? t.common.saving : t.common.save}</Button>
             </div>
           ) : (
             <p className="text-sm text-slate-500">{taskStatusLabel(status, lang)}</p>
@@ -797,30 +760,42 @@ function TaskDrawer({
           <section className="mt-8 border-t border-[var(--border)] pt-4">
             <h3 className="text-sm font-bold text-slate-800">{t.task.comments}</h3>
             <ul className="mt-3 space-y-3">
-              {comments.length === 0 ? (
+              {commentsLoading ? (
+                <li className="inline-flex items-center gap-1.5 text-sm text-slate-400">
+                  <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
+                </li>
+              ) : comments.length === 0 ? (
                 <li className="text-sm text-slate-400">{t.task.noComments}</li>
               ) : (
                 comments.map((c) => (
                   <li key={c.id} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
                     <p className="text-xs text-slate-400">{c.day} · {staffName(c.actorId)}</p>
-                    <p className="mt-1 text-sm text-slate-700">{c.text}</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{c.text}</p>
                   </li>
                 ))
               )}
             </ul>
             {me?.id ? (
               <div className="mt-3 grid gap-2">
-                <input
-                  className={inputClass}
+                <textarea
+                  className={cn(inputClass, "h-auto min-h-24 py-2")}
                   placeholder={t.task.commentPlaceholder}
                   value={comment}
+                  disabled={commentBusy}
+                  rows={4}
                   onChange={(e) => setComment(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") void sendComment();
+                    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      void sendComment();
+                    }
                   }}
                 />
+                <p className="text-xs text-slate-400">{t.task.commentHint}</p>
                 {commentError ? <p className="text-sm text-rose-700">{commentError}</p> : null}
-                <Button type="button" onClick={() => void sendComment()}>{t.task.sendComment}</Button>
+                <Button type="button" busy={commentBusy} onClick={() => void sendComment()}>
+                  {commentBusy ? t.common.saving : t.task.sendComment}
+                </Button>
               </div>
             ) : null}
           </section>

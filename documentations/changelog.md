@@ -2,6 +2,15 @@
 
 ## 2026-10-25
 
+- **Tasks:** bỏ nút Group (group-by assignee/parent); list + board cố định theo trạng thái. Nhóm việc vẫn qua **Nhóm việc**.
+- **Tasks parent:** nút **Nhóm việc** + drawer tạo/sửa/xóa; thẻ parent luôn hiện (màu hash + tiến độ).
+- **Tasks comment:** textarea xuống hàng, `pre-wrap`; Ctrl+Enter gửi. Ảnh R2 chưa làm.
+- **Tasks input màu:** ưu tiên / hạn / nhóm việc phân biệt như status.
+- **Tasks status màu:** todo xám · in progress sky · verify brand · feedback amber · done xanh (`taskStatusClass`) — List select, Board header, drawer.
+- **Tasks List:** click cả hàng mở drawer; select trạng thái không mở (stopPropagation).
+- **Tasks comment:** mở drawer MA gọi `GET /tasks/{id}` để hiện lịch sử comment (list không trả comments).
+- **Tasks filter:** drawer kiểu Google Calendar như `/schedule` (`TaskFilterDrawer` + `filter-checklist.tsx`); multi-select người nhận / trạng thái / ưu tiên / nhóm / quá hạn; bỏ dropdown + hàng avatar.
+- **Loading / API:** SoT `context/design-language.md` — `Button` `busy` + `Spinner`; gắn tạo/sửa task, comment, parent, đổi status, staff, profile, login MA.
 - **App ghim / cache:** `scripts/write-build-id.mjs` + `BuildUpdateGuard` — Pages không set Cache-Control HTML; standalone reload khi `build-id.json` đổi.
 - **ENV prod:** `.env.production` → `NEXT_PUBLIC_CRM_API_URL=https://api.dolphin-software.io.vn` (bake lúc build). Local vẫn `.env.local` / `.env.example` → localhost.
 - **Avatar màu:** staff CRM `avatar_color` (palette Jira) gán lúc tạo; login/staff/me trả về; shell/menu/tasks dùng màu đó.

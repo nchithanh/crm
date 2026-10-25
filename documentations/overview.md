@@ -2,7 +2,7 @@
 
 Local-first (demo vertical + Dexie). **MA Dance:** login API + `/tasks` qua CRM Laravel (`ma-tasks-api.md`); boss thêm `/staff` tạo TK (`ma-staff.md`). Accent `#5d5cc4` cho mọi lĩnh vực. Thanh dưới mobile là viên nổi.
 
-Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Nền app tint lavender `#f6f5fc`, khối trắng bo 12–16px + bóng mềm, badge pill, bottom nav 5 mục. SoT: `context/design-language.md`. Students = chip + hàng avatar + drawer; Overview = lời chào + KPI + buổi sắp tới. **Ctrl+K / ⌘K** = Command Palette AI-style (giữa màn; Gợi ý nhanh / Hành động / Gần đây). Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`.
+Product: **Dolphin Edu CRM**. Terminology: **Khóa** / **Buổi**. Nền app tint lavender `#f6f5fc`, khối trắng bo 12–16px + bóng mềm, badge pill, bottom nav 5 mục. SoT: `context/design-language.md` (mục **Loading / API**: mọi thao tác gọi API phải `Button busy` / spinner ngay lúc bấm). `/tasks` bộ lọc drawer kiểu Google Calendar như `/schedule`. Students = chip + hàng avatar + drawer; Overview = lời chào + KPI + buổi sắp tới. **Ctrl+K / ⌘K** = Command Palette AI-style (giữa màn; Gợi ý nhanh / Hành động / Gần đây). Canonical: `/overview` `/revenue` `/collections` `/dolphin-ai`.
 
 `npm run dev` → http://127.0.0.1:3014
 
