@@ -14,6 +14,7 @@ import { nextReceiptNo } from "@/lib/receipt";
 import { conflictLabel, sessionDates, sessionStatus } from "@/lib/schedule";
 import { isSubscriptionValid } from "@/lib/subscription";
 import { quotePromotion } from "@/lib/promotions";
+import { diffActivities, existingActivity, makeActivity, taskSnapshot } from "@/lib/task-activity";
 import { isMinor, localDayKey, uid, weekdayShort } from "@/lib/utils";
 import { makeLinkSlug, sourceLabel } from "@/lib/social-cta";
 import type {
@@ -387,11 +388,13 @@ export async function createTask(input: {
   status?: TaskStatus;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeIds?: string[];
   verifierId?: string;
   branchId?: string;
   parentId?: string;
   dueDay?: string;
   note?: string;
+  actorId?: string;
 }) {
   const title = input.title.trim();
   if (!title) return "fields";
@@ -401,7 +404,8 @@ export async function createTask(input: {
         title,
         status: input.status ?? "todo",
         priority: input.priority ?? "medium",
-        assigneeId: input.assigneeId,
+        assigneeId: input.assigneeIds?.[0] ?? input.assigneeId,
+        assigneeIds: input.assigneeIds ?? (input.assigneeId ? [input.assigneeId] : []),
         verifierId: input.verifierId,
         branchId: input.branchId,
         parentId: input.parentId,
@@ -418,13 +422,15 @@ export async function createTask(input: {
     title,
     status: input.status ?? "todo",
     priority: input.priority ?? "medium",
-    assigneeId: input.assigneeId ?? "",
+    assigneeId: (input.assigneeIds?.[0] ?? input.assigneeId) ?? "",
+    assigneeIds: input.assigneeIds ?? (input.assigneeId ? [input.assigneeId] : []),
     verifierId: input.verifierId ?? "",
     branchId: input.branchId ?? "",
     parentId: input.parentId ?? "",
     dueDay: input.dueDay || localDayKey(),
     note: (input.note ?? "").trim(),
     comments: [],
+    activity: [makeActivity({ kind: "created", actorId: input.actorId, toValue: title })],
   });
   return "";
 }
@@ -442,10 +448,12 @@ export async function addTaskComment(input: { taskId: string; actorId: string; t
   }
   const task = await db.tasks.get(input.taskId);
   if (!task) return "fields";
+  const comment = { id: uid("tc"), day: localDayKey(), actorId: input.actorId, text, at: new Date().toISOString() };
   await db.tasks.update(input.taskId, {
-    comments: [
-      ...(task.comments ?? []),
-      { id: uid("tc"), day: localDayKey(), actorId: input.actorId, text },
+    comments: [...(task.comments ?? []), comment],
+    activity: [
+      ...existingActivity(task),
+      makeActivity({ kind: "comment", actorId: input.actorId, text }),
     ],
   });
   return "";
@@ -457,11 +465,13 @@ export async function updateTask(input: {
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId: string;
+  assigneeIds?: string[];
   verifierId: string;
   branchId: string;
   parentId: string;
   dueDay: string;
   note: string;
+  actorId?: string;
 }) {
   const title = input.title.trim();
   if (!title || !input.dueDay) return "fields";
@@ -473,26 +483,40 @@ export async function updateTask(input: {
       return "fields";
     }
   }
-  await db.tasks.update(input.id, {
+  const current = await db.tasks.get(input.id);
+  const next = {
     title,
     status: input.status,
     priority: input.priority,
-    assigneeId: input.assigneeId,
+    assigneeId: input.assigneeIds?.[0] ?? input.assigneeId,
+    assigneeIds: input.assigneeIds ?? (input.assigneeId ? [input.assigneeId] : []),
     verifierId: input.verifierId,
     branchId: input.branchId,
     parentId: input.parentId,
     dueDay: input.dueDay,
     note: input.note.trim(),
+  };
+  const extra = current ? diffActivities(taskSnapshot(current), taskSnapshot(next), input.actorId) : [];
+  await db.tasks.update(input.id, {
+    ...next,
+    activity: [...(current ? existingActivity(current) : []), ...extra],
   });
   return "";
 }
 
-export async function moveTaskStatus(id: string, status: TaskStatus) {
+export async function moveTaskStatus(id: string, status: TaskStatus, actorId?: string) {
   if (isMaStudioMode()) {
     await apiMoveTaskStatus(id, status);
     return;
   }
-  await db.tasks.update(id, { status });
+  const current = await db.tasks.get(id);
+  const extra = current && current.status !== status
+    ? [makeActivity({ kind: "field", actorId, field: "status", fromValue: current.status, toValue: status })]
+    : [];
+  await db.tasks.update(id, {
+    status,
+    activity: current ? [...existingActivity(current), ...extra] : extra,
+  });
 }
 
 export async function payReceivable(input: {

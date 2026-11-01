@@ -2,6 +2,7 @@ import type { AccessNavKey } from "@/lib/access-defaults";
 import { ACCESS_NAV_KEYS } from "@/lib/access-defaults";
 import { getStoredAuthMode } from "@/lib/auth-mode";
 import type { TabKey } from "@/lib/tabs";
+import { taskAssigneeIds } from "@/lib/task-people";
 import { useAccessStore } from "@/stores/access-store";
 import type { Role } from "@/types";
 
@@ -66,10 +67,14 @@ export function canSeeAllTasks(role: Role | undefined) {
   return role === "boss" || role === "owner";
 }
 
-export function canTouchTask(role: Role | undefined, task: { assigneeId: string; verifierId?: string }, userId?: string) {
+export function canTouchTask(
+  role: Role | undefined,
+  task: { assigneeId?: string; assigneeIds?: string[]; verifierId?: string },
+  userId?: string,
+) {
   if (canManageTasks(role)) return true;
   if (!userId) return false;
-  return task.assigneeId === userId || task.verifierId === userId;
+  return taskAssigneeIds(task).includes(userId) || task.verifierId === userId;
 }
 
 export function canManagePaymentAccounts(role: Role | undefined) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { FolderKanban, ListFilter, Search } from "lucide-react";
+import { Check, FolderKanban, ListFilter, Search } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, Card, Field, Spinner, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
@@ -15,6 +15,8 @@ import {
 import { filterColorOf } from "@/components/filter-checklist";
 import { ParentChip, TaskParentDrawer } from "@/components/task-parent-drawer";
 import { canManageTasks, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
+import { mergeTaskActivity } from "@/lib/task-activity";
+import { taskAssigneeIds, taskMatchesAssigneeFilter } from "@/lib/task-people";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
 import { fetchMaTask } from "@/lib/api/crm-tasks";
 import { fill } from "@/lib/copy";
@@ -42,6 +44,47 @@ function dueTone(status: TaskStatus, dueDay: string, today: string, soonDay: str
   return "text-slate-600";
 }
 
+function AssigneeFaces({
+  ids,
+  staff,
+  emptyLabel,
+  moreLabel,
+}: {
+  ids: string[];
+  staff: User[];
+  emptyLabel: string;
+  moreLabel: (n: number) => string;
+}) {
+  const people = ids.map((id) => staff.find((u) => u.id === id)).filter((u): u is User => Boolean(u));
+  if (people.length === 0) {
+    return (
+      <span className="inline-flex items-center gap-2 text-slate-500">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500">—</span>
+        <span className="truncate text-xs">{emptyLabel}</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex min-w-0 items-center gap-2 text-slate-600">
+      <span className="flex shrink-0 -space-x-1.5">
+        {people.slice(0, 3).map((person) => (
+          <span
+            key={person.id}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-white"
+            style={{ background: person.avatarColor }}
+          >
+            {initials(person.name)}
+          </span>
+        ))}
+      </span>
+      <span className="truncate text-xs">
+        {people[0].name}
+        {people.length > 1 ? ` ${moreLabel(people.length - 1)}` : ""}
+      </span>
+    </span>
+  );
+}
+
 export default function TasksPage() {
   const { lang, t } = useI18n();
   const me = useAuthStore((s) => s.user);
@@ -57,7 +100,7 @@ export default function TasksPage() {
   const rawTasks = maMode ? ma.tasks : dexieTasks;
   const tasks = seeAll || maMode
     ? rawTasks
-    : rawTasks.filter((task) => canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id));
+    : rawTasks.filter((task) => canTouchTask(me?.role, task, me?.id));
   const parents = maMode ? ma.parents : dexieParents;
   const branches = maMode ? ma.branches : dexieBranches;
   const staff = maMode
@@ -77,7 +120,7 @@ export default function TasksPage() {
     const ids = new Set<string>();
     if (me?.id) ids.add(me.id);
     for (const task of tasks) {
-      if (task.assigneeId) ids.add(task.assigneeId);
+      for (const id of taskAssigneeIds(task)) ids.add(id);
       if (task.verifierId) ids.add(task.verifierId);
     }
     return staff.filter((u) => ids.has(u.id));
@@ -110,7 +153,7 @@ export default function TasksPage() {
     const needle = q.trim().toLowerCase();
     return branchTasks
       .filter((task) => {
-        if (filters.assignees.length > 0 && !filters.assignees.includes(task.assigneeId || "")) return false;
+        if (!taskMatchesAssigneeFilter(task, filters.assignees)) return false;
         if (needle && !task.title.toLowerCase().includes(needle)) return false;
         if (filters.statuses.length > 0 && !filters.statuses.includes(task.status)) return false;
         if (filters.priorities.length > 0 && !filters.priorities.includes(task.priority)) return false;
@@ -129,7 +172,7 @@ export default function TasksPage() {
 
   const parentProgress = useMemo(() => {
     const source = branchTasks.filter((task) => {
-      if (filters.assignees.length > 0 && !filters.assignees.includes(task.assigneeId || "")) return false;
+      if (!taskMatchesAssigneeFilter(task, filters.assignees)) return false;
       return Boolean(task.parentId);
     });
     return parents
@@ -156,11 +199,6 @@ export default function TasksPage() {
 
   const open = tasks.find((task) => task.id === openId) ?? null;
 
-  function staffName(id: string) {
-    if (!id) return t.task.unassigned;
-    return staff.find((u) => u.id === id)?.name ?? id;
-  }
-
   function branchName(id: string) {
     if (!id) return "—";
     return branches.find((b) => b.id === id)?.name ?? id;
@@ -174,10 +212,10 @@ export default function TasksPage() {
   async function onDrop(status: TaskStatus, taskId: string) {
     const task = tasks.find((row) => row.id === taskId);
     if (!task || task.status === status || movingId) return;
-    if (!canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)) return;
+    if (!canTouchTask(me?.role, task, me?.id)) return;
     setMovingId(taskId);
     try {
-      await moveTaskStatus(taskId, status);
+      await moveTaskStatus(taskId, status, me?.id);
       if (maMode) await ma.reload();
     } finally {
       setMovingId(null);
@@ -317,7 +355,7 @@ export default function TasksPage() {
                         value={task.status}
                         disabled={
                           Boolean(movingId) ||
-                          !canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id)
+                          !canTouchTask(me?.role, task, me?.id)
                         }
                         aria-busy={movingId === task.id || undefined}
                         onChange={(e) => void onDrop(e.target.value as TaskStatus, task.id)}
@@ -334,17 +372,12 @@ export default function TasksPage() {
                       {task.parentId ? <ParentChip id={task.parentId} name={group} /> : <span className="text-slate-400">—</span>}
                     </td>
                     <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-2 text-slate-600">
-                        {(() => {
-                          const person = staff.find((u) => u.id === task.assigneeId);
-                          return person ? (
-                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: person.avatarColor }}>{initials(person.name)}</span>
-                          ) : (
-                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500">—</span>
-                          );
-                        })()}
-                        {staffName(task.assigneeId)}
-                      </span>
+                      <AssigneeFaces
+                        ids={taskAssigneeIds(task)}
+                        staff={staff}
+                        emptyLabel={t.task.unassigned}
+                        moreLabel={(n) => fill(t.task.assigneeMore, { n })}
+                      />
                     </td>
                     <td className="px-3 py-3">
                       <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold", taskPriorityClass(task.priority))}>
@@ -389,8 +422,7 @@ export default function TasksPage() {
                   {rows.map((task) => {
                     const overdue = task.status !== "done" && task.dueDay < today;
                     const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
-                    const assignee = users.find((u) => u.id === task.assigneeId);
-                    const movable = canTouchTask(me?.role, { assigneeId: task.assigneeId, verifierId: task.verifierId ?? "" }, me?.id);
+                    const movable = canTouchTask(me?.role, task, me?.id);
                     const group = parentName(task.parentId);
                     return (
                       <li key={task.id}>
@@ -423,18 +455,13 @@ export default function TasksPage() {
                               {t.task.due}: {task.dueDay}{overdue ? ` · ${t.pages.overdue}` : soon ? ` · ${t.task.dueSoon}` : ""}
                             </span>
                           </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            {assignee ? (
-                              <span
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                                style={{ background: assignee.avatarColor }}
-                              >
-                                {initials(assignee.name)}
-                              </span>
-                            ) : (
-                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500">—</span>
-                            )}
-                            <span className="truncate text-xs text-slate-500">{staffName(task.assigneeId)}</span>
+                          <div className="mt-2">
+                            <AssigneeFaces
+                              ids={taskAssigneeIds(task)}
+                              staff={staff}
+                              emptyLabel={t.task.unassigned}
+                              moreLabel={(n) => fill(t.task.assigneeMore, { n })}
+                            />
                           </div>
                         </button>
                       </li>
@@ -481,7 +508,7 @@ export default function TasksPage() {
           canEdit={
             canEdit ||
             (!!open &&
-              canTouchTask(me?.role, { assigneeId: open.assigneeId, verifierId: open.verifierId ?? "" }, me?.id))
+              canTouchTask(me?.role, open, me?.id))
           }
           onClose={() => { setCreating(false); setOpenId(null); }}
           onMutated={() => { if (maMode) void ma.reload(); }}
@@ -545,7 +572,7 @@ function TaskDrawer({
   const [title, setTitle] = useState(task?.title ?? "");
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? "todo");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "medium");
-  const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? "");
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(() => taskAssigneeIds(task));
   const [verifierId, setVerifierId] = useState(task?.verifierId ?? "");
   const { branchId: studioBranch } = useStudioBranch();
   const [branchId, setBranchId] = useState(task?.branchId ?? (studioBranch !== "all" ? studioBranch : ""));
@@ -561,15 +588,59 @@ function TaskDrawer({
   const [saving, setSaving] = useState(false);
   const [commentBusy, setCommentBusy] = useState(false);
   const [parentBusy, setParentBusy] = useState(false);
+  const [activityTab, setActivityTab] = useState<"all" | "comment" | "history">("all");
 
-  const assignee = staff.find((u) => u.id === (assigneeId || current?.assigneeId));
+  const firstAssigneeId = assigneeIds[0] ?? taskAssigneeIds(current)[0] ?? "";
+  const assignee = staff.find((u) => u.id === firstAssigneeId);
   const phone = assignee?.phone?.trim() ?? "";
   const callHref = phone ? `tel:${phone.replace(/\s/g, "")}` : "";
   const zalo = phone ? zaloHref(phone) : "";
-  const comments = [...(current?.comments ?? [])].sort((a, b) => {
-    if (a.day !== b.day) return b.day.localeCompare(a.day);
-    return b.id.localeCompare(a.id, undefined, { numeric: true });
+  const activity = mergeTaskActivity(current ?? { comments: [] }).filter((row) => {
+    if (activityTab === "comment") return row.kind === "comment";
+    if (activityTab === "history") return row.kind !== "comment";
+    return true;
   });
+
+  function personName(id: string) {
+    if (!id) return t.task.activityEmptyValue;
+    return staff.find((u) => u.id === id)?.name ?? id;
+  }
+
+  function namesFromIds(value: string) {
+    const ids = value.split(",").map((id) => id.trim()).filter(Boolean);
+    if (ids.length === 0) return t.task.activityEmptyValue;
+    return ids.map(personName).join(", ");
+  }
+
+  function fieldLabel(field: string) {
+    if (field === "status") return t.task.status;
+    if (field === "priority") return t.task.priority;
+    if (field === "assignee_ids") return t.task.assignee;
+    if (field === "verifier_id") return t.task.verifier;
+    if (field === "due_day") return t.task.due;
+    if (field === "title") return t.task.titleField;
+    if (field === "parent_id") return t.task.parent;
+    if (field === "branch_id") return t.common.branch;
+    if (field === "note") return t.task.note;
+    return field;
+  }
+
+  function fieldValue(field: string, value: string) {
+    if (!value) return t.task.activityEmptyValue;
+    if (field === "status") return taskStatusLabel(value as TaskStatus, lang);
+    if (field === "priority") return taskPriorityLabel(value as TaskPriority, lang);
+    if (field === "assignee_ids" || field === "verifier_id") return namesFromIds(value);
+    if (field === "parent_id") return parents.find((p) => p.id === value)?.name ?? value;
+    if (field === "branch_id") return branches.find((b) => b.id === value)?.name ?? value;
+    return value;
+  }
+
+  function formatAt(iso: string) {
+    if (!iso) return "";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso.slice(0, 16).replace("T", " ");
+    return date.toLocaleString(lang === "vi" ? "vi-VN" : "en-GB", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
+  }
 
   const { leaving, requestClose } = useOverlayClose(onClose);
 
@@ -584,14 +655,16 @@ function TaskDrawer({
             title,
             status,
             priority,
-            assigneeId,
+            assigneeId: assigneeIds[0] ?? "",
+            assigneeIds,
             verifierId,
             branchId,
             parentId,
             dueDay,
             note,
+            actorId: me?.id,
           })
-        : await createTask({ title, status, priority, assigneeId, verifierId, branchId, parentId, dueDay, note });
+        : await createTask({ title, status, priority, assigneeId: assigneeIds[0] ?? "", assigneeIds, verifierId, branchId, parentId, dueDay, note, actorId: me?.id });
       if (code) {
         setError(t.task.needTitle);
         return;
@@ -716,12 +789,40 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.task.assignee}>
-            <select className={inputClass} value={assigneeId} disabled={!canEdit || saving} onChange={(e) => setAssigneeId(e.target.value)}>
-              <option value="">{t.task.unassigned}</option>
-              {staff.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
+            <div className="grid gap-1 rounded-xl border border-[var(--border)] bg-white p-1.5">
+              {staff.length === 0 ? (
+                <p className="px-2 py-1.5 text-sm text-slate-400">{t.task.unassigned}</p>
+              ) : (
+                staff.map((u) => {
+                  const on = assigneeIds.includes(u.id);
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      disabled={!canEdit || saving}
+                      onClick={() =>
+                        setAssigneeIds((cur) => (cur.includes(u.id) ? cur.filter((id) => id !== u.id) : [...cur, u.id]))
+                      }
+                      className="flex w-full items-center gap-3 rounded-xl px-2 py-1.5 text-left transition hover:bg-[var(--brand-50)] disabled:opacity-60"
+                    >
+                      <span
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2"
+                        style={on ? { backgroundColor: "var(--brand-500)", borderColor: "var(--brand-500)" } : { borderColor: "var(--border)" }}
+                      >
+                        {on ? <Check size={13} strokeWidth={3.5} className="text-white" /> : null}
+                      </span>
+                      <span
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                        style={{ background: u.avatarColor }}
+                      >
+                        {initials(u.name)}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm">{u.name}</span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </Field>
           <Field label={t.task.verifier}>
             <select className={inputClass} value={verifierId} disabled={!canEdit || saving} onChange={(e) => setVerifierId(e.target.value)}>
@@ -758,19 +859,47 @@ function TaskDrawer({
 
         {task ? (
           <section className="mt-8 border-t border-[var(--border)] pt-4">
-            <h3 className="text-sm font-bold text-slate-800">{t.task.comments}</h3>
+            <h3 className="text-sm font-bold text-slate-800">{t.task.activity}</h3>
+            <div className="mt-3 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1">
+              {([
+                ["all", t.task.activityAll],
+                ["comment", t.task.activityComments],
+                ["history", t.task.activityHistory],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={cn(
+                    "rounded-lg px-2 py-1.5 text-xs font-semibold",
+                    activityTab === id ? "bg-white text-[var(--brand-600)] shadow-sm" : "text-slate-500",
+                  )}
+                  onClick={() => setActivityTab(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <ul className="mt-3 space-y-3">
               {commentsLoading ? (
                 <li className="inline-flex items-center gap-1.5 text-sm text-slate-400">
                   <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
                 </li>
-              ) : comments.length === 0 ? (
-                <li className="text-sm text-slate-400">{t.task.noComments}</li>
+              ) : activity.length === 0 ? (
+                <li className="text-sm text-slate-400">{activityTab === "comment" ? t.task.noComments : t.task.noActivity}</li>
               ) : (
-                comments.map((c) => (
-                  <li key={c.id} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
-                    <p className="text-xs text-slate-400">{c.day} · {staffName(c.actorId)}</p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{c.text}</p>
+                activity.map((row) => (
+                  <li key={row.id} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
+                    <p className="text-xs text-slate-400">{formatAt(row.at)} · {staffName(row.actorId)}</p>
+                    {row.kind === "comment" ? (
+                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{row.text}</p>
+                    ) : row.kind === "created" ? (
+                      <p className="mt-1 text-sm text-slate-700">{fill(t.task.activityCreated, { name: staffName(row.actorId) })}</p>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-sm text-slate-700">{fill(t.task.activityChanged, { name: staffName(row.actorId), field: fieldLabel(row.field) })}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{fill(t.task.activityFromTo, { from: fieldValue(row.field, row.fromValue), to: fieldValue(row.field, row.toValue) })}</p>
+                      </>
+                    )}
                   </li>
                 ))
               )}

@@ -410,6 +410,20 @@ export type TaskComment = {
   day: string;
   actorId: string;
   text: string;
+  at?: string;
+};
+
+export type TaskActivityKind = "created" | "field" | "comment";
+
+export type TaskActivity = {
+  id: string;
+  kind: TaskActivityKind;
+  field: string;
+  fromValue: string;
+  toValue: string;
+  text: string;
+  actorId: string;
+  at: string;
 };
 
 export type TaskParent = {
@@ -423,6 +437,8 @@ export type StudioTask = {
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId: string;
+  /** Nhiều người phụ trách; `assigneeId` = phần tử đầu (tương thích). */
+  assigneeIds?: string[];
   /** Người kiểm tra — 0/"" = chưa gán. */
   verifierId: string;
   branchId: string;
@@ -430,6 +446,7 @@ export type StudioTask = {
   dueDay: string;
   note: string;
   comments: TaskComment[];
+  activity?: TaskActivity[];
 };
 
 export type Meta = {

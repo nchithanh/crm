@@ -665,11 +665,13 @@ export async function ensureSeed(id: VerticalId) {
       status,
       priority: row.priority ?? "medium",
       assigneeId: row.assigneeId ?? "",
+      assigneeIds: row.assigneeId ? [row.assigneeId] : [],
       verifierId: (row as { verifierId?: string }).verifierId ?? "",
       branchId: row.branchId ?? "",
       parentId: row.parentId ?? "",
       dueDay: dayFromOffset(row.offset),
       note: row.note ?? "",
+      activity: [],
       comments: (row.comments ?? []).map((c) => ({
         id: c.id,
         actorId: c.actorId,

@@ -1,5 +1,5 @@
 import { crmFetch } from "@/lib/api/crm-client";
-import type { StudioTask, TaskComment, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
+import type { StudioTask, TaskActivity, TaskComment, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type ApiTask = {
   id: number;
@@ -7,6 +7,7 @@ type ApiTask = {
   status: string;
   priority: string;
   assignee_id: number;
+  assignee_ids?: number[];
   verifier_id?: number;
   branch_id: number;
   parent_id: number;
@@ -14,6 +15,7 @@ type ApiTask = {
   note: string;
   created_by?: number;
   comments?: ApiComment[];
+  activity?: ApiActivity[];
 };
 
 type ApiComment = {
@@ -21,7 +23,19 @@ type ApiComment = {
   task_id: number;
   actor_id: number;
   day: string;
+  at?: string;
   text: string;
+};
+
+type ApiActivity = {
+  id: string | number;
+  kind: string;
+  field?: string;
+  from_value?: string;
+  to_value?: string;
+  text?: string;
+  actor_id: number;
+  at: string;
 };
 
 type ApiParent = { id: number; name: string; sort?: number; status?: string };
@@ -42,22 +56,44 @@ function mapComment(c: ApiComment): TaskComment {
     day: c.day,
     actorId: String(c.actor_id || ""),
     text: c.text,
+    at: c.at,
+  };
+}
+
+function mapActivity(row: ApiActivity): TaskActivity {
+  const kind = row.kind === "created" || row.kind === "comment" || row.kind === "field" ? row.kind : "field";
+  return {
+    id: String(row.id),
+    kind,
+    field: row.field ?? "",
+    fromValue: row.from_value ?? "",
+    toValue: row.to_value ?? "",
+    text: row.text ?? "",
+    actorId: row.actor_id > 0 ? String(row.actor_id) : "",
+    at: row.at || "",
   };
 }
 
 export function mapApiTask(t: ApiTask): StudioTask {
+  const assigneeIds = (t.assignee_ids ?? (t.assignee_id > 0 ? [t.assignee_id] : []))
+    .map((id) => Number(id))
+    .filter((id) => id > 0)
+    .map(String);
+  const unique = [...new Set(assigneeIds)];
   return {
     id: String(t.id),
     title: t.title,
     status: t.status as TaskStatus,
     priority: t.priority as TaskPriority,
-    assigneeId: t.assignee_id > 0 ? String(t.assignee_id) : "",
+    assigneeId: unique[0] ?? "",
+    assigneeIds: unique,
     verifierId: t.verifier_id && t.verifier_id > 0 ? String(t.verifier_id) : "",
     branchId: t.branch_id > 0 ? String(t.branch_id) : "",
     parentId: t.parent_id > 0 ? String(t.parent_id) : "",
     dueDay: t.due_day,
     note: t.note ?? "",
     comments: (t.comments ?? []).map(mapComment),
+    activity: (t.activity ?? []).map(mapActivity),
   };
 }
 
@@ -147,11 +183,16 @@ export async function apiDeleteParent(id: string): Promise<void> {
   await crmFetch(`/task-parents/${id}`, { method: "DELETE" });
 }
 
+function assigneeIdsPayload(ids?: string[], fallback?: string) {
+  return [...new Set((ids ?? (fallback ? [fallback] : [])).map((id) => Number(id)).filter((id) => id > 0))];
+}
+
 export async function apiCreateTask(input: {
   title: string;
   status?: TaskStatus;
   priority?: TaskPriority;
   assigneeId?: string;
+  assigneeIds?: string[];
   verifierId?: string;
   branchId?: string;
   parentId?: string;
@@ -164,7 +205,7 @@ export async function apiCreateTask(input: {
       title: input.title,
       status: input.status,
       priority: input.priority,
-      assignee_id: input.assigneeId ? Number(input.assigneeId) : 0,
+      assignee_ids: assigneeIdsPayload(input.assigneeIds, input.assigneeId),
       verifier_id: input.verifierId ? Number(input.verifierId) : 0,
       branch_id: input.branchId ? Number(input.branchId) : 0,
       parent_id: input.parentId ? Number(input.parentId) : 0,
@@ -181,6 +222,7 @@ export async function apiUpdateTask(input: {
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId: string;
+  assigneeIds?: string[];
   verifierId: string;
   branchId: string;
   parentId: string;
@@ -193,7 +235,7 @@ export async function apiUpdateTask(input: {
       title: input.title,
       status: input.status,
       priority: input.priority,
-      assignee_id: input.assigneeId ? Number(input.assigneeId) : 0,
+      assignee_ids: assigneeIdsPayload(input.assigneeIds, input.assigneeId),
       verifier_id: input.verifierId ? Number(input.verifierId) : 0,
       branch_id: input.branchId ? Number(input.branchId) : 0,
       parent_id: input.parentId ? Number(input.parentId) : 0,

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02
+
+- **Tasks activity (Jira):** drawer tab Tất cả / Comment / Lịch sử. BE `task_activities` + `GET /tasks/{id}` gộp comment và đổi field. Tự ghi khi tạo / PATCH / đổi status (kể cả kéo board). Demo Dexie append `activity`.
+- **Tasks nhiều người phụ trách:** một việc gán nhiều staff (`assigneeIds` / API `assignee_ids`). Drawer checklist; list/board stack avatar. Filter khớp nếu một người trong list. Scope xem/sửa: mình là một assignee hoặc verifier. Cột `assignee_id` = người đầu.
+
 ## 2026-10-25
 
 - **Tasks:** bỏ nút Group (group-by assignee/parent); list + board cố định theo trạng thái. Nhóm việc vẫn qua **Nhóm việc**.

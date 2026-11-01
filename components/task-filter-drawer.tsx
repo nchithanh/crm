@@ -7,6 +7,7 @@ import { fill } from "@/lib/copy";
 import { useI18n } from "@/lib/i18n";
 import { taskPriorities, taskPriorityLabel, taskStatusLabel, taskStatuses } from "@/lib/labels";
 import { localDayKey } from "@/lib/utils";
+import { taskAssigneeIds } from "@/lib/task-people";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 export const TASK_FILTER_NONE_PARENT = "__none__";
@@ -73,7 +74,19 @@ export function TaskFilterDrawer({
     }
     return map;
   };
-  const assigneeCounts = countBy((row) => row.assigneeId || TASK_FILTER_UNASSIGNED);
+  const countAssignees = () => {
+    const map = new Map<string, number>();
+    for (const row of tasks) {
+      const ids = taskAssigneeIds(row);
+      if (ids.length === 0) {
+        map.set(TASK_FILTER_UNASSIGNED, (map.get(TASK_FILTER_UNASSIGNED) ?? 0) + 1);
+        continue;
+      }
+      for (const id of ids) map.set(id, (map.get(id) ?? 0) + 1);
+    }
+    return map;
+  };
+  const assigneeCounts = countAssignees();
   const statusCounts = countBy((row) => row.status);
   const priorityCounts = countBy((row) => row.priority);
   const parentCounts = countBy((row) => row.parentId || TASK_FILTER_NONE_PARENT);
