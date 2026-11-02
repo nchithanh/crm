@@ -1,7 +1,12 @@
 import { uid } from "@/lib/utils";
 import type { StudioTask, TaskActivity, TaskActivityKind } from "@/types";
 
-export function taskSnapshot(task: Pick<StudioTask, "title" | "status" | "priority" | "assigneeId" | "assigneeIds" | "verifierId" | "branchId" | "parentId" | "dueDay" | "note">) {
+export function taskSnapshot(
+  task: Pick<
+    StudioTask,
+    "title" | "status" | "priority" | "assigneeId" | "assigneeIds" | "verifierId" | "branchId" | "parentId" | "dueDay" | "note" | "noteImageUrls"
+  >,
+) {
   const ids = [...new Set((task.assigneeIds ?? (task.assigneeId ? [task.assigneeId] : [])).filter(Boolean))].sort();
   return {
     title: task.title,
@@ -13,6 +18,7 @@ export function taskSnapshot(task: Pick<StudioTask, "title" | "status" | "priori
     parent_id: task.parentId || "",
     due_day: task.dueDay,
     note: task.note ?? "",
+    note_image_urls: (task.noteImageUrls ?? []).join(","),
   };
 }
 
@@ -58,6 +64,8 @@ export function existingActivity(task: Pick<StudioTask, "comments" | "activity">
     fromValue: "",
     toValue: "",
     text: c.text,
+    imageUrl: c.imageUrls?.[0] ?? c.imageUrl,
+    imageUrls: c.imageUrls?.length ? c.imageUrls : c.imageUrl ? [c.imageUrl] : undefined,
     actorId: c.actorId,
     at: c.at || `${c.day}T00:00:00Z`,
   }));

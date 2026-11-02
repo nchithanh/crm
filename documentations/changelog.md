@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03
+
+- **Tasks loading UX:** upload ảnh comment/mô tả `Promise.all` song song; nút hiện `common.uploading` + overlay spinner trên preview. Skeleton đầy đủ list/board/parent lần đầu (`loading && empty`) và skeleton hàng activity trong drawer; `Skeleton` trong `ui.tsx`.
+- **Task mô tả:** nhãn Mô tả; textarea lớn; `note_image_urls` ≤10 ảnh (MA upload R2 khi lưu).
+- **MA comment nhiều ảnh:** `image_urls[]` (≤10); chọn multiple + preview lưới; upload song song rồi gửi comment.
+- **MA comment ảnh R2:** `POST /crm/{org}/media` → bucket `crm` / folder slug tên org; comment nhận `image_url`/`image_urls`; drawer đính kèm + preview. Lỗi upload/API không còn giả dạng “Nhập nội dung…”.
+- **MA unauthorized → login:** `crmFetch` thiếu JWT hoặc HTTP 401 → logout + redirect `/login` (không còn hiện chữ `unauthorized` trên `/tasks`).
+
 ## 2026-11-02
 
 - **Tasks activity (Jira):** drawer tab Tất cả / Comment / Lịch sử. BE `task_activities` + `GET /tasks/{id}` gộp comment và đổi field. Tự ghi khi tạo / PATCH / đổi status (kể cả kéo board). Demo Dexie append `activity`.

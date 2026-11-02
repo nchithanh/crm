@@ -22,6 +22,16 @@ export function Spinner({ className }: { className?: string }) {
   );
 }
 
+/** Skeleton pulse — chỗ list/drawer đang tải, tránh khoảng trống câm. */
+export function Skeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn("animate-pulse rounded-xl bg-slate-200/80", className)}
+      aria-hidden
+    />
+  );
+}
+
 export function Button({
   className,
   variant = "primary",

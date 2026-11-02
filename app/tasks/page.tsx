@@ -1,9 +1,9 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Check, FolderKanban, ListFilter, Search } from "lucide-react";
+import { Check, FolderKanban, ImagePlus, ListFilter, Search, X } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Button, Card, Field, Spinner, inputClass } from "@/components/ui";
+import { Button, Card, Field, Skeleton, Spinner, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
 import {
   TASK_FILTER_NONE_PARENT,
@@ -18,7 +18,7 @@ import { canManageTasks, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/
 import { mergeTaskActivity } from "@/lib/task-activity";
 import { taskAssigneeIds, taskMatchesAssigneeFilter } from "@/lib/task-people";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
-import { fetchMaTask } from "@/lib/api/crm-tasks";
+import { apiUploadMedia, fetchMaTask } from "@/lib/api/crm-tasks";
 import { fill } from "@/lib/copy";
 import { db } from "@/lib/db";
 import { useMaTasksData } from "@/lib/hooks/use-ma-tasks-data";
@@ -228,7 +228,7 @@ export default function TasksPage() {
         <div>
           <h1 className="crm-page-title">{t.task.title}</h1>
           <p className="mt-1 text-sm text-slate-500">{t.task.subtitle}</p>
-          {maMode && ma.loading ? (
+          {maMode && ma.loading && tasks.length > 0 ? (
             <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-slate-400">
               <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
             </p>
@@ -279,7 +279,17 @@ export default function TasksPage() {
         </span>
       </div>
 
-      {parents.length > 0 ? (
+      {maMode && ma.loading && tasks.length === 0 ? (
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-busy aria-label={t.common.loading}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2.5">
+              <Skeleton className="h-5 w-[66%]" />
+              <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
+              <Skeleton className="mt-2 h-3 w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : parents.length > 0 ? (
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {parents.map((parent) => {
             const group = parentProgress.find((row) => row.id === parent.id);
@@ -314,7 +324,43 @@ export default function TasksPage() {
         </div>
       ) : null}
 
-      {visible.length === 0 ? (
+      {maMode && ma.loading && tasks.length === 0 ? (
+        mode === "list" ? (
+          <Card className="mt-4 overflow-hidden" aria-busy aria-label={t.common.loading}>
+            <div className="space-y-0 divide-y divide-slate-100">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-3">
+                  <Skeleton className="h-9 w-24 shrink-0" />
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="hidden h-4 w-20 sm:block" />
+                  <Skeleton className="hidden h-7 w-16 rounded-full md:block" />
+                  <Skeleton className="hidden h-4 w-24 lg:block" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        ) : (
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-2" aria-busy aria-label={t.common.loading}>
+            {Array.from({ length: 5 }).map((_, col) => (
+              <section key={col} className="w-[272px] shrink-0 rounded-xl border border-[var(--border)] bg-slate-50 p-2">
+                <div className="flex items-center justify-between px-2 py-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-5 w-8" />
+                </div>
+                <ul className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, row) => (
+                    <li key={row} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+                      <Skeleton className="h-4 w-[80%]" />
+                      <Skeleton className="mt-2 h-5 w-16 rounded-full" />
+                      <Skeleton className="mt-2 h-7 w-24 rounded-full" />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )
+      ) : visible.length === 0 ? (
         <p className="mt-6 text-sm text-slate-500">{t.task.empty}</p>
       ) : mode === "list" ? (
         <Card className="mt-4 overflow-auto">
@@ -579,14 +625,27 @@ function TaskDrawer({
   const [parentId, setParentId] = useState(task?.parentId ?? "");
   const [dueDay, setDueDay] = useState(task?.dueDay ?? localDayKey());
   const [note, setNote] = useState(task?.note ?? "");
+  const [noteImageUrls, setNoteImageUrls] = useState<string[]>(() => task?.noteImageUrls ?? []);
+  const [notePendingFiles, setNotePendingFiles] = useState<File[]>([]);
+  const [notePendingPreviews, setNotePendingPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!maDetail || !task?.id || maDetail.id !== task.id) return;
+    // Detail fetch chủ yếu lấy comment; đồng bộ ảnh mô tả nếu list chưa có.
+    setNoteImageUrls((prev) => (prev.length ? prev : maDetail.noteImageUrls ?? []));
+  }, [maDetail, task?.id]);
   const [comment, setComment] = useState("");
+  const [commentImages, setCommentImages] = useState<File[]>([]);
+  const [commentPreviews, setCommentPreviews] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [commentError, setCommentError] = useState("");
   const [newParentName, setNewParentName] = useState("");
   const [parentError, setParentError] = useState("");
   const [addingParent, setAddingParent] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [commentBusy, setCommentBusy] = useState(false);
+  const [commentUploading, setCommentUploading] = useState(false);
   const [parentBusy, setParentBusy] = useState(false);
   const [activityTab, setActivityTab] = useState<"all" | "comment" | "history">("all");
 
@@ -621,7 +680,7 @@ function TaskDrawer({
     if (field === "title") return t.task.titleField;
     if (field === "parent_id") return t.task.parent;
     if (field === "branch_id") return t.common.branch;
-    if (field === "note") return t.task.note;
+    if (field === "note" || field === "note_image_urls") return t.task.note;
     return field;
   }
 
@@ -644,11 +703,71 @@ function TaskDrawer({
 
   const { leaving, requestClose } = useOverlayClose(onClose);
 
+  function clearNotePending() {
+    setNotePendingPreviews((prev) => {
+      prev.forEach((url) => URL.revokeObjectURL(url));
+      return [];
+    });
+    setNotePendingFiles([]);
+  }
+
+  function onPickNoteImages(list: FileList | null) {
+    if (!list || list.length === 0) return;
+    const next: File[] = [];
+    for (const file of Array.from(list)) {
+      if (file.type.startsWith("image/")) next.push(file);
+    }
+    if (next.length === 0) {
+      setError(t.task.uploadFail);
+      return;
+    }
+    setNotePendingFiles((prev) => {
+      const room = Math.max(0, 10 - noteImageUrls.length - prev.length);
+      const merged = [...prev, ...next].slice(0, prev.length + room);
+      setNotePendingPreviews((old) => {
+        old.forEach((url) => URL.revokeObjectURL(url));
+        return merged.map((f) => URL.createObjectURL(f));
+      });
+      return merged;
+    });
+    setError("");
+  }
+
+  function removeNoteUrlAt(index: number) {
+    setNoteImageUrls((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removeNotePendingAt(index: number) {
+    setNotePendingFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      setNotePendingPreviews((old) => {
+        old.forEach((url, i) => {
+          if (i === index) URL.revokeObjectURL(url);
+        });
+        return old.filter((_, i) => i !== index);
+      });
+      return next;
+    });
+  }
+
   async function save() {
     if (!canEdit || saving) return;
     setSaving(true);
     setError("");
     try {
+      let uploaded = [...noteImageUrls];
+      if (maMode && notePendingFiles.length > 0) {
+        setUploadingImages(true);
+        try {
+          const urls = await Promise.all(notePendingFiles.map((file) => apiUploadMedia(file)));
+          uploaded = [...uploaded, ...urls].slice(0, 10);
+        } catch (e) {
+          setError(e instanceof Error && e.message !== "fail" ? e.message : t.task.uploadFail);
+          return;
+        } finally {
+          setUploadingImages(false);
+        }
+      }
       const code = task
         ? await updateTask({
             id: task.id,
@@ -662,31 +781,115 @@ function TaskDrawer({
             parentId,
             dueDay,
             note,
+            noteImageUrls: uploaded,
             actorId: me?.id,
           })
-        : await createTask({ title, status, priority, assigneeId: assigneeIds[0] ?? "", assigneeIds, verifierId, branchId, parentId, dueDay, note, actorId: me?.id });
+        : await createTask({
+            title,
+            status,
+            priority,
+            assigneeId: assigneeIds[0] ?? "",
+            assigneeIds,
+            verifierId,
+            branchId,
+            parentId,
+            dueDay,
+            note,
+            noteImageUrls: uploaded,
+            actorId: me?.id,
+          });
       if (code) {
         setError(t.task.needTitle);
         return;
       }
+      clearNotePending();
+      setNoteImageUrls(uploaded);
       onMutated?.();
       requestClose();
     } finally {
+      setUploadingImages(false);
       setSaving(false);
     }
   }
 
+  function clearCommentImages() {
+    setCommentPreviews((prev) => {
+      prev.forEach((url) => URL.revokeObjectURL(url));
+      return [];
+    });
+    setCommentImages([]);
+  }
+
+  function onPickCommentImages(list: FileList | null) {
+    if (!list || list.length === 0) return;
+    const nextFiles: File[] = [];
+    for (const file of Array.from(list)) {
+      if (!file.type.startsWith("image/")) continue;
+      nextFiles.push(file);
+    }
+    if (nextFiles.length === 0) {
+      setCommentError(t.task.uploadFail);
+      return;
+    }
+    setCommentImages((prev) => {
+      const merged = [...prev, ...nextFiles].slice(0, 10);
+      setCommentPreviews((old) => {
+        old.forEach((url) => URL.revokeObjectURL(url));
+        return merged.map((f) => URL.createObjectURL(f));
+      });
+      return merged;
+    });
+    setCommentError("");
+  }
+
+  function removeCommentImageAt(index: number) {
+    setCommentImages((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      setCommentPreviews((old) => {
+        old.forEach((url, i) => {
+          if (i === index) URL.revokeObjectURL(url);
+        });
+        return old.filter((_, i) => i !== index);
+      });
+      return next;
+    });
+  }
+
   async function sendComment() {
     if (!task || !me?.id || commentBusy) return;
+    if (!comment.trim() && commentImages.length === 0) {
+      setCommentError(t.task.needComment);
+      return;
+    }
     setCommentBusy(true);
+    setCommentUploading(maMode && commentImages.length > 0);
     setCommentError("");
     try {
-      const code = await addTaskComment({ taskId: task.id, actorId: me.id, text: comment });
-      if (code) {
-        setCommentError(t.task.needComment);
+      const result = await addTaskComment({
+        taskId: task.id,
+        actorId: me.id,
+        text: comment,
+        imageFiles: maMode ? commentImages : [],
+      });
+      if (!result.ok) {
+        if (result.code === "fields") setCommentError(t.task.needComment);
+        else if (result.code === "upload") {
+          setCommentError(
+            result.message && result.message !== "fail" && result.message !== "network"
+              ? result.message
+              : t.task.uploadFail,
+          );
+        } else {
+          setCommentError(
+            result.message && result.message !== "fail" && result.message !== "network"
+              ? result.message
+              : t.common.fail,
+          );
+        }
         return;
       }
       setComment("");
+      clearCommentImages();
       if (maMode) {
         try {
           setMaDetail(await fetchMaTask(task.id));
@@ -696,6 +899,7 @@ function TaskDrawer({
         onMutated?.();
       }
     } finally {
+      setCommentUploading(false);
       setCommentBusy(false);
     }
   }
@@ -844,13 +1048,84 @@ function TaskDrawer({
             <input className={cn(inputClass, "font-semibold", taskDueClass(status, dueDay, localDayKey(), addDays(localDayKey(), 2)))} type="date" value={dueDay} disabled={!canEdit || saving} onChange={(e) => setDueDay(e.target.value)} />
           </Field>
           <Field label={t.task.note}>
-            <input className={inputClass} value={note} disabled={!canEdit || saving} onChange={(e) => setNote(e.target.value)} />
+            <textarea
+              className={cn(inputClass, "h-auto min-h-36 py-2")}
+              value={note}
+              disabled={!canEdit || saving}
+              rows={8}
+              placeholder={t.task.notePlaceholder}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </Field>
+          {(noteImageUrls.length > 0 || notePendingPreviews.length > 0) ? (
+            <div className="flex flex-wrap gap-2">
+              {noteImageUrls.map((src, index) => (
+                <div key={src} className="relative w-fit">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="max-h-28 max-w-[7.5rem] rounded-xl border border-[var(--border)] object-contain" />
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
+                      aria-label={t.task.removeImage}
+                      disabled={saving}
+                      onClick={() => removeNoteUrlAt(index)}
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+              {notePendingPreviews.map((src, index) => (
+                <div key={src} className="relative w-fit">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="max-h-28 max-w-[7.5rem] rounded-xl border border-dashed border-[var(--brand-500)] object-contain" />
+                  {uploadingImages ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                      <Spinner className="text-[var(--brand-500)]" />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
+                      aria-label={t.task.removeImage}
+                      disabled={saving}
+                      onClick={() => removeNotePendingAt(index)}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {maMode && canEdit ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-medium text-slate-700">
+                <ImagePlus size={16} />
+                {t.task.noteAttach}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  className="sr-only"
+                  disabled={saving || noteImageUrls.length + notePendingFiles.length >= 10}
+                  onChange={(e) => {
+                    onPickNoteImages(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <p className="text-xs text-slate-400">{t.task.noteHint}</p>
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
           {canEdit ? (
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" disabled={saving} onClick={requestClose}>{t.common.cancel}</Button>
-              <Button type="button" busy={saving} onClick={() => void save()}>{saving ? t.common.saving : t.common.save}</Button>
+              <Button type="button" busy={saving} onClick={() => void save()}>
+                {saving ? (uploadingImages ? t.common.uploading : t.common.saving) : t.common.save}
+              </Button>
             </div>
           ) : (
             <p className="text-sm text-slate-500">{taskStatusLabel(status, lang)}</p>
@@ -879,11 +1154,15 @@ function TaskDrawer({
                 </button>
               ))}
             </div>
-            <ul className="mt-3 space-y-3">
+            <ul className="mt-3 space-y-3" aria-busy={commentsLoading || undefined} aria-label={commentsLoading ? t.common.loading : undefined}>
               {commentsLoading ? (
-                <li className="inline-flex items-center gap-1.5 text-sm text-slate-400">
-                  <Spinner className="text-[var(--brand-500)]" /> {t.common.loading}
-                </li>
+                Array.from({ length: 4 }).map((_, i) => (
+                  <li key={i} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="mt-2 h-4 w-full" />
+                    <Skeleton className="mt-1.5 h-4 w-3/4" />
+                  </li>
+                ))
               ) : activity.length === 0 ? (
                 <li className="text-sm text-slate-400">{activityTab === "comment" ? t.task.noComments : t.task.noActivity}</li>
               ) : (
@@ -891,7 +1170,24 @@ function TaskDrawer({
                   <li key={row.id} className="rounded-xl border border-[var(--border)] bg-slate-50 px-3 py-2">
                     <p className="text-xs text-slate-400">{formatAt(row.at)} · {staffName(row.actorId)}</p>
                     {row.kind === "comment" ? (
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{row.text}</p>
+                      <div className="mt-1 space-y-2">
+                        {row.text ? (
+                          <p className="whitespace-pre-wrap text-sm text-slate-700">{row.text}</p>
+                        ) : null}
+                        {(row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []).length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {(row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []).map((src) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                key={src}
+                                src={src}
+                                alt=""
+                                className="max-h-40 max-w-[min(100%,12rem)] rounded-xl border border-[var(--border)] object-contain"
+                              />
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
                     ) : row.kind === "created" ? (
                       <p className="mt-1 text-sm text-slate-700">{fill(t.task.activityCreated, { name: staffName(row.actorId) })}</p>
                     ) : (
@@ -920,11 +1216,59 @@ function TaskDrawer({
                     }
                   }}
                 />
+                {commentPreviews.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {commentPreviews.map((src, index) => (
+                      <div key={src} className="relative w-fit">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt=""
+                          className="max-h-28 max-w-[7.5rem] rounded-xl border border-[var(--border)] object-contain"
+                        />
+                        {commentUploading ? (
+                          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                            <Spinner className="text-[var(--brand-500)]" />
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
+                            aria-label={t.task.removeImage}
+                            disabled={commentBusy}
+                            onClick={() => removeCommentImageAt(index)}
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {maMode ? (
+                    <label className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-medium text-slate-700">
+                      <ImagePlus size={16} />
+                      {t.task.attachImage}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        className="sr-only"
+                        disabled={commentBusy || commentImages.length >= 10}
+                        onChange={(e) => {
+                          onPickCommentImages(e.target.files);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  ) : null}
+                  <Button type="button" busy={commentBusy} onClick={() => void sendComment()}>
+                    {commentBusy ? (commentUploading ? t.common.uploading : t.common.saving) : t.task.sendComment}
+                  </Button>
+                </div>
                 <p className="text-xs text-slate-400">{t.task.commentHint}</p>
                 {commentError ? <p className="text-sm text-rose-700">{commentError}</p> : null}
-                <Button type="button" busy={commentBusy} onClick={() => void sendComment()}>
-                  {commentBusy ? t.common.saving : t.task.sendComment}
-                </Button>
               </div>
             ) : null}
           </section>

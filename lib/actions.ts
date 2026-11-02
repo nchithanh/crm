@@ -1,5 +1,6 @@
 import {
   apiAddComment,
+  apiUploadMedia,
   apiCreateParent,
   apiDeleteParent,
   apiUpdateParent,
@@ -394,10 +395,12 @@ export async function createTask(input: {
   parentId?: string;
   dueDay?: string;
   note?: string;
+  noteImageUrls?: string[];
   actorId?: string;
 }) {
   const title = input.title.trim();
   if (!title) return "fields";
+  const noteImageUrls = (input.noteImageUrls ?? []).map((u) => u.trim()).filter(Boolean).slice(0, 10);
   if (isMaStudioMode()) {
     try {
       await apiCreateTask({
@@ -411,6 +414,7 @@ export async function createTask(input: {
         parentId: input.parentId,
         dueDay: input.dueDay || localDayKey(),
         note: (input.note ?? "").trim(),
+        noteImageUrls,
       });
       return "";
     } catch {
@@ -429,25 +433,56 @@ export async function createTask(input: {
     parentId: input.parentId ?? "",
     dueDay: input.dueDay || localDayKey(),
     note: (input.note ?? "").trim(),
+    noteImageUrls,
     comments: [],
     activity: [makeActivity({ kind: "created", actorId: input.actorId, toValue: title })],
   });
   return "";
 }
 
-export async function addTaskComment(input: { taskId: string; actorId: string; text: string }) {
+export type AddTaskCommentResult =
+  | { ok: true }
+  | { ok: false; code: "fields" | "upload" | "fail"; message?: string };
+
+export async function addTaskComment(input: {
+  taskId: string;
+  actorId: string;
+  text: string;
+  imageFiles?: File[];
+}): Promise<AddTaskCommentResult> {
   const text = input.text.trim();
-  if (!text || !input.actorId) return "fields";
+  const files = (input.imageFiles ?? []).slice(0, 10);
+  if ((!text && files.length === 0) || !input.actorId) {
+    return { ok: false, code: "fields" };
+  }
   if (isMaStudioMode()) {
+    let imageUrls: string[] = [];
+    if (files.length > 0) {
+      try {
+        imageUrls = await Promise.all(files.map((file) => apiUploadMedia(file)));
+      } catch (e) {
+        return {
+          ok: false,
+          code: "upload",
+          message: e instanceof Error ? e.message : undefined,
+        };
+      }
+    }
     try {
-      await apiAddComment(input.taskId, text);
-      return "";
-    } catch {
-      return "fields";
+      await apiAddComment(input.taskId, text, imageUrls);
+      return { ok: true };
+    } catch (e) {
+      return {
+        ok: false,
+        code: "fail",
+        message: e instanceof Error ? e.message : undefined,
+      };
     }
   }
   const task = await db.tasks.get(input.taskId);
-  if (!task) return "fields";
+  if (!task) return { ok: false, code: "fields" };
+  // Demo Dexie: không R2 — chỉ text (bỏ ảnh).
+  if (!text) return { ok: false, code: "fields" };
   const comment = { id: uid("tc"), day: localDayKey(), actorId: input.actorId, text, at: new Date().toISOString() };
   await db.tasks.update(input.taskId, {
     comments: [...(task.comments ?? []), comment],
@@ -456,7 +491,7 @@ export async function addTaskComment(input: { taskId: string; actorId: string; t
       makeActivity({ kind: "comment", actorId: input.actorId, text }),
     ],
   });
-  return "";
+  return { ok: true };
 }
 
 export async function updateTask(input: {
@@ -471,13 +506,15 @@ export async function updateTask(input: {
   parentId: string;
   dueDay: string;
   note: string;
+  noteImageUrls?: string[];
   actorId?: string;
 }) {
   const title = input.title.trim();
   if (!title || !input.dueDay) return "fields";
+  const noteImageUrls = (input.noteImageUrls ?? []).map((u) => u.trim()).filter(Boolean).slice(0, 10);
   if (isMaStudioMode()) {
     try {
-      await apiUpdateTask({ ...input, title, note: input.note.trim() });
+      await apiUpdateTask({ ...input, title, note: input.note.trim(), noteImageUrls });
       return "";
     } catch {
       return "fields";
@@ -495,6 +532,7 @@ export async function updateTask(input: {
     parentId: input.parentId,
     dueDay: input.dueDay,
     note: input.note.trim(),
+    noteImageUrls,
   };
   const extra = current ? diffActivities(taskSnapshot(current), taskSnapshot(next), input.actorId) : [];
   await db.tasks.update(input.id, {

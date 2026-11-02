@@ -1,4 +1,4 @@
-import { crmFetch } from "@/lib/api/crm-client";
+import { crmFetch, crmUpload } from "@/lib/api/crm-client";
 import type { StudioTask, TaskActivity, TaskComment, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type ApiTask = {
@@ -13,6 +13,7 @@ type ApiTask = {
   parent_id: number;
   due_day: string;
   note: string;
+  note_image_urls?: string[] | null;
   created_by?: number;
   comments?: ApiComment[];
   activity?: ApiActivity[];
@@ -25,6 +26,8 @@ type ApiComment = {
   day: string;
   at?: string;
   text: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
 };
 
 type ApiActivity = {
@@ -34,9 +37,26 @@ type ApiActivity = {
   from_value?: string;
   to_value?: string;
   text?: string;
+  image_url?: string | null;
+  image_urls?: string[] | null;
   actor_id: number;
   at: string;
 };
+
+function mapImageUrls(urls?: string[] | null, legacy?: string | null): string[] {
+  const out: string[] = [];
+  if (Array.isArray(urls)) {
+    for (const u of urls) {
+      const s = String(u || "").trim();
+      if (s) out.push(s);
+    }
+  }
+  if (out.length === 0 && legacy) {
+    const s = String(legacy).trim();
+    if (s) out.push(s);
+  }
+  return [...new Set(out)];
+}
 
 type ApiParent = { id: number; name: string; sort?: number; status?: string };
 type ApiStaff = { id: number; name: string; username: string; role: string; avatar_color?: string; phone?: string };
@@ -51,17 +71,21 @@ type ApiBranch = {
 };
 
 function mapComment(c: ApiComment): TaskComment {
+  const imageUrls = mapImageUrls(c.image_urls, c.image_url);
   return {
     id: String(c.id),
     day: c.day,
     actorId: String(c.actor_id || ""),
     text: c.text,
+    imageUrl: imageUrls[0],
+    imageUrls: imageUrls.length ? imageUrls : undefined,
     at: c.at,
   };
 }
 
 function mapActivity(row: ApiActivity): TaskActivity {
   const kind = row.kind === "created" || row.kind === "comment" || row.kind === "field" ? row.kind : "field";
+  const imageUrls = mapImageUrls(row.image_urls, row.image_url);
   return {
     id: String(row.id),
     kind,
@@ -69,6 +93,8 @@ function mapActivity(row: ApiActivity): TaskActivity {
     fromValue: row.from_value ?? "",
     toValue: row.to_value ?? "",
     text: row.text ?? "",
+    imageUrl: imageUrls[0],
+    imageUrls: imageUrls.length ? imageUrls : undefined,
     actorId: row.actor_id > 0 ? String(row.actor_id) : "",
     at: row.at || "",
   };
@@ -92,6 +118,7 @@ export function mapApiTask(t: ApiTask): StudioTask {
     parentId: t.parent_id > 0 ? String(t.parent_id) : "",
     dueDay: t.due_day,
     note: t.note ?? "",
+    noteImageUrls: mapImageUrls(t.note_image_urls),
     comments: (t.comments ?? []).map(mapComment),
     activity: (t.activity ?? []).map(mapActivity),
   };
@@ -198,6 +225,7 @@ export async function apiCreateTask(input: {
   parentId?: string;
   dueDay?: string;
   note?: string;
+  noteImageUrls?: string[];
 }): Promise<StudioTask> {
   const res = await crmFetch<{ data: ApiTask }>("/tasks", {
     method: "POST",
@@ -211,6 +239,7 @@ export async function apiCreateTask(input: {
       parent_id: input.parentId ? Number(input.parentId) : 0,
       due_day: input.dueDay,
       note: input.note ?? "",
+      note_image_urls: (input.noteImageUrls ?? []).map((u) => u.trim()).filter(Boolean).slice(0, 10),
     }),
   });
   return mapApiTask(res.data);
@@ -228,6 +257,7 @@ export async function apiUpdateTask(input: {
   parentId: string;
   dueDay: string;
   note: string;
+  noteImageUrls?: string[];
 }): Promise<StudioTask> {
   const res = await crmFetch<{ data: ApiTask }>(`/tasks/${input.id}`, {
     method: "PATCH",
@@ -241,6 +271,7 @@ export async function apiUpdateTask(input: {
       parent_id: input.parentId ? Number(input.parentId) : 0,
       due_day: input.dueDay,
       note: input.note,
+      note_image_urls: (input.noteImageUrls ?? []).map((u) => u.trim()).filter(Boolean).slice(0, 10),
     }),
   });
   return mapApiTask(res.data);
@@ -254,10 +285,26 @@ export async function apiMoveTaskStatus(id: string, status: TaskStatus): Promise
   return mapApiTask(res.data);
 }
 
-export async function apiAddComment(taskId: string, text: string): Promise<TaskComment> {
+export async function apiAddComment(
+  taskId: string,
+  text: string,
+  imageUrls?: string[],
+): Promise<TaskComment> {
+  const body: { text?: string; image_urls?: string[] } = {};
+  const trimmed = text.trim();
+  if (trimmed) body.text = trimmed;
+  const urls = (imageUrls ?? []).map((u) => u.trim()).filter(Boolean);
+  if (urls.length) body.image_urls = urls;
   const res = await crmFetch<{ data: ApiComment }>(`/tasks/${taskId}/comments`, {
     method: "POST",
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(body),
   });
   return mapComment(res.data);
+}
+
+export async function apiUploadMedia(file: File): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await crmUpload<{ data: { url: string } }>("/media", form);
+  return res.data.url;
 }

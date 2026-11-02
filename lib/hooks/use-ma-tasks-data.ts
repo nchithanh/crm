@@ -35,6 +35,8 @@ export function useMaTasksData(enabled: boolean) {
       setStaff(s);
       setBranches(b);
     } catch (e) {
+      // 401 đã redirect /login trong crmFetch — không hiện "unauthorized" trên trang.
+      if (e instanceof Error && e.message === "unauthorized") return;
       setError(e instanceof Error ? e.message : "fail");
     } finally {
       setLoading(false);

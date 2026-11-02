@@ -410,6 +410,9 @@ export type TaskComment = {
   day: string;
   actorId: string;
   text: string;
+  /** @deprecated dùng imageUrls */
+  imageUrl?: string;
+  imageUrls?: string[];
   at?: string;
 };
 
@@ -422,6 +425,9 @@ export type TaskActivity = {
   fromValue: string;
   toValue: string;
   text: string;
+  /** @deprecated dùng imageUrls */
+  imageUrl?: string;
+  imageUrls?: string[];
   actorId: string;
   at: string;
 };
@@ -445,6 +451,8 @@ export type StudioTask = {
   parentId: string;
   dueDay: string;
   note: string;
+  /** Ảnh mô tả (R2 URLs). */
+  noteImageUrls?: string[];
   comments: TaskComment[];
   activity?: TaskActivity[];
 };
