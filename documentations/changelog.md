@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05
+
+- **Tasks Done:** chỉ **boss/owner** hoặc **người kiểm tra** được chuyển sang Done (BE + FE). UI: banner amber, badge cột Done, option khóa `Done — chỉ Boss/kiểm tra`, alert khi bị chặn.
+- **MA media upload:** BE `/crm/{org}/media` nâng giới hạn ảnh **5MB → 20MB** (task mô tả / comment). Bill thu học phí vẫn 1,5MB ở FE.
+- **Docker media:** PHP `upload_max`/`post_max` **25M** + nginx body 25m + fastcgi timeout 120s (tránh ảnh ~14MB treo `network` khi Lưu).
+
 ## 2026-11-03
 
 - **Tasks loading UX:** upload ảnh comment/mô tả `Promise.all` song song; nút hiện `common.uploading` + overlay spinner trên preview. Skeleton đầy đủ list/board/parent lần đầu (`loading && empty`) và skeleton hàng activity trong drawer; `Skeleton` trong `ui.tsx`.

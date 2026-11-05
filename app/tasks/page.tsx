@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Check, FolderKanban, ImagePlus, ListFilter, Search, X } from "lucide-react";
+import { Check, FolderKanban, ImagePlus, ListFilter, Search, ShieldAlert, X } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, Card, Field, Skeleton, Spinner, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
@@ -14,7 +14,7 @@ import {
 } from "@/components/task-filter-drawer";
 import { filterColorOf } from "@/components/filter-checklist";
 import { ParentChip, TaskParentDrawer } from "@/components/task-parent-drawer";
-import { canManageTasks, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
+import { canManageTasks, canMarkTaskDone, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
 import { mergeTaskActivity } from "@/lib/task-activity";
 import { taskAssigneeIds, taskMatchesAssigneeFilter } from "@/lib/task-people";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
@@ -137,6 +137,7 @@ export default function TasksPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [movingId, setMovingId] = useState<string | null>(null);
+  const [statusHint, setStatusHint] = useState("");
 
   const parentMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -213,10 +214,18 @@ export default function TasksPage() {
     const task = tasks.find((row) => row.id === taskId);
     if (!task || task.status === status || movingId) return;
     if (!canTouchTask(me?.role, task, me?.id)) return;
+    if (status === "done" && !canMarkTaskDone(me?.role, task, me?.id)) {
+      setStatusHint(t.task.doneBlocked);
+      return;
+    }
+    setStatusHint("");
     setMovingId(taskId);
     try {
       await moveTaskStatus(taskId, status, me?.id);
       if (maMode) await ma.reload();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      setStatusHint(msg && msg !== "fail" ? msg : t.task.doneBlocked);
     } finally {
       setMovingId(null);
     }
@@ -256,6 +265,26 @@ export default function TasksPage() {
           ) : null}
         </div>
       </div>
+
+      <div
+        className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950"
+        role="note"
+      >
+        <ShieldAlert size={18} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
+        <div className="min-w-0">
+          <p className="font-semibold">{t.task.doneBadge}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-amber-900/90">{t.task.doneOnlyBossVerifier}</p>
+        </div>
+      </div>
+      {statusHint ? (
+        <div
+          className="mt-2 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+          role="alert"
+        >
+          <ShieldAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+          <p className="font-medium">{statusHint}</p>
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <label className="flex h-10 min-w-[12rem] flex-1 items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 sm:max-w-xs sm:flex-none">
@@ -406,9 +435,17 @@ export default function TasksPage() {
                         aria-busy={movingId === task.id || undefined}
                         onChange={(e) => void onDrop(e.target.value as TaskStatus, task.id)}
                       >
-                        {statuses.map((s) => (
-                          <option key={s.id} value={s.id}>{s.label}</option>
-                        ))}
+                        {statuses.map((s) => {
+                          const doneLocked =
+                            s.id === "done" &&
+                            task.status !== "done" &&
+                            !canMarkTaskDone(me?.role, task, me?.id);
+                          return (
+                            <option key={s.id} value={s.id} disabled={doneLocked}>
+                              {doneLocked ? t.task.doneLockedOption : s.label}
+                            </option>
+                          );
+                        })}
                       </select>
                     </td>
                     <td className="px-3 py-3">
@@ -452,7 +489,10 @@ export default function TasksPage() {
             return (
               <section
                 key={col.id}
-                className="w-[272px] shrink-0 rounded-xl border border-[var(--border)] bg-slate-50 p-2"
+                className={cn(
+                  "w-[272px] shrink-0 rounded-xl border bg-slate-50 p-2",
+                  col.id === "done" ? "border-amber-300 ring-1 ring-amber-200/80" : "border-[var(--border)]",
+                )}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -460,8 +500,18 @@ export default function TasksPage() {
                   if (id) void onDrop(col.id, id);
                 }}
               >
-                <div className="flex items-center justify-between px-2 py-2">
-                  <h2 className={cn("text-sm font-bold inline-flex rounded-full border px-2 py-0.5", taskStatusClass(col.id))}>{col.label}</h2>
+                <div className="flex items-center justify-between gap-2 px-2 py-2">
+                  <div className="min-w-0">
+                    <h2 className={cn("text-sm font-bold inline-flex rounded-full border px-2 py-0.5", taskStatusClass(col.id))}>
+                      {col.label}
+                    </h2>
+                    {col.id === "done" ? (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-lg bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900">
+                        <ShieldAlert size={11} aria-hidden />
+                        {t.task.doneBadge}
+                      </p>
+                    ) : null}
+                  </div>
                   <span className="rounded-xl bg-white px-2 py-0.5 text-xs font-semibold text-slate-500">{rows.length}</span>
                 </div>
                 <ul className="space-y-2">
@@ -752,6 +802,11 @@ function TaskDrawer({
 
   async function save() {
     if (!canEdit || saving) return;
+    const markDoneAllowed = canMarkTaskDone(me?.role, { verifierId }, me?.id);
+    if (status === "done" && task?.status !== "done" && !markDoneAllowed) {
+      setError(t.task.doneBlocked);
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -979,11 +1034,42 @@ function TaskDrawer({
             )
           ) : null}
           <Field label={t.task.status}>
-            <select className={cn(inputClass, "font-semibold", taskStatusClass(status))} value={status} disabled={!canEdit || saving} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
-              {taskStatuses(lang).map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
-              ))}
+            <select
+              className={cn(inputClass, "font-semibold", taskStatusClass(status))}
+              value={status}
+              disabled={!canEdit || saving}
+              onChange={(e) => {
+                const next = e.target.value as TaskStatus;
+                if (
+                  next === "done" &&
+                  task?.status !== "done" &&
+                  !canMarkTaskDone(me?.role, { verifierId }, me?.id)
+                ) {
+                  setError(t.task.doneBlocked);
+                  return;
+                }
+                setError("");
+                setStatus(next);
+              }}
+            >
+              {taskStatuses(lang).map((s) => {
+                const doneLocked =
+                  s.id === "done" &&
+                  task?.status !== "done" &&
+                  !canMarkTaskDone(me?.role, { verifierId }, me?.id);
+                return (
+                  <option key={s.id} value={s.id} disabled={doneLocked}>
+                    {doneLocked ? t.task.doneLockedOption : s.label}
+                  </option>
+                );
+              })}
             </select>
+            {!canMarkTaskDone(me?.role, { verifierId }, me?.id) ? (
+              <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-950">
+                <ShieldAlert size={14} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
+                <p>{t.task.doneOnlyBossVerifier}</p>
+              </div>
+            ) : null}
           </Field>
           <Field label={t.task.priority}>
             <select className={cn(inputClass, "font-semibold", taskPriorityClass(priority))} value={priority} disabled={!canEdit || saving} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
