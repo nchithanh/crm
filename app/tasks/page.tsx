@@ -14,7 +14,14 @@ import {
 } from "@/components/task-filter-drawer";
 import { filterColorOf } from "@/components/filter-checklist";
 import { ParentChip, TaskParentDrawer } from "@/components/task-parent-drawer";
-import { canManageTasks, canMarkTaskDone, canSeeAllTasks, canTouchTask, isMaStudioMode } from "@/lib/access";
+import {
+  canManageTaskParents,
+  canManageTasks,
+  canMarkTaskDone,
+  canSeeAllTasks,
+  canTouchTask,
+  isMaStudioMode,
+} from "@/lib/access";
 import { mergeTaskActivity } from "@/lib/task-activity";
 import { taskAssigneeIds, taskMatchesAssigneeFilter } from "@/lib/task-people";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
@@ -89,6 +96,7 @@ export default function TasksPage() {
   const { lang, t } = useI18n();
   const me = useAuthStore((s) => s.user);
   const canEdit = canManageTasks(me?.role);
+  const canEditParents = canManageTaskParents(me?.role);
   const seeAll = canSeeAllTasks(me?.role);
   const maMode = isMaStudioMode();
   const ma = useMaTasksData(maMode);
@@ -252,7 +260,7 @@ export default function TasksPage() {
           <Button type="button" variant={mode === "board" ? "primary" : "outline"} onClick={() => setMode("board")}>
             {t.task.board}
           </Button>
-          {canEdit ? (
+          {canEditParents ? (
             <Button type="button" variant="outline" onClick={() => { setParentOpen(true); setFilterOpen(false); }}>
               <FolderKanban size={16} />
               {t.task.parentManage}
@@ -570,11 +578,11 @@ export default function TasksPage() {
         </div>
       )}
 
-      {parentOpen ? (
+      {parentOpen && canEditParents ? (
         <TaskParentDrawer
           parents={parents}
           tasks={branchTasks}
-          canEdit={canEdit}
+          canEdit={canEditParents}
           onClose={() => setParentOpen(false)}
           onChanged={() => { if (maMode) void ma.reload(); }}
         />
@@ -606,6 +614,7 @@ export default function TasksPage() {
             (!!open &&
               canTouchTask(me?.role, open, me?.id))
           }
+          canEditParents={canEditParents}
           onClose={() => { setCreating(false); setOpenId(null); }}
           onMutated={() => { if (maMode) void ma.reload(); }}
         />
@@ -621,6 +630,7 @@ function TaskDrawer({
   parents,
   me,
   canEdit,
+  canEditParents,
   onClose,
   onMutated,
 }: {
@@ -630,6 +640,7 @@ function TaskDrawer({
   parents: TaskParent[];
   me: User | null | undefined;
   canEdit: boolean;
+  canEditParents: boolean;
   onClose: () => void;
   onMutated?: () => void;
 }) {
@@ -960,7 +971,7 @@ function TaskDrawer({
   }
 
   async function addParent() {
-    if (!canEdit || parentBusy) return;
+    if (!canEditParents || parentBusy) return;
     setParentBusy(true);
     setParentError("");
     try {
@@ -1017,7 +1028,7 @@ function TaskDrawer({
               ))}
             </select>
           </Field>
-          {canEdit ? (
+          {canEditParents ? (
             addingParent ? (
               <div className="grid gap-2 rounded-xl border border-[var(--border)] bg-slate-50 p-3">
                 <Field label={t.task.parentName}>
@@ -1032,6 +1043,8 @@ function TaskDrawer({
             ) : (
               <Button type="button" variant="outline" onClick={() => setAddingParent(true)}>{t.task.createParent}</Button>
             )
+          ) : canEdit ? (
+            <p className="text-xs text-slate-500">{t.task.parentOnlyBossManager}</p>
           ) : null}
           <Field label={t.task.status}>
             <select

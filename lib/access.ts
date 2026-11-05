@@ -62,8 +62,13 @@ export function canManageTasks(role: Role | undefined) {
   return role === "boss" || role === "owner" || role === "reception" || role === "marketing";
 }
 
-/** Boss / Quản lý xem mọi tác vụ. */
+/** Boss / Quản lý (`owner`) xem mọi tác vụ. */
 export function canSeeAllTasks(role: Role | undefined) {
+  return role === "boss" || role === "owner";
+}
+
+/** Chỉ Boss / Quản lý được tạo·sửa·xóa nhóm việc. */
+export function canManageTaskParents(role: Role | undefined) {
   return role === "boss" || role === "owner";
 }
 
@@ -77,13 +82,13 @@ export function canTouchTask(
   return taskAssigneeIds(task).includes(userId) || task.verifierId === userId;
 }
 
-/** Chuyển sang Done: chỉ boss/owner hoặc người kiểm tra của task. */
+/** Chuyển sang Done: chỉ boss hoặc người kiểm tra của task (không gồm owner/Quản lý). */
 export function canMarkTaskDone(
   role: Role | undefined,
   task: { verifierId?: string },
   userId?: string,
 ) {
-  if (role === "boss" || role === "owner") return true;
+  if (role === "boss") return true;
   if (!userId) return false;
   return Boolean(task.verifierId && task.verifierId === userId);
 }

@@ -2,7 +2,9 @@
 
 ## 2026-11-05
 
-- **Tasks Done:** chỉ **boss/owner** hoặc **người kiểm tra** được chuyển sang Done (BE + FE). UI: banner amber, badge cột Done, option khóa `Done — chỉ Boss/kiểm tra`, alert khi bị chặn.
+- **Tasks Done (FE):** chỉ **boss** hoặc **người kiểm tra** (không gồm owner/Quản lý). UI: banner amber, badge cột Done, option khóa.
+- **Nhóm việc (FE):** chỉ **boss** / **owner (Quản lý)** tạo·sửa·xóa nhóm (`canManageTaskParents`).
+- **Media upload:** FE nén/resize ảnh trước upload (max cạnh 1920px, JPEG ~0.72) qua `compress-image.ts` trong `apiUploadMedia` — task mô tả + comment.
 - **MA media upload:** BE `/crm/{org}/media` nâng giới hạn ảnh **5MB → 20MB** (task mô tả / comment). Bill thu học phí vẫn 1,5MB ở FE.
 - **Docker media:** PHP `upload_max`/`post_max` **25M** + nginx body 25m + fastcgi timeout 120s (tránh ảnh ~14MB treo `network` khi Lưu).
 

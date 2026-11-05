@@ -21,7 +21,9 @@ SoT endpoint BE: `products/saas/backend/context/crm/tasks.md` (+ `branches.md`, 
 - List/board + drawer: data từ hook; **mở drawer** MA `GET /tasks/{id}` để lấy `comments` + `activity` (list không embed). Tab Tất cả / Comment / Lịch sử. Sau save/comment/drag status → `reload`; gửi comment → fetch lại detail.
 - **Mô tả task:** field `note` = mô tả (textarea); `note_image_urls` ≤10 ảnh (upload `/media` lúc lưu).
 - **Comment ảnh (MA):** chọn nhiều file (≤10) → lần lượt `POST /media` (R2 bucket `crm`, folder = slug tên org) → `POST /comments` kèm `image_urls` (+ text tùy chọn). Timeline hiện lưới ảnh.
-- **Nhóm việc:** `TaskParentDrawer` — POST/PATCH/DELETE `/task-parents`.
+- **Nhóm việc:** `TaskParentDrawer` — POST/PATCH/DELETE `/task-parents`. **FE:** chỉ `boss` / `owner` (`canManageTaskParents`); role khác không thấy nút quản lý / tạo nhóm trong drawer.
+- **Done (FE):** chỉ `boss` hoặc `verifier_id` = mình (`canMarkTaskDone`). Owner/Quản lý không Done trên UI (BE có thể khác — SoT FE).
+- Media: `apiUploadMedia` nén ảnh client trước upload (`lib/compress-image.ts`).
 - Demo vertical (`authMode=demo`): vẫn IndexedDB như cũ.
 - Boss thêm menu tạo TK: xem `ma-staff.md`.
 - Task có **nhiều người phụ trách** (`assignee_ids`) + `verifier_id` (Người kiểm tra). Scope list: boss/owner = all; role khác = mình nằm trong assignee_ids hoặc là verifier.

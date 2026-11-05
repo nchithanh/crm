@@ -1,4 +1,5 @@
 import { crmFetch, crmUpload } from "@/lib/api/crm-client";
+import { compressImageForUpload } from "@/lib/compress-image";
 import type { StudioTask, TaskActivity, TaskComment, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
 
 type ApiTask = {
@@ -303,8 +304,9 @@ export async function apiAddComment(
 }
 
 export async function apiUploadMedia(file: File): Promise<string> {
+  const ready = await compressImageForUpload(file);
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", ready);
   const res = await crmUpload<{ data: { url: string } }>("/media", form);
   return res.data.url;
 }
