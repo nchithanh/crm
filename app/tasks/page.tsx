@@ -1,10 +1,11 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Check, FolderKanban, ImagePlus, ListFilter, Search, ShieldAlert, X } from "lucide-react";
+import { Check, FolderKanban, ImagePlus, ListFilter, Search, ShieldAlert } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Button, Card, Field, Skeleton, Spinner, inputClass } from "@/components/ui";
 import { CrmDrawerShell, useOverlayClose } from "@/components/crm-overlay";
+import { TaskImageGallery } from "@/components/task-image-gallery";
 import {
   TASK_FILTER_NONE_PARENT,
   TaskFilterDrawer,
@@ -1156,47 +1157,31 @@ function TaskDrawer({
               onChange={(e) => setNote(e.target.value)}
             />
           </Field>
-          {(noteImageUrls.length > 0 || notePendingPreviews.length > 0) ? (
-            <div className="flex flex-wrap gap-2">
-              {noteImageUrls.map((src, index) => (
-                <div key={src} className="relative w-fit">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt="" className="max-h-28 max-w-[7.5rem] rounded-xl border border-[var(--border)] object-contain" />
-                  {canEdit ? (
-                    <button
-                      type="button"
-                      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
-                      aria-label={t.task.removeImage}
-                      disabled={saving}
-                      onClick={() => removeNoteUrlAt(index)}
-                    >
-                      <X size={14} />
-                    </button>
-                  ) : null}
-                </div>
-              ))}
-              {notePendingPreviews.map((src, index) => (
-                <div key={src} className="relative w-fit">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={src} alt="" className="max-h-28 max-w-[7.5rem] rounded-xl border border-dashed border-[var(--brand-500)] object-contain" />
-                  {uploadingImages ? (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
-                      <Spinner className="text-[var(--brand-500)]" />
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
-                      aria-label={t.task.removeImage}
-                      disabled={saving}
-                      onClick={() => removeNotePendingAt(index)}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+          {noteImageUrls.length > 0 ? (
+            <TaskImageGallery
+              urls={noteImageUrls}
+              viewLabel={t.task.viewImage}
+              closeLabel={t.task.closeImage}
+              prevLabel={t.task.prevImage}
+              nextLabel={t.task.nextImage}
+              counterLabel={(current, total) => fill(t.task.imageCount, { current, total })}
+              removeLabel={t.task.removeImage}
+              onRemove={canEdit && !saving ? removeNoteUrlAt : undefined}
+            />
+          ) : null}
+          {notePendingPreviews.length > 0 ? (
+            <TaskImageGallery
+              urls={notePendingPreviews}
+              pending
+              busy={uploadingImages}
+              viewLabel={t.task.viewImage}
+              closeLabel={t.task.closeImage}
+              prevLabel={t.task.prevImage}
+              nextLabel={t.task.nextImage}
+              counterLabel={(current, total) => fill(t.task.imageCount, { current, total })}
+              removeLabel={t.task.removeImage}
+              onRemove={!saving && !uploadingImages ? removeNotePendingAt : undefined}
+            />
           ) : null}
           {maMode && canEdit ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -1274,17 +1259,14 @@ function TaskDrawer({
                           <p className="whitespace-pre-wrap text-sm text-slate-700">{row.text}</p>
                         ) : null}
                         {(row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []).length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {(row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []).map((src) => (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                key={src}
-                                src={src}
-                                alt=""
-                                className="max-h-40 max-w-[min(100%,12rem)] rounded-xl border border-[var(--border)] object-contain"
-                              />
-                            ))}
-                          </div>
+                          <TaskImageGallery
+                            urls={row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []}
+                            viewLabel={t.task.viewImage}
+                            closeLabel={t.task.closeImage}
+                            prevLabel={t.task.prevImage}
+                            nextLabel={t.task.nextImage}
+                            counterLabel={(current, total) => fill(t.task.imageCount, { current, total })}
+                          />
                         ) : null}
                       </div>
                     ) : row.kind === "created" ? (
@@ -1316,33 +1298,18 @@ function TaskDrawer({
                   }}
                 />
                 {commentPreviews.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {commentPreviews.map((src, index) => (
-                      <div key={src} className="relative w-fit">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={src}
-                          alt=""
-                          className="max-h-28 max-w-[7.5rem] rounded-xl border border-[var(--border)] object-contain"
-                        />
-                        {commentUploading ? (
-                          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
-                            <Spinner className="text-[var(--brand-500)]" />
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-600 shadow"
-                            aria-label={t.task.removeImage}
-                            disabled={commentBusy}
-                            onClick={() => removeCommentImageAt(index)}
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  <TaskImageGallery
+                    urls={commentPreviews}
+                    pending
+                    busy={commentUploading}
+                    viewLabel={t.task.viewImage}
+                    closeLabel={t.task.closeImage}
+                    prevLabel={t.task.prevImage}
+                    nextLabel={t.task.nextImage}
+                    counterLabel={(current, total) => fill(t.task.imageCount, { current, total })}
+                    removeLabel={t.task.removeImage}
+                    onRemove={!commentBusy ? removeCommentImageAt : undefined}
+                  />
                 ) : null}
                 <div className="flex flex-wrap items-center gap-2">
                   {maMode ? (

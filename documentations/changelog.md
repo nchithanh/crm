@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06
+
+- **Task ảnh:** thumbnail mô tả / comment / preview bấm được; lightbox full màn (trước, sau, đếm, Escape không đóng drawer). `components/task-image-gallery.tsx`.
+- **Lightbox mobile:** vùng chạm trái/phải luôn trên ảnh; ảnh chưa tải không chặn chuyển ảnh, có spinner.
+
 ## 2026-11-05
 
 - **Tasks Done (FE):** chỉ **boss** hoặc **người kiểm tra** (không gồm owner/Quản lý). UI: banner amber, badge cột Done, option khóa.
