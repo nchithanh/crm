@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev --port 3014",
     "build": "node scripts/write-build-id.mjs && next build",
+    "typecheck": "tsc --noEmit",
     "start": "next start --port 3014"
   },
   "dependencies": {

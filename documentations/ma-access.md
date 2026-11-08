@@ -6,9 +6,11 @@ Khi `authMode=ma`, ma trận `/settings/access` sync Laravel thay Dexie.
 
 | File | Vai trò |
 | --- | --- |
-| `lib/api/crm-access.ts` | `GET/PUT /crm/{org}/access` |
+| `lib/api/crm-access.ts` | `GET/PUT /crm/{org}/access` (`MaRoleAccessRow.id: Role`) |
 | `stores/access-store.ts` | `hydrate` / mutate → API khi MA; Dexie khi demo |
 | `stores/auth-store.ts` | Sau login MA → `hydrate` access |
+
+Local / CI: `npm run typecheck` trước khi ship (workflow Pages chạy bước này trước build).
 
 SoT BE: `products/saas/backend/context/crm/access.md` (+ enforce `tasks.md`).
 

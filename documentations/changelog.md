@@ -2,6 +2,7 @@
 
 ## 2026-11-08
 
+- **CI · typecheck:** `npm run typecheck` (`tsc --noEmit`) trước `next build` trong Pages workflow.
 - **Tasks · quyền tạo ≠ xem all:** `canTouchTask` bỏ nhánh `create/delete` — chỉ see-all / assignee / verifier. Bật “Tạo tác vụ” không còn làm thấy/chạm mọi task.
 - **MA session · đổi role online:** BE JWT lấy role/status từ DB; FE `syncMaSession` + refresh matrix khi focus / tasks·access·staff; khóa → 401 logout. Fix reload loop: AuthGate không boot lại khi sync profile; chỉ `set` user/revision khi data đổi; throttle sync 8s.
 - **Phân quyền MA · refresh:** kéo lại `GET /access` khi focus tab hoặc vào `/tasks` · `/settings/access` — UI cập nhật sau Boss sửa, không cần login lại.

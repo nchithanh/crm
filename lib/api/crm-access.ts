@@ -1,24 +1,20 @@
 import { crmFetch, type CrmFetchInit } from "@/lib/api/crm-client";
-import type { RoleAccess, TaskAccess } from "@/types";
+import type { RoleAccess } from "@/types";
 
-export type MaRoleAccessRow = {
-  id: string;
-  items: Record<string, boolean>;
-  tabs: Record<string, boolean>;
-  tasks: TaskAccess;
-};
+/** Hàng ma trận từ API — cùng shape `RoleAccess` (`id: Role`, Boss không lưu). */
+export type MaRoleAccessRow = RoleAccess;
 
 /** GET /crm/{org}/access */
-export async function fetchMaAccessMatrix(opts?: Pick<CrmFetchInit, "silentError">): Promise<MaRoleAccessRow[]> {
-  const res = await crmFetch<{ data: MaRoleAccessRow[] }>("/access", {
+export async function fetchMaAccessMatrix(opts?: Pick<CrmFetchInit, "silentError">): Promise<RoleAccess[]> {
+  const res = await crmFetch<{ data: RoleAccess[] }>("/access", {
     silentError: opts?.silentError,
   });
   return res.data ?? [];
 }
 
 /** PUT /crm/{org}/access — Boss only. */
-export async function putMaAccessMatrix(rows: RoleAccess[]): Promise<MaRoleAccessRow[]> {
-  const res = await crmFetch<{ data: MaRoleAccessRow[] }>("/access", {
+export async function putMaAccessMatrix(rows: RoleAccess[]): Promise<RoleAccess[]> {
+  const res = await crmFetch<{ data: RoleAccess[] }>("/access", {
     method: "PUT",
     body: JSON.stringify({
       data: rows.map((row) => ({
