@@ -342,7 +342,7 @@ export default function AccessSettingsPage() {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-[var(--foreground)]">{row.label}</p>
-                {row.kind !== "taskVisibility" && rowHiddenEverywhere(row) ? (
+                {rowHiddenEverywhere(row) ? (
                   <p className="text-xs text-amber-600">{t.access.hiddenAll}</p>
                 ) : null}
               </div>
