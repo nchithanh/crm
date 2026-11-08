@@ -115,6 +115,9 @@ export const NAV_AI: NavItem = { href: "/dolphin-ai", key: "ai", icon: Sparkles 
 /** MA only — hiện qua canSeeNavHref (boss). Không đưa vào NavItemKey / ma trận demo. */
 export const NAV_MA_STAFF = { href: "/staff", key: "staff" as const, icon: UserPlus };
 
+/** MA — Phân quyền (Boss luôn; role khác nếu ma trận bật `access`). */
+export const NAV_MA_ACCESS = { href: "/settings/access", key: "access" as const, icon: Settings2 };
+
 export const NAV_SYSTEM: NavGroup = {
   title: "system",
   items: [

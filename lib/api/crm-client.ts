@@ -1,5 +1,6 @@
 import { crmApiBaseUrl } from "@/lib/api/config";
 import { clearCrmSession, getCrmAccessToken, getCrmOrganization } from "@/lib/api/crm-session";
+import { reportSystemApiError } from "@/stores/system-error-store";
 import { useAuthStore } from "@/stores/auth-store";
 
 export class CrmApiError extends Error {
@@ -23,11 +24,41 @@ function redirectToLoginAfterUnauthorized() {
   window.location.replace(target);
 }
 
+function messageFromBody(body: unknown): string {
+  if (!body || typeof body !== "object") return "";
+  if ("message" in body && typeof (body as { message: unknown }).message === "string") {
+    const msg = (body as { message: string }).message.trim();
+    if (msg) return msg;
+  }
+  if ("errors" in body && (body as { errors: unknown }).errors && typeof (body as { errors: unknown }).errors === "object") {
+    const errors = (body as { errors: Record<string, unknown> }).errors;
+    for (const value of Object.values(errors)) {
+      if (Array.isArray(value) && typeof value[0] === "string" && value[0].trim()) {
+        return value[0].trim();
+      }
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+  return "";
+}
+
+function throwCrmError(status: number, body: unknown): never {
+  const msg = messageFromBody(body) || "fail";
+  reportSystemApiError(status, msg);
+  throw new CrmApiError(msg, status);
+}
+
+export type CrmFetchInit = RequestInit & {
+  /** Không mở popup lỗi toàn app (vd. refresh nền). */
+  silentError?: boolean;
+};
+
 /** Fetch JSON tới /crm/{org}/… với Bearer. 401 / thiếu session → login. */
 export async function crmFetch<T>(
   path: string,
-  init: RequestInit = {},
+  init: CrmFetchInit = {},
 ): Promise<T> {
+  const { silentError, ...req } = init;
   const org = getCrmOrganization();
   const token = getCrmAccessToken();
   if (!org || !token) {
@@ -39,15 +70,16 @@ export async function crmFetch<T>(
   let res: Response;
   try {
     res = await fetch(url, {
-      ...init,
+      ...req,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        ...(init.headers ?? {}),
+        ...(req.headers ?? {}),
       },
     });
   } catch {
+    if (!silentError) reportSystemApiError(0, "network");
     throw new CrmApiError("network", 0);
   }
 
@@ -68,10 +100,8 @@ export async function crmFetch<T>(
   }
 
   if (!res.ok) {
-    const msg =
-      body && typeof body === "object" && "message" in body && typeof (body as { message: unknown }).message === "string"
-        ? (body as { message: string }).message
-        : "fail";
+    const msg = messageFromBody(body) || "fail";
+    if (!silentError) reportSystemApiError(res.status, msg);
     throw new CrmApiError(msg, res.status);
   }
 
@@ -99,6 +129,7 @@ export async function crmUpload<T>(path: string, form: FormData): Promise<T> {
       body: form,
     });
   } catch {
+    reportSystemApiError(0, "network");
     throw new CrmApiError("network", 0);
   }
 
@@ -115,11 +146,7 @@ export async function crmUpload<T>(path: string, form: FormData): Promise<T> {
   }
 
   if (!res.ok) {
-    const msg =
-      body && typeof body === "object" && "message" in body && typeof (body as { message: unknown }).message === "string"
-        ? (body as { message: string }).message
-        : "fail";
-    throw new CrmApiError(msg, res.status);
+    throwCrmError(res.status, body);
   }
 
   return body as T;

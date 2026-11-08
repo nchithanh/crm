@@ -35,8 +35,10 @@ function mapProfile(p: ApiProfile): CrmProfile {
   };
 }
 
-export async function fetchMyProfile(): Promise<CrmProfile> {
-  const res = await crmFetch<{ data: ApiProfile }>("/me");
+export async function fetchMyProfile(opts?: { silentError?: boolean }): Promise<CrmProfile> {
+  const res = await crmFetch<{ data: ApiProfile }>("/me", {
+    silentError: opts?.silentError,
+  });
   return mapProfile(res.data);
 }
 

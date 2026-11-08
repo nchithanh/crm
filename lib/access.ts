@@ -27,10 +27,19 @@ function isMaStaffPath(pathname: string) {
   return path === "/staff" || path.startsWith("/staff/");
 }
 
+function isMaAccessPath(pathname: string) {
+  const path = normalizePath(pathname);
+  return path === "/settings/access" || path.startsWith("/settings/access/");
+}
+
 /** Path MA được phép theo role. */
 export function isMaAllowedPath(pathname: string, role?: Role) {
   if (isMaTasksPath(pathname)) return true;
   if (isMaStaffPath(pathname) && role === "boss") return true;
+  if (isMaAccessPath(pathname)) {
+    if (role === "boss") return true;
+    return useAccessStore.getState().hasNav(role, "access");
+  }
   return false;
 }
 
@@ -58,39 +67,85 @@ export function canManageCatalog(role: Role | undefined) {
   return role === "boss" || role === "owner" || role === "reception";
 }
 
+/** Tạo task theo ma trận (Boss luôn true). */
+export function canCreateTasks(role: Role | undefined) {
+  return useAccessStore.getState().hasTaskAction(role, "create");
+}
+
+/** Tạo / xóa task theo ma trận (Boss luôn true). */
 export function canManageTasks(role: Role | undefined) {
-  return role === "boss" || role === "owner" || role === "reception" || role === "marketing";
+  const store = useAccessStore.getState();
+  return store.hasTaskAction(role, "create") || store.hasTaskAction(role, "delete");
 }
 
-/** Boss / Quản lý (`owner`) xem mọi tác vụ. */
+/** Xem mọi tác vụ — Boss luôn; role khác theo ma trận Phạm vi xem. */
 export function canSeeAllTasks(role: Role | undefined) {
-  return role === "boss" || role === "owner";
+  return useAccessStore.getState().taskVisibility(role) === "all";
 }
 
-/** Chỉ Boss / Quản lý được tạo·sửa·xóa nhóm việc. */
+/** Tạo·sửa·xóa nhóm việc theo ma trận. */
 export function canManageTaskParents(role: Role | undefined) {
-  return role === "boss" || role === "owner";
+  return useAccessStore.getState().hasTaskAction(role, "manageParents");
 }
 
+/** Người chịu trách nhiệm làm task (assignee). */
+export function isTaskHandler(
+  task: { assigneeId?: string; assigneeIds?: string[] },
+  userId?: string,
+) {
+  if (!userId) return false;
+  return taskAssigneeIds(task).includes(userId);
+}
+
+/** Người kiểm tra của task — luôn được sửa field (không thuộc ma trận). */
+export function isTaskVerifier(task: { verifierId?: string }, userId?: string) {
+  if (!userId) return false;
+  return Boolean(task.verifierId && task.verifierId === userId);
+}
+
+/** Sửa nội dung field: Boss, verifier (cố định), hoặc role được Boss cấp `editFields`. */
+export function canEditTaskFields(
+  role: Role | undefined,
+  task: { verifierId?: string },
+  userId?: string,
+) {
+  if (role === "boss") return true;
+  if (isTaskVerifier(task, userId)) return true;
+  return useAccessStore.getState().hasTaskAction(role, "editFields");
+}
+
+export function canChangeTaskStatus(role: Role | undefined) {
+  return useAccessStore.getState().hasTaskAction(role, "changeStatus");
+}
+
+export function canCommentTask(role: Role | undefined) {
+  return useAccessStore.getState().hasTaskAction(role, "comment");
+}
+
+/**
+ * Chạm task (xem scoped / đổi status trên task đang thấy):
+ * xem all · người chịu trách nhiệm · verifier.
+ * Không gồm create/delete — CTA tạo không được mở quyền đụng mọi task.
+ */
 export function canTouchTask(
   role: Role | undefined,
   task: { assigneeId?: string; assigneeIds?: string[]; verifierId?: string },
   userId?: string,
 ) {
-  if (canManageTasks(role)) return true;
+  if (canSeeAllTasks(role)) return true;
   if (!userId) return false;
-  return taskAssigneeIds(task).includes(userId) || task.verifierId === userId;
+  return isTaskHandler(task, userId) || isTaskVerifier(task, userId);
 }
 
-/** Chuyển sang Done: chỉ boss hoặc người kiểm tra của task (không gồm owner/Quản lý). */
+/** Done: Boss, verifier (cố định), hoặc role được cấp `markDone`. */
 export function canMarkTaskDone(
   role: Role | undefined,
   task: { verifierId?: string },
   userId?: string,
 ) {
   if (role === "boss") return true;
-  if (!userId) return false;
-  return Boolean(task.verifierId && task.verifierId === userId);
+  if (isTaskVerifier(task, userId)) return true;
+  return useAccessStore.getState().hasTaskAction(role, "markDone");
 }
 
 export function canManagePaymentAccounts(role: Role | undefined) {

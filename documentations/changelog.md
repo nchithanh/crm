@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-08
+
+- **Tasks · quyền tạo ≠ xem all:** `canTouchTask` bỏ nhánh `create/delete` — chỉ see-all / assignee / verifier. Bật “Tạo tác vụ” không còn làm thấy/chạm mọi task.
+- **MA session · đổi role online:** BE JWT lấy role/status từ DB; FE `syncMaSession` + refresh matrix khi focus / tasks·access·staff; khóa → 401 logout. Fix reload loop: AuthGate không boot lại khi sync profile; chỉ `set` user/revision khi data đổi; throttle sync 8s.
+- **Phân quyền MA · refresh:** kéo lại `GET /access` khi focus tab hoặc vào `/tasks` · `/settings/access` — UI cập nhật sau Boss sửa, không cần login lại.
+- **Lỗi API · popup toàn app:** `crmFetch`/`crmUpload` mở dialog — 4xx hiện message BE (fallback 403/404/422); 5xx kêu liên hệ support (Zalo); mạng = mất kết nối. `SystemErrorDialog` + `system-error-store`.
+- **Phân quyền · Integrate MA:** bảng BE `role_access` + `GET/PUT /access`; `TaskService` enforce matrix; FE sync MA. API **không** tự tạo bảng — cần migrate. Docs `ma-access.md`, BE `access.md`.
+- **Phân quyền · Tác vụ UX:** tách 3 nhóm — phạm vi xem list · CTA toàn studio · trên từng task; nhãn `Tất cả tác vụ` / `Việc mình làm`.
+- **Phân quyền · Tác vụ (FE UI):** `/settings/access` khối **Tác vụ**; mặc định Admin & staff = `mine` + status + comment; chỉ Boss sửa ma trận.
+
 ## 2026-11-06
 
 - **Task ảnh:** thumbnail mô tả / comment / preview bấm được; lightbox full màn (trước, sau, đếm, Escape không đóng drawer). `components/task-image-gallery.tsx`.

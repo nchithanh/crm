@@ -16,8 +16,11 @@ import {
 import { filterColorOf } from "@/components/filter-checklist";
 import { ParentChip, TaskParentDrawer } from "@/components/task-parent-drawer";
 import {
+  canChangeTaskStatus,
+  canCommentTask,
+  canCreateTasks,
+  canEditTaskFields,
   canManageTaskParents,
-  canManageTasks,
   canMarkTaskDone,
   canSeeAllTasks,
   canTouchTask,
@@ -33,6 +36,7 @@ import { useMaTasksData } from "@/lib/hooks/use-ma-tasks-data";
 import { useI18n } from "@/lib/i18n";
 import { taskDueClass, taskPriorities, taskPriorityClass, taskPriorityLabel, taskStatusClass, taskStatusLabel, taskStatuses } from "@/lib/labels";
 import { cn, initials, localDayKey, zaloHref } from "@/lib/utils";
+import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
 import type { StudioTask, TaskParent, TaskPriority, TaskStatus, User } from "@/types";
@@ -96,9 +100,13 @@ function AssigneeFaces({
 export default function TasksPage() {
   const { lang, t } = useI18n();
   const me = useAuthStore((s) => s.user);
-  const canEdit = canManageTasks(me?.role);
+  const accessRev = useAccessStore((s) => s.revision);
+  const canCreate = canCreateTasks(me?.role);
   const canEditParents = canManageTaskParents(me?.role);
   const seeAll = canSeeAllTasks(me?.role);
+  const allowStatus = canChangeTaskStatus(me?.role);
+  const allowComment = canCommentTask(me?.role);
+  void accessRev;
   const maMode = isMaStudioMode();
   const ma = useMaTasksData(maMode);
   const dexieTasks = useLiveQuery(() => db.tasks.toArray(), []) ?? [];
@@ -222,7 +230,7 @@ export default function TasksPage() {
   async function onDrop(status: TaskStatus, taskId: string) {
     const task = tasks.find((row) => row.id === taskId);
     if (!task || task.status === status || movingId) return;
-    if (!canTouchTask(me?.role, task, me?.id)) return;
+    if (!allowStatus || !canTouchTask(me?.role, task, me?.id)) return;
     if (status === "done" && !canMarkTaskDone(me?.role, task, me?.id)) {
       setStatusHint(t.task.doneBlocked);
       return;
@@ -252,7 +260,9 @@ export default function TasksPage() {
             </p>
           ) : null}
           {maMode && ma.error ? <p className="mt-1 text-xs text-rose-600">{ma.error}</p> : null}
-          {!canEdit ? <p className="mt-1 text-xs text-slate-400">{t.task.viewOnly}</p> : null}
+          {!canCreate && !allowStatus && !allowComment ? (
+            <p className="mt-1 text-xs text-slate-400">{t.task.viewOnly}</p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant={mode === "list" ? "primary" : "outline"} onClick={() => setMode("list")}>
@@ -267,7 +277,7 @@ export default function TasksPage() {
               {t.task.parentManage}
             </Button>
           ) : null}
-          {canEdit ? (
+          {canCreate ? (
             <Button type="button" onClick={() => { setCreating(true); setOpenId(null); }}>
               {t.task.create}
             </Button>
@@ -439,6 +449,7 @@ export default function TasksPage() {
                         value={task.status}
                         disabled={
                           Boolean(movingId) ||
+                          !allowStatus ||
                           !canTouchTask(me?.role, task, me?.id)
                         }
                         aria-busy={movingId === task.id || undefined}
@@ -527,7 +538,7 @@ export default function TasksPage() {
                   {rows.map((task) => {
                     const overdue = task.status !== "done" && task.dueDay < today;
                     const soon = !overdue && task.status !== "done" && task.dueDay <= soonDay;
-                    const movable = canTouchTask(me?.role, task, me?.id);
+                    const movable = allowStatus && canTouchTask(me?.role, task, me?.id);
                     const group = parentName(task.parentId);
                     return (
                       <li key={task.id}>
@@ -610,11 +621,17 @@ export default function TasksPage() {
           branches={branches}
           parents={parents}
           me={me}
-          canEdit={
-            canEdit ||
-            (!!open &&
-              canTouchTask(me?.role, open, me?.id))
+          canEditFields={
+            creating
+              ? canCreate
+              : !!open && canEditTaskFields(me?.role, open, me?.id)
           }
+          canChangeStatus={
+            creating
+              ? canCreate
+              : !!open && allowStatus && canTouchTask(me?.role, open, me?.id)
+          }
+          canComment={allowComment}
           canEditParents={canEditParents}
           onClose={() => { setCreating(false); setOpenId(null); }}
           onMutated={() => { if (maMode) void ma.reload(); }}
@@ -630,7 +647,9 @@ function TaskDrawer({
   branches,
   parents,
   me,
-  canEdit,
+  canEditFields,
+  canChangeStatus,
+  canComment,
   canEditParents,
   onClose,
   onMutated,
@@ -640,11 +659,14 @@ function TaskDrawer({
   branches: { id: string; name: string }[];
   parents: TaskParent[];
   me: User | null | undefined;
-  canEdit: boolean;
+  canEditFields: boolean;
+  canChangeStatus: boolean;
+  canComment: boolean;
   canEditParents: boolean;
   onClose: () => void;
   onMutated?: () => void;
 }) {
+  const canSave = canEditFields || canChangeStatus;
   const { lang, t } = useI18n();
   const maMode = isMaStudioMode();
   const liveTask = useLiveQuery(
@@ -813,7 +835,7 @@ function TaskDrawer({
   }
 
   async function save() {
-    if (!canEdit || saving) return;
+    if (!canSave || saving) return;
     const markDoneAllowed = canMarkTaskDone(me?.role, { verifierId }, me?.id);
     if (status === "done" && task?.status !== "done" && !markDoneAllowed) {
       setError(t.task.doneBlocked);
@@ -835,39 +857,45 @@ function TaskDrawer({
           setUploadingImages(false);
         }
       }
-      const code = task
-        ? await updateTask({
-            id: task.id,
-            title,
-            status,
-            priority,
-            assigneeId: assigneeIds[0] ?? "",
-            assigneeIds,
-            verifierId,
-            branchId,
-            parentId,
-            dueDay,
-            note,
-            noteImageUrls: uploaded,
-            actorId: me?.id,
-          })
-        : await createTask({
-            title,
-            status,
-            priority,
-            assigneeId: assigneeIds[0] ?? "",
-            assigneeIds,
-            verifierId,
-            branchId,
-            parentId,
-            dueDay,
-            note,
-            noteImageUrls: uploaded,
-            actorId: me?.id,
-          });
-      if (code) {
-        setError(t.task.needTitle);
-        return;
+      if (task && !canEditFields && canChangeStatus) {
+        if (status !== task.status) {
+          await moveTaskStatus(task.id, status, me?.id);
+        }
+      } else {
+        const code = task
+          ? await updateTask({
+              id: task.id,
+              title,
+              status,
+              priority,
+              assigneeId: assigneeIds[0] ?? "",
+              assigneeIds,
+              verifierId,
+              branchId,
+              parentId,
+              dueDay,
+              note,
+              noteImageUrls: uploaded,
+              actorId: me?.id,
+            })
+          : await createTask({
+              title,
+              status,
+              priority,
+              assigneeId: assigneeIds[0] ?? "",
+              assigneeIds,
+              verifierId,
+              branchId,
+              parentId,
+              dueDay,
+              note,
+              noteImageUrls: uploaded,
+              actorId: me?.id,
+            });
+        if (code) {
+          setError(t.task.needTitle);
+          return;
+        }
       }
       clearNotePending();
       setNoteImageUrls(uploaded);
@@ -1019,10 +1047,10 @@ function TaskDrawer({
 
         <div className="mt-4 grid gap-3">
           <Field label={t.task.titleField}>
-            <input className={inputClass} value={title} disabled={!canEdit || saving} onChange={(e) => setTitle(e.target.value)} />
+            <input className={inputClass} value={title} disabled={!canEditFields || saving} onChange={(e) => setTitle(e.target.value)} />
           </Field>
           <Field label={t.task.parent}>
-            <select className={cn(inputClass, "font-semibold")} value={parentId} disabled={!canEdit || saving} onChange={(e) => setParentId(e.target.value)} style={parentId ? { borderColor: filterColorOf(parentId), color: filterColorOf(parentId) } : undefined}>
+            <select className={cn(inputClass, "font-semibold")} value={parentId} disabled={!canEditFields || saving} onChange={(e) => setParentId(e.target.value)} style={parentId ? { borderColor: filterColorOf(parentId), color: filterColorOf(parentId) } : undefined}>
               <option value="">{t.task.noParent}</option>
               {parents.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -1044,14 +1072,14 @@ function TaskDrawer({
             ) : (
               <Button type="button" variant="outline" onClick={() => setAddingParent(true)}>{t.task.createParent}</Button>
             )
-          ) : canEdit ? (
+          ) : canEditFields ? (
             <p className="text-xs text-slate-500">{t.task.parentOnlyBossManager}</p>
           ) : null}
           <Field label={t.task.status}>
             <select
               className={cn(inputClass, "font-semibold", taskStatusClass(status))}
               value={status}
-              disabled={!canEdit || saving}
+              disabled={!canChangeStatus || saving}
               onChange={(e) => {
                 const next = e.target.value as TaskStatus;
                 if (
@@ -1086,7 +1114,7 @@ function TaskDrawer({
             ) : null}
           </Field>
           <Field label={t.task.priority}>
-            <select className={cn(inputClass, "font-semibold", taskPriorityClass(priority))} value={priority} disabled={!canEdit || saving} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+            <select className={cn(inputClass, "font-semibold", taskPriorityClass(priority))} value={priority} disabled={!canEditFields || saving} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
               {taskPriorities(lang).map((p) => (
                 <option key={p.id} value={p.id}>{p.label}</option>
               ))}
@@ -1103,7 +1131,7 @@ function TaskDrawer({
                     <button
                       key={u.id}
                       type="button"
-                      disabled={!canEdit || saving}
+                      disabled={!canEditFields || saving}
                       onClick={() =>
                         setAssigneeIds((cur) => (cur.includes(u.id) ? cur.filter((id) => id !== u.id) : [...cur, u.id]))
                       }
@@ -1129,7 +1157,7 @@ function TaskDrawer({
             </div>
           </Field>
           <Field label={t.task.verifier}>
-            <select className={inputClass} value={verifierId} disabled={!canEdit || saving} onChange={(e) => setVerifierId(e.target.value)}>
+            <select className={inputClass} value={verifierId} disabled={!canEditFields || saving} onChange={(e) => setVerifierId(e.target.value)}>
               <option value="">{t.task.unassignedVerifier}</option>
               {staff.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
@@ -1137,7 +1165,7 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.common.branch}>
-            <select className={inputClass} value={branchId} disabled={!canEdit || saving} onChange={(e) => setBranchId(e.target.value)}>
+            <select className={inputClass} value={branchId} disabled={!canEditFields || saving} onChange={(e) => setBranchId(e.target.value)}>
               <option value="">—</option>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -1145,13 +1173,13 @@ function TaskDrawer({
             </select>
           </Field>
           <Field label={t.task.due}>
-            <input className={cn(inputClass, "font-semibold", taskDueClass(status, dueDay, localDayKey(), addDays(localDayKey(), 2)))} type="date" value={dueDay} disabled={!canEdit || saving} onChange={(e) => setDueDay(e.target.value)} />
+            <input className={cn(inputClass, "font-semibold", taskDueClass(status, dueDay, localDayKey(), addDays(localDayKey(), 2)))} type="date" value={dueDay} disabled={!canEditFields || saving} onChange={(e) => setDueDay(e.target.value)} />
           </Field>
           <Field label={t.task.note}>
             <textarea
               className={cn(inputClass, "h-auto min-h-36 py-2")}
               value={note}
-              disabled={!canEdit || saving}
+              disabled={!canEditFields || saving}
               rows={8}
               placeholder={t.task.notePlaceholder}
               onChange={(e) => setNote(e.target.value)}
@@ -1166,7 +1194,7 @@ function TaskDrawer({
               nextLabel={t.task.nextImage}
               counterLabel={(current, total) => fill(t.task.imageCount, { current, total })}
               removeLabel={t.task.removeImage}
-              onRemove={canEdit && !saving ? removeNoteUrlAt : undefined}
+              onRemove={canEditFields && !saving ? removeNoteUrlAt : undefined}
             />
           ) : null}
           {notePendingPreviews.length > 0 ? (
@@ -1183,7 +1211,7 @@ function TaskDrawer({
               onRemove={!saving && !uploadingImages ? removeNotePendingAt : undefined}
             />
           ) : null}
-          {maMode && canEdit ? (
+          {maMode && canEditFields ? (
             <div className="flex flex-wrap items-center gap-2">
               <label className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-[var(--border)] bg-white px-3 text-sm font-medium text-slate-700">
                 <ImagePlus size={16} />
@@ -1204,7 +1232,7 @@ function TaskDrawer({
             </div>
           ) : null}
           {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-          {canEdit ? (
+          {canSave ? (
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" disabled={saving} onClick={requestClose}>{t.common.cancel}</Button>
               <Button type="button" busy={saving} onClick={() => void save()}>
@@ -1281,7 +1309,7 @@ function TaskDrawer({
                 ))
               )}
             </ul>
-            {me?.id ? (
+            {me?.id && canComment ? (
               <div className="mt-3 grid gap-2">
                 <textarea
                   className={cn(inputClass, "h-auto min-h-24 py-2")}

@@ -1,7 +1,7 @@
 import type { NavItemKey } from "@/lib/nav";
 import type { TabKey } from "@/lib/tabs";
 import { TAB_DEFS } from "@/lib/tabs";
-import type { Role, RoleAccess } from "@/types";
+import type { Role, RoleAccess, TaskAccess, TaskAccessKey, TaskVisibility } from "@/types";
 
 /** Role có cột trong ma trận (Boss luôn bật, không lưu override). */
 export type MatrixRole = Exclude<Role, "boss">;
@@ -9,6 +9,48 @@ export type MatrixRole = Exclude<Role, "boss">;
 export const MATRIX_ROLES: MatrixRole[] = ["owner", "reception", "teacher", "marketing", "accountant"];
 
 export const ALL_ROLES: Role[] = ["boss", "owner", "reception", "teacher", "marketing", "accountant"];
+
+/** Toàn bộ action keys (persist / helpers). */
+export const TASK_ACCESS_KEYS: TaskAccessKey[] = [
+  "create",
+  "delete",
+  "changeStatus",
+  "comment",
+  "markDone",
+  "manageParents",
+  "editFields",
+];
+
+/** CTA toàn studio — không gắn từng record. */
+export const TASK_CTA_KEYS: TaskAccessKey[] = ["create", "delete", "manageParents"];
+
+/** Quyền khi đã mở một task. */
+export const TASK_RECORD_KEYS: TaskAccessKey[] = ["changeStatus", "comment", "markDone", "editFields"];
+
+/** Mặc định nhân sự / Admin: chỉ comment + đổi status; xem việc mình làm. Boss cấp thêm. */
+export function defaultTaskAccess(_role: MatrixRole): TaskAccess {
+  return {
+    visibility: "mine" satisfies TaskVisibility,
+    actions: {
+      create: false,
+      delete: false,
+      changeStatus: true,
+      comment: true,
+      markDone: false,
+      manageParents: false,
+      editFields: false,
+    },
+  };
+}
+
+export function mergeTaskAccess(row: TaskAccess | undefined, role: MatrixRole): TaskAccess {
+  const base = defaultTaskAccess(role);
+  if (!row) return base;
+  return {
+    visibility: row.visibility === "all" ? "all" : "mine",
+    actions: { ...base.actions, ...row.actions },
+  };
+}
 
 /** Nav keys trong ma trận — gồm Phân quyền. */
 export type AccessNavKey = NavItemKey | "access";
@@ -190,6 +232,7 @@ export function defaultRoleAccess(role: MatrixRole): RoleAccess {
     id: role,
     items: { ...DEFAULT_NAV[role] },
     tabs: { ...defaultTabsFor(role) },
+    tasks: defaultTaskAccess(role),
   };
 }
 
@@ -204,5 +247,6 @@ export function mergeWithDefaults(row: RoleAccess | undefined, role: MatrixRole)
     id: role,
     items: { ...base.items, ...row.items },
     tabs: { ...base.tabs, ...row.tabs },
+    tasks: mergeTaskAccess(row.tasks, role),
   };
 }

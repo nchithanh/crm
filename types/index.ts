@@ -2,11 +2,31 @@ export type VerticalId = "nhay" | "anh" | "nhac" | "boi" | "spa" | "nails" | "sa
 
 export type Role = "boss" | "owner" | "reception" | "teacher" | "marketing" | "accountant";
 
+/** Phạm vi xem tác vụ theo role (Boss luôn `all`). */
+export type TaskVisibility = "all" | "mine";
+
+/** Hành động tác vụ trong ma trận (không gồm rule verifier — runtime cố định). */
+export type TaskAccessKey =
+  | "create"
+  | "delete"
+  | "changeStatus"
+  | "comment"
+  | "markDone"
+  | "manageParents"
+  | "editFields";
+
+export type TaskAccess = {
+  visibility: TaskVisibility;
+  actions: Record<TaskAccessKey, boolean>;
+};
+
 /** Ma trận phân quyền theo role — Dexie `roleAccess`. */
 export type RoleAccess = {
   id: Role;
   items: Record<string, boolean>;
   tabs: Record<string, boolean>;
+  /** Quyền module Tác vụ — thiếu → merge mặc định. */
+  tasks?: TaskAccess;
 };
 
 export type LeadStage = "new" | "contacted" | "trial" | "won" | "lost";

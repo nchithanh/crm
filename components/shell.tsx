@@ -14,6 +14,7 @@ import {
   LogOut,
   Receipt,
   Search,
+  Settings2,
   Sparkles,
   UserPlus,
   Users,
@@ -33,6 +34,7 @@ import {
   isMaStudioMode,
 } from "@/lib/access";
 import { db } from "@/lib/db";
+import { useMaAccessRefresh } from "@/lib/hooks/use-ma-access-refresh";
 import { ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
@@ -47,7 +49,7 @@ import type { Role } from "@/types";
 
 type MobileItem = {
   href: string;
-  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "staff" | "menu" | "care";
+  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "staff" | "access" | "menu" | "care";
   icon: typeof LayoutDashboard;
 };
 
@@ -56,6 +58,9 @@ function mobileForRole(role: Role | undefined): MobileItem[] {
     const items: MobileItem[] = [{ href: "/tasks", key: "tasks", icon: ListTodo }];
     if (role === "boss") {
       items.push({ href: "/staff", key: "staff", icon: UserPlus });
+    }
+    if (role === "boss" || useAccessStore.getState().hasNav(role, "access")) {
+      items.push({ href: "/settings/access", key: "access", icon: Settings2 });
     }
     return items;
   }
@@ -161,6 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const setNavHidden = useChromeStore((s) => s.setNavHidden);
   const accessRev = useAccessStore((s) => s.revision);
   const mobile = useMemo(() => mobileForRole(user?.role), [user?.role, accessRev]);
+  useMaAccessRefresh();
 
   const settings = useLiveQuery(() => db.settings.toCollection().first(), []);
   const studio = maMode ? "Ma Dance Studio" : settings?.name || "Edu Dance";

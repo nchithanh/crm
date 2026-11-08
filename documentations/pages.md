@@ -33,7 +33,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/staff` | **MA boss only** — quản lý TK (tạo/sửa/đổi MK/khóa/chi nhánh/share) (`ma-staff.md`) |
 | `/room-bookings` · `/dolphin-ai` | Đặt phòng · Dolphin AI |
 | `/guide` | Hướng dẫn sử dụng — Course / Class / SKU / Subscription / flow. Menu Hệ thống |
-| `/settings/access` | Ma trận phân quyền (Boss / Quản lý). Menu Hệ thống |
+| `/settings/access` | Ma trận phân quyền: **Tác vụ** (phạm vi xem + hành động) · Menu · Tab. Chỉ **Boss** sửa; role khác xem nếu được cấp menu. **MA** cũng vào được path này |
 | `/menu` | Menu mobile — lưới nav theo quyền |
 
 Redirect legacy → canonical: `/` → `/overview`; `/enroll` → `/mid-course-enroll`; `/leads` → `/follow-up`; `/finance/collect` `/fees` `/thu-hoc-phi` → `/collect-fees`; `/finance/debts` `/cong-no` → `/receivables`; `/finance/revenue` `/doanh-thu` → `/revenue`; `/finance/ledger` → `/collections`; `/ai` → `/dolphin-ai`; `/diem-danh-qr` → `/qr-attendance`; `/dat-phong` → `/room-bookings`; VI khác → EN như trước.

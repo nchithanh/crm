@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/shell";
 import { BootSplash } from "@/components/boot-splash";
+import { SystemErrorDialog } from "@/components/system-error-dialog";
 import { I18nProvider } from "@/lib/i18n";
 import { getStoredAuthMode } from "@/lib/auth-mode";
 import { bootStudio, resetBoot } from "@/lib/seed";
@@ -101,7 +102,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (user && isAuthEntry(path)) {
       router.replace(homePathForRole(user.role));
     }
-  }, [hydrated, user, path, router, vertical, publicJoin]);
+  }, [hydrated, user?.id, user?.role, path, router, vertical, publicJoin]);
 
   useEffect(() => {
     if (!hydrated || vertical === undefined) return;
@@ -136,7 +137,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       window.clearTimeout(slowTimer);
       window.clearTimeout(cap);
     };
-  }, [hydrated, vertical, user, attempt, publicJoin]);
+    // Chỉ boot lại khi đổi user id (login/logout), không khi syncMaSession cập nhật profile/role.
+  }, [hydrated, vertical, user?.id, attempt, publicJoin]);
 
   if (!hydrated || vertical === undefined || !ready) {
     return (
@@ -154,14 +156,23 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             router.replace("/login");
           }}
         />
+        <SystemErrorDialog />
       </I18nProvider>
     );
   }
 
-  if (!user || publicJoin) return <I18nProvider>{children}</I18nProvider>;
+  if (!user || publicJoin) {
+    return (
+      <I18nProvider>
+        {children}
+        <SystemErrorDialog />
+      </I18nProvider>
+    );
+  }
   return (
     <I18nProvider>
       <AppShell>{children}</AppShell>
+      <SystemErrorDialog />
     </I18nProvider>
   );
 }
