@@ -337,7 +337,7 @@ export default function AccessSettingsPage() {
           }
           return (
             <div
-              key={`${row.kind}-${"key" in row ? row.key : row.label}`}
+              key={`${row.kind}-${row.key}`}
               className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-white px-3 py-2.5"
             >
               <div className="min-w-0">
