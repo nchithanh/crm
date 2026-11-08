@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09
+
+- **MA · Courses phân quyền:** `courses.actions` trên matrix + UI `/settings/access`; BE enforce create/edit/generate/activate/delete; cột `role_access.courses`.
+- **MA · Generate classes API:** `POST …/generate-classes` body `{ sessions: [{ day, start?, end? }] }` (compat `days[]`); FE drawer gửi giờ từng buổi. **TODO** liên kết room. Docs BE `courses.md` / `access.md` + `ma-courses-api.md` / `ma-access.md`.
+- **MA · Generate classes UX:** drawer danh sách từng buổi (bật/tắt + chỉnh giờ + reset giờ mẫu), lịch nhảy tới dòng, bulk theo tuần.
+- **MA · Generate classes:** hub `/courses/[id]` CTA khi chưa sinh. Preview `course-generate-preview.ts`.
+- **MA · Courses Slice 1:** BE `courses` + teachers/rooms pivot; API CRUD + activate/deactivate; FE list/tạo qua API. Tạo khóa **không** auto sinh buổi.
+
 ## 2026-11-08
 
 - **Task media · PDF:** mô tả + comment nhận PDF (cùng slot ≤10 với ảnh); preview chip mở tab mới; BE `/media` `mimes` + `application/pdf`.

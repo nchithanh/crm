@@ -1,7 +1,15 @@
 import type { NavItemKey } from "@/lib/nav";
 import type { TabKey } from "@/lib/tabs";
 import { TAB_DEFS } from "@/lib/tabs";
-import type { Role, RoleAccess, TaskAccess, TaskAccessKey, TaskVisibility } from "@/types";
+import type {
+  CourseAccess,
+  CourseAccessKey,
+  Role,
+  RoleAccess,
+  TaskAccess,
+  TaskAccessKey,
+  TaskVisibility,
+} from "@/types";
 
 /** Role có cột trong ma trận (Boss luôn bật, không lưu override). */
 export type MatrixRole = Exclude<Role, "boss">;
@@ -26,6 +34,37 @@ export const TASK_CTA_KEYS: TaskAccessKey[] = ["create", "delete", "manageParent
 
 /** Quyền khi đã mở một task. */
 export const TASK_RECORD_KEYS: TaskAccessKey[] = ["changeStatus", "comment", "markDone", "editFields"];
+
+/** Write khóa / generate (nav `courses` = xem menu riêng). */
+export const COURSE_ACCESS_KEYS: CourseAccessKey[] = [
+  "create",
+  "edit",
+  "generate",
+  "activate",
+  "delete",
+];
+
+/** Mặc định: owner + reception full write (khớp hardcode cũ); role khác tắt. */
+export function defaultCourseAccess(role: MatrixRole): CourseAccess {
+  const on = role === "owner" || role === "reception";
+  return {
+    actions: {
+      create: on,
+      edit: on,
+      generate: on,
+      activate: on,
+      delete: on,
+    },
+  };
+}
+
+export function mergeCourseAccess(row: CourseAccess | undefined, role: MatrixRole): CourseAccess {
+  const base = defaultCourseAccess(role);
+  if (!row) return base;
+  return {
+    actions: { ...base.actions, ...row.actions },
+  };
+}
 
 /** Mặc định nhân sự / Admin: chỉ comment + đổi status; xem việc mình làm. Boss cấp thêm. */
 export function defaultTaskAccess(_role: MatrixRole): TaskAccess {
@@ -233,6 +272,7 @@ export function defaultRoleAccess(role: MatrixRole): RoleAccess {
     items: { ...DEFAULT_NAV[role] },
     tabs: { ...defaultTabsFor(role) },
     tasks: defaultTaskAccess(role),
+    courses: defaultCourseAccess(role),
   };
 }
 
@@ -248,5 +288,6 @@ export function mergeWithDefaults(row: RoleAccess | undefined, role: MatrixRole)
     items: { ...base.items, ...row.items },
     tabs: { ...base.tabs, ...row.tabs },
     tasks: mergeTaskAccess(row.tasks, role),
+    courses: mergeCourseAccess(row.courses, role),
   };
 }

@@ -79,7 +79,15 @@ export function CourseCreateDrawer({
     });
     setSaving(false);
     if (code) {
-      setError(code === "weekday" ? t.catalog.needWeekday : code === "room" ? t.catalog.roomBranch : t.catalog.needFields);
+      setError(
+        code === "weekday"
+          ? t.catalog.needWeekday
+          : code === "room"
+            ? t.catalog.roomBranch
+            : code === "fields"
+              ? t.catalog.needFields
+              : code,
+      );
       return;
     }
     requestClose();

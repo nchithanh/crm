@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
+import { CourseGenerateClassesDrawer } from "@/components/course-generate-classes-drawer";
 import { Badge, Button } from "@/components/ui";
-import { canSeeTab } from "@/lib/access";
+import { canCourseAction, canSeeTab, isMaStudioMode } from "@/lib/access";
+import { fetchMaCourse, fetchMaCourseClasses, type MaCourse } from "@/lib/api/crm-courses";
+import { fetchMaBranches, fetchMaStaff } from "@/lib/api/crm-tasks";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { fill } from "@/lib/copy";
@@ -13,6 +16,7 @@ import { levelLabel } from "@/lib/rules";
 import { tabKeyFor } from "@/lib/tabs";
 import { cn, initials, localDayKey } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import type { Branch, Course, StudioClass, User } from "@/types";
 
 const tabs = ["overview", "classes", "students", "teachers", "subscriptions"] as const;
 type Tab = (typeof tabs)[number];
@@ -20,19 +24,68 @@ type Tab = (typeof tabs)[number];
 export default function CourseDetailPage() {
   const { t } = useI18n();
   const role = useAuthStore((s) => s.user?.role);
+  const canGenerate = canCourseAction(role, "generate");
+  const maMode = isMaStudioMode();
   const params = useParams();
   const id = String(params?.id ?? "");
-  const course = useLiveQuery(() => db.courses.get(id), [id]);
-  const classes = useLiveQuery(() => db.classes.where("courseId").equals(id).toArray(), [id]) ?? [];
-  const students = useLiveQuery(() => db.students.where("courseId").equals(id).toArray(), [id]) ?? [];
-  const teachers = useLiveQuery(() => db.courseTeachers.where("courseId").equals(id).toArray(), [id]) ?? [];
-  const users = useLiveQuery(() => db.users.toArray(), []) ?? [];
-  const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
-  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
-  const subscriptions = useLiveQuery(() => db.subscriptions.where("courseId").equals(id).toArray(), [id]) ?? [];
-  const plans = useLiveQuery(() => db.subscriptionPlans.toArray(), []) ?? [];
+  const dexieCourse = useLiveQuery(() => (maMode ? undefined : db.courses.get(id)), [id, maMode]);
+  const dexieClasses = useLiveQuery(() => (maMode ? [] : db.classes.where("courseId").equals(id).toArray()), [id, maMode]) ?? [];
+  const students = useLiveQuery(() => (maMode ? [] : db.students.where("courseId").equals(id).toArray()), [id, maMode]) ?? [];
+  const dexieTeachers = useLiveQuery(() => (maMode ? [] : db.courseTeachers.where("courseId").equals(id).toArray()), [id, maMode]) ?? [];
+  const dexieUsers = useLiveQuery(() => (maMode ? [] : db.users.toArray()), [maMode]) ?? [];
+  const rooms = useLiveQuery(() => (maMode ? [] : db.rooms.toArray()), [maMode]) ?? [];
+  const dexieBranches = useLiveQuery(() => (maMode ? [] : db.branches.toArray()), [maMode]) ?? [];
+  const subscriptions = useLiveQuery(() => (maMode ? [] : db.subscriptions.where("courseId").equals(id).toArray()), [id, maMode]) ?? [];
+  const plans = useLiveQuery(() => (maMode ? [] : db.subscriptionPlans.toArray()), [maMode]) ?? [];
   const [tab, setTab] = useState<Tab>("overview");
+  const [maCourse, setMaCourse] = useState<MaCourse | null | undefined>(maMode ? undefined : null);
+  const [maClasses, setMaClasses] = useState<StudioClass[]>([]);
+  const [maUsers, setMaUsers] = useState<User[]>([]);
+  const [maBranches, setMaBranches] = useState<Branch[]>([]);
+  const [genOpen, setGenOpen] = useState(false);
+  const [maTick, setMaTick] = useState(0);
+
+  const reloadMa = useCallback(async () => {
+    if (!maMode || !id) return;
+    try {
+      const [c, cls, staff, branches] = await Promise.all([
+        fetchMaCourse(id),
+        fetchMaCourseClasses(id),
+        fetchMaStaff(),
+        fetchMaBranches(),
+      ]);
+      setMaCourse(c);
+      setMaClasses(cls);
+      setMaUsers(staff);
+      setMaBranches(
+        branches.map((b) => ({
+          id: b.id,
+          name: b.name,
+          address: b.address,
+          lat: b.lat,
+          lng: b.lng,
+          checkInRadiusM: b.checkInRadiusM,
+        })),
+      );
+    } catch {
+      setMaCourse(null);
+    }
+  }, [maMode, id]);
+
+  useEffect(() => {
+    void reloadMa();
+  }, [reloadMa, maTick]);
+
+  const course: Course | undefined | null = maMode ? maCourse : dexieCourse;
+  const classes = maMode ? maClasses : dexieClasses;
+  const users = maMode ? maUsers : dexieUsers;
+  const branches = maMode ? maBranches : dexieBranches;
+  const teachers = maMode
+    ? (maCourse?.teachers ?? [])
+    : dexieTeachers;
+
   const visibleTabs = tabs.filter((idTab) => {
+    if (maMode && (idTab === "students" || idTab === "subscriptions")) return false;
     const key = tabKeyFor("course", idTab);
     return key ? canSeeTab(role, key) : true;
   });
@@ -44,6 +97,7 @@ export default function CourseDetailPage() {
   );
   const today = localDayKey();
   const renewSoon = subscriptions.filter((s) => s.status === "active" && s.endDay <= today);
+  const maGenerated = maMode ? Boolean(maCourse?.classesGenerated) : sortedClasses.length > 0;
 
   if (course === undefined) {
     return <p className="text-sm text-slate-500">{t.common.loading}</p>;
@@ -62,7 +116,7 @@ export default function CourseDetailPage() {
     teachers: `${t.nav.teachers} (${teachers.length})`,
     subscriptions: `Subscriptions (${subscriptions.length})`,
   };
-  const show = (id: Tab) => activeTab === "overview" || activeTab === id;
+  const show = (id: Tab) => visibleTabs.includes(id) && (activeTab === "overview" || activeTab === id);
 
   return (
     <div>
@@ -79,10 +133,19 @@ export default function CourseDetailPage() {
             {course.style} · {levelLabel(course.level)} · {course.slot}
           </p>
           <p className="crm-body mt-1.5 text-slate-600">
-            {t.catalog.capacityCurrent}: <span className="font-semibold tabular-nums text-slate-900">{students.length}</span>
-            <span className="mx-1.5 text-slate-300">·</span>
+            {maMode ? null : (
+              <>
+                {t.catalog.capacityCurrent}:{" "}
+                <span className="font-semibold tabular-nums text-slate-900">{students.length}</span>
+                <span className="mx-1.5 text-slate-300">·</span>
+              </>
+            )}
             {t.catalog.capacityMax}: <span className="font-semibold tabular-nums text-slate-900">{course.capacity ?? 12}</span>
-            <span className="crm-meta ml-1.5">({fill(t.catalog.studentsFill, { n: students.length, cap: course.capacity ?? 12 })})</span>
+            {maMode ? null : (
+              <span className="crm-meta ml-1.5">
+                ({fill(t.catalog.studentsFill, { n: students.length, cap: course.capacity ?? 12 })})
+              </span>
+            )}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
             <Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge>
@@ -92,14 +155,34 @@ export default function CourseDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-xl border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
-            {t.nav.schedule}
-          </Link>
-          <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
-            {t.nav.midEnroll}
-          </Link>
+          {maMode && canGenerate && !maGenerated ? (
+            <Button type="button" onClick={() => setGenOpen(true)}>
+              {t.catalog.genCta}
+            </Button>
+          ) : null}
+          {maMode && maGenerated ? (
+            <Badge tone="ok">{t.catalog.genDone}</Badge>
+          ) : null}
+          {!maMode ? (
+            <>
+              <Link href="/schedule" className="crm-outline inline-flex h-10 items-center rounded-xl border-[1.5px] border-[var(--brand-500)] px-3.5 text-sm font-semibold text-[var(--brand-500)]">
+                {t.nav.schedule}
+              </Link>
+              <Link href="/mid-course-enroll" className="inline-flex h-10 items-center rounded-xl bg-[var(--brand-500)] px-3.5 text-sm font-semibold text-white">
+                {t.nav.midEnroll}
+              </Link>
+            </>
+          ) : null}
         </div>
       </header>
+
+      {genOpen && maMode ? (
+        <CourseGenerateClassesDrawer
+          course={course}
+          onClose={() => setGenOpen(false)}
+          onDone={() => setMaTick((n) => n + 1)}
+        />
+      ) : null}
 
       <div className="mt-4 flex gap-1 overflow-x-auto border-b border-[var(--border)]" role="tablist">
         {visibleTabs.map((idTab) => (
@@ -125,12 +208,16 @@ export default function CourseDetailPage() {
             <div className="grid grid-cols-6 gap-2 md:grid-cols-2 md:gap-3 xl:grid-cols-3">
               {(
                 [
-                  { label: t.nav.classes, n: String(sortedClasses.length), go: "classes" as Tab, wide: false },
-                  { label: t.catalog.capacityCurrent, n: String(students.length), go: "students" as Tab, wide: false },
-                  { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), go: null, wide: false },
-                  { label: t.nav.teachers, n: String(teachers.length), go: "teachers" as Tab, wide: true },
-                  { label: "Subscriptions", n: String(subscriptions.length), go: "subscriptions" as Tab, wide: true },
-                ] as const
+                  { label: t.nav.classes, n: String(sortedClasses.length), go: "classes" as Tab | null, wide: false },
+                  ...(!maMode
+                    ? [{ label: t.catalog.capacityCurrent, n: String(students.length), go: "students" as Tab | null, wide: false }]
+                    : []),
+                  { label: t.catalog.capacityMax, n: String(course.capacity ?? 12), go: null as Tab | null, wide: false },
+                  { label: t.nav.teachers, n: String(teachers.length), go: "teachers" as Tab | null, wide: true },
+                  ...(!maMode
+                    ? [{ label: "Subscriptions", n: String(subscriptions.length), go: "subscriptions" as Tab | null, wide: true }]
+                    : []),
+                ]
               ).map((card) => {
                 const className = cn(
                   "rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left md:col-span-1 md:p-4",
@@ -142,9 +229,10 @@ export default function CourseDetailPage() {
                     <p className="mt-1 text-xl font-extrabold tabular-nums leading-none text-slate-900 md:text-[2rem]">{card.n}</p>
                   </>
                 );
-                if (card.go) {
+                const go = card.go;
+                if (go) {
                   return (
-                    <button key={card.label} type="button" onClick={() => setTab(card.go)} className={`${className} hover:border-[var(--brand-300)]`}>
+                    <button key={card.label} type="button" onClick={() => setTab(go)} className={`${className} hover:border-[var(--brand-300)]`}>
                       {body}
                     </button>
                   );
@@ -168,44 +256,66 @@ export default function CourseDetailPage() {
         {show("classes") ? (
           <section>
             {activeTab === "overview" ? <h2 className="crm-section-title mb-3">{tabLabel.classes}</h2> : null}
-            <div className="overflow-auto rounded-xl border border-[var(--border)] bg-white">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="bg-slate-50 text-left">
-                  <tr>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">#</th>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">Day</th>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">Time</th>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.teachers}</th>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.rooms}</th>
-                    <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedClasses.map((c) => {
-                    const teacher = users.find((u) => u.id === c.teacherId);
-                    const r = rooms.find((x) => x.id === c.roomId);
-                    return (
-                      <tr key={c.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
-                        <td className="px-3 py-2.5">
-                          <Link href={`/classes/${c.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">{c.index}</Link>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <Link href={`/classes/${c.id}`} className="text-slate-800 hover:underline">{c.day}</Link>
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600">{c.start}–{c.end}</td>
-                        <td className="px-3 py-2.5">
-                          {teacher ? (
-                            <Link href={`/teachers/${teacher.id}`} className="text-[var(--brand-600)] hover:underline">{teacher.name}</Link>
-                          ) : "—"}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600">{r ? <Link href="/rooms" className="hover:underline">{r.name}</Link> : "—"}</td>
-                        <td className="px-3 py-2.5"><Badge tone={c.status === "cancelled" ? "danger" : c.status === "completed" ? "neutral" : "ok"}>{c.status}</Badge></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {maMode && canGenerate && !maGenerated ? (
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-[var(--brand-300)] bg-[var(--brand-50)] px-4 py-3">
+                <p className="text-sm text-[var(--brand-700,#3c3b87)]">{t.catalog.genLead}</p>
+                <Button type="button" onClick={() => setGenOpen(true)}>
+                  {t.catalog.genCta}
+                </Button>
+              </div>
+            ) : null}
+            {sortedClasses.length === 0 ? (
+              <p className="rounded-xl border border-[var(--border)] bg-white px-4 py-6 text-sm text-slate-500">
+                {maMode ? t.catalog.genLead : "—"}
+              </p>
+            ) : (
+              <div className="overflow-auto rounded-xl border border-[var(--border)] bg-white">
+                <table className="w-full min-w-[720px] text-sm">
+                  <thead className="bg-slate-50 text-left">
+                    <tr>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">#</th>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">Day</th>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">Time</th>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.teachers}</th>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">{t.nav.rooms}</th>
+                      <th className="px-3 py-2.5 font-semibold text-slate-600">{t.common.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedClasses.map((c) => {
+                      const teacher = users.find((u) => u.id === c.teacherId);
+                      const r = rooms.find((x) => x.id === c.roomId);
+                      return (
+                        <tr key={c.id} className="border-t border-slate-100 hover:bg-[var(--brand-50)]">
+                          <td className="px-3 py-2.5">
+                            {maMode ? (
+                              <span className="font-semibold text-slate-800">{c.index}</span>
+                            ) : (
+                              <Link href={`/classes/${c.id}`} className="font-semibold text-[var(--brand-600)] hover:underline">{c.index}</Link>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-800">{c.day}</td>
+                          <td className="px-3 py-2.5 text-slate-600">{c.start}–{c.end}</td>
+                          <td className="px-3 py-2.5">
+                            {teacher ? (
+                              maMode ? (
+                                teacher.name
+                              ) : (
+                                <Link href={`/teachers/${teacher.id}`} className="text-[var(--brand-600)] hover:underline">{teacher.name}</Link>
+                              )
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600">{r ? r.name : "—"}</td>
+                          <td className="px-3 py-2.5"><Badge tone={c.status === "cancelled" ? "danger" : c.status === "completed" ? "neutral" : "ok"}>{c.status}</Badge></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         ) : null}
 
@@ -247,16 +357,35 @@ export default function CourseDetailPage() {
               {teachers.map((ct) => {
                 const u = users.find((x) => x.id === ct.teacherId);
                 if (!u) return null;
+                const rowClass =
+                  "flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3";
+                const inner = (
+                  <>
+                    <span
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
+                      style={{ background: u.avatarColor }}
+                    >
+                      {initials(u.name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-slate-900">{u.name}</span>
+                      <span className="text-xs text-slate-500">{u.phone}</span>
+                    </span>
+                    <Badge tone={ct.role === "main" ? "ok" : "info"}>{ct.role}</Badge>
+                  </>
+                );
                 return (
                   <li key={ct.id}>
-                    <Link href={`/teachers/${u.id}`} className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 hover:border-[var(--brand-300)]">
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: u.avatarColor }}>{initials(u.name)}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold text-slate-900">{u.name}</span>
-                        <span className="text-xs text-slate-500">{u.phone}</span>
-                      </span>
-                      <Badge tone={ct.role === "main" ? "ok" : "info"}>{ct.role}</Badge>
-                    </Link>
+                    {maMode ? (
+                      <div className={rowClass}>{inner}</div>
+                    ) : (
+                      <Link
+                        href={`/teachers/${u.id}`}
+                        className={`${rowClass} hover:border-[var(--brand-300)]`}
+                      >
+                        {inner}
+                      </Link>
+                    )}
                   </li>
                 );
               })}

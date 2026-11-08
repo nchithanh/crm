@@ -13,7 +13,15 @@ import { fetchMaAccessMatrix, putMaAccessMatrix } from "@/lib/api/crm-access";
 import { getStoredAuthMode } from "@/lib/auth-mode";
 import type { TabKey } from "@/lib/tabs";
 import { db } from "@/lib/db";
-import type { Role, RoleAccess, TaskAccess, TaskAccessKey, TaskVisibility } from "@/types";
+import type {
+  CourseAccess,
+  CourseAccessKey,
+  Role,
+  RoleAccess,
+  TaskAccess,
+  TaskAccessKey,
+  TaskVisibility,
+} from "@/types";
 
 type AccessState = {
   byRole: Record<MatrixRole, RoleAccess>;
@@ -26,11 +34,13 @@ type AccessState = {
   setTab: (role: MatrixRole, key: TabKey, on: boolean) => Promise<void>;
   setTaskVisibility: (role: MatrixRole, visibility: TaskVisibility) => Promise<void>;
   setTaskAction: (role: MatrixRole, key: TaskAccessKey, on: boolean) => Promise<void>;
+  setCourseAction: (role: MatrixRole, key: CourseAccessKey, on: boolean) => Promise<void>;
   resetDefaults: () => Promise<void>;
   hasNav: (role: Role | undefined, key: AccessNavKey) => boolean;
   hasTab: (role: Role | undefined, key: TabKey) => boolean;
   taskPack: (role: Role | undefined) => TaskAccess | null;
   hasTaskAction: (role: Role | undefined, key: TaskAccessKey) => boolean;
+  hasCourseAction: (role: Role | undefined, key: CourseAccessKey) => boolean;
   taskVisibility: (role: Role | undefined) => TaskVisibility;
   canEditMatrix: (role: Role | undefined) => boolean;
 };
@@ -64,6 +74,23 @@ function packFor(role: Role | undefined, get: () => AccessState): TaskAccess | n
   }
   const row = get().byRole[role as MatrixRole] ?? defaultRoleAccess(role as MatrixRole);
   return row.tasks ?? defaultRoleAccess(role as MatrixRole).tasks!;
+}
+
+function coursePackFor(role: Role | undefined, get: () => AccessState): CourseAccess | null {
+  if (!role) return null;
+  if (role === "boss") {
+    return {
+      actions: {
+        create: true,
+        edit: true,
+        generate: true,
+        activate: true,
+        delete: true,
+      },
+    };
+  }
+  const row = get().byRole[role as MatrixRole] ?? defaultRoleAccess(role as MatrixRole);
+  return row.courses ?? defaultRoleAccess(role as MatrixRole).courses!;
 }
 
 function mapFromRows(rows: RoleAccess[]): Record<MatrixRole, RoleAccess> {
@@ -106,7 +133,7 @@ export const useAccessStore = create<AccessState>((set, get) => ({
       const found = rows.find((r) => r.id === role);
       map[role] = mergeWithDefaults(found, role);
       if (!found) await db.roleAccess.put(map[role]);
-      else if (!found.tasks) await db.roleAccess.put(map[role]);
+      else if (!found.tasks || !found.courses) await db.roleAccess.put(map[role]);
     }
     set({ byRole: map, hydrated: true, revision: get().revision + 1 });
   },
@@ -190,6 +217,23 @@ export const useAccessStore = create<AccessState>((set, get) => ({
     set({ byRole, revision: get().revision + 1 });
   },
 
+  setCourseAction: async (role, key, on) => {
+    const current = mergeWithDefaults(get().byRole[role], role);
+    const courses: CourseAccess = {
+      ...(current.courses as CourseAccess),
+      actions: { ...(current.courses as CourseAccess).actions, [key]: on },
+    };
+    const next: RoleAccess = { ...current, courses };
+    const byRole = { ...get().byRole, [role]: next };
+    if (isMaMode()) {
+      const map = await persistMa(byRole);
+      set({ byRole: map, revision: get().revision + 1 });
+      return;
+    }
+    await db.roleAccess.put(next);
+    set({ byRole, revision: get().revision + 1 });
+  },
+
   resetDefaults: async () => {
     const rows = defaultAllRoleAccess();
     if (isMaMode()) {
@@ -225,6 +269,12 @@ export const useAccessStore = create<AccessState>((set, get) => ({
 
   hasTaskAction: (role, key) => {
     const pack = packFor(role, get);
+    if (!pack) return false;
+    return pack.actions[key] !== false;
+  },
+
+  hasCourseAction: (role, key) => {
+    const pack = coursePackFor(role, get);
     if (!pack) return false;
     return pack.actions[key] !== false;
   },

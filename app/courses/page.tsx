@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { CourseCreateDrawer } from "@/components/course-create-drawer";
 import { Badge, Button, inputClass } from "@/components/ui";
-import { canManageCatalog } from "@/lib/access";
+import { canCourseAction, isMaStudioMode } from "@/lib/access";
+import { fetchMaCourses, type MaCourse } from "@/lib/api/crm-courses";
+import { fetchMaBranches, fetchMaStaff } from "@/lib/api/crm-tasks";
 import { db } from "@/lib/db";
 import { useI18n } from "@/lib/i18n";
 import { levelLabel } from "@/lib/rules";
@@ -13,34 +15,97 @@ import { fill } from "@/lib/copy";
 import { initials } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudioBranch } from "@/stores/branch-store";
+import type { Branch, Course, Room, User } from "@/types";
+
+type Row = {
+  course: Course;
+  classCount: number;
+  studentCount: number;
+  main?: { id: string; name: string; avatarColor?: string };
+};
 
 export default function CoursesPage() {
   const { t } = useI18n();
-  const canEdit = canManageCatalog(useAuthStore((s) => s.user?.role));
-  const courses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
-  const classes = useLiveQuery(() => db.classes.toArray(), []) ?? [];
-  const students = useLiveQuery(() => db.students.toArray(), []) ?? [];
-  const teachers = useLiveQuery(() => db.courseTeachers.toArray(), []) ?? [];
-  const users = useLiveQuery(() => db.users.where("role").equals("teacher").toArray(), []) ?? [];
-  const rooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
-  const branches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
+  const maMode = isMaStudioMode();
+  const role = useAuthStore((s) => s.user?.role);
+  const canEdit = canCourseAction(role, "create");
+  const dexieCourses = useLiveQuery(() => db.courses.toArray(), []) ?? [];
+  const dexieClasses = useLiveQuery(() => db.classes.toArray(), []) ?? [];
+  const dexieStudents = useLiveQuery(() => db.students.toArray(), []) ?? [];
+  const dexieUsers = useLiveQuery(() => db.users.where("role").equals("teacher").toArray(), []) ?? [];
+  const dexieRooms = useLiveQuery(() => db.rooms.toArray(), []) ?? [];
+  const dexieBranches = useLiveQuery(() => db.branches.toArray(), []) ?? [];
   const { branchId } = useStudioBranch();
   const [creating, setCreating] = useState(false);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [maCourses, setMaCourses] = useState<MaCourse[]>([]);
+  const [maTeachers, setMaTeachers] = useState<User[]>([]);
+  const [maBranches, setMaBranches] = useState<Branch[]>([]);
+  const [maLoading, setMaLoading] = useState(maMode);
+  const [maError, setMaError] = useState("");
+  const [maTick, setMaTick] = useState(0);
+
+  const reloadMa = useCallback(async () => {
+    if (!maMode) return;
+    setMaLoading(true);
+    setMaError("");
+    try {
+      const [courses, staff, branches] = await Promise.all([
+        fetchMaCourses(),
+        fetchMaStaff(),
+        fetchMaBranches(),
+      ]);
+      setMaCourses(courses);
+      setMaTeachers(staff.filter((u) => u.role === "teacher" || u.role === "boss" || u.role === "owner"));
+      setMaBranches(
+        branches.map((b) => ({
+          id: b.id,
+          name: b.name,
+          address: b.address,
+          lat: b.lat,
+          lng: b.lng,
+          checkInRadiusM: b.checkInRadiusM,
+        })),
+      );
+    } catch (e) {
+      setMaError(e instanceof Error ? e.message : t.common.fail);
+    } finally {
+      setMaLoading(false);
+    }
+  }, [maMode, t.common.fail]);
+
+  useEffect(() => {
+    void reloadMa();
+  }, [reloadMa, maTick]);
+
+  const courses = maMode ? maCourses : dexieCourses;
+  const users = maMode ? maTeachers : dexieUsers;
+  const rooms: Room[] = maMode ? [] : dexieRooms;
+  const branches = maMode ? maBranches : dexieBranches;
 
   const rows = useMemo(() => {
     return courses
       .filter((c) => branchId === "all" || c.branchId === branchId)
-      .map((c) => ({
-        course: c,
-        classCount: classes.filter((x) => x.courseId === c.id).length,
-        studentCount: students.filter((x) => x.courseId === c.id).length,
-        teacherCount: teachers.filter((x) => x.courseId === c.id).length,
-        main: users.find((u) => u.id === c.teacherId),
-      }));
-  }, [courses, classes, students, teachers, users, branchId]);
+      .map((c) => {
+        if (maMode) {
+          const mc = c as MaCourse;
+          return {
+            course: c,
+            classCount: mc.classCount,
+            studentCount: mc.studentCount,
+            main: users.find((u) => u.id === c.teacherId),
+          } satisfies Row;
+        }
+        return {
+          course: c,
+          classCount: dexieClasses.filter((x) => x.courseId === c.id).length,
+          studentCount: dexieStudents.filter((x) => x.courseId === c.id).length,
+          main: users.find((u) => u.id === c.teacherId),
+        } satisfies Row;
+      });
+  }, [courses, dexieClasses, dexieStudents, users, branchId, maMode]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -56,9 +121,24 @@ export default function CoursesPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="crm-page-title">{t.pages.courses}</h1>
-          <p className="crm-lead mt-1">{filtered.length} · {t.nav.courses}</p>
+          <p className="crm-lead mt-1">
+            {maLoading ? t.common.loading : `${filtered.length} · ${t.nav.courses}`}
+          </p>
+          {maMode ? (
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              TODO: CTA Generate classes — sinh buổi chưa có trên API.
+            </p>
+          ) : null}
         </div>
-        {canEdit ? <Button type="button" onClick={() => setCreating(true)}>{t.catalog.createCourse}</Button> : null}
+        {canEdit ? (
+          <Button
+            type="button"
+            onClick={() => setCreating(true)}
+            disabled={maMode && (maLoading || maTeachers.length === 0 || maBranches.length === 0)}
+          >
+            {t.catalog.createCourse}
+          </Button>
+        ) : null}
       </div>
 
       {creating && canEdit ? (
@@ -67,11 +147,23 @@ export default function CoursesPage() {
           rooms={rooms}
           branches={branches}
           initialBranch={branchId === "all" ? branches[0]?.id ?? "" : branchId}
-          onClose={() => setCreating(false)}
+          onClose={() => {
+            setCreating(false);
+            if (maMode) setMaTick((n) => n + 1);
+          }}
         />
       ) : null}
 
-      <input className={`${inputClass} mt-4 max-w-md`} placeholder={t.common.search} value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} />
+      <input
+        className={`${inputClass} mt-4 max-w-md`}
+        placeholder={t.common.search}
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setPage(0);
+        }}
+      />
+      {maError ? <p className="mt-2 text-sm text-rose-700">{maError}</p> : null}
 
       <ul className="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
         <li className="hidden items-center gap-x-3 px-4 py-2 text-xs font-semibold text-[var(--muted)] lg:grid lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem]">
@@ -90,9 +182,15 @@ export default function CoursesPage() {
           const cap = course.capacity ?? 12;
           return (
             <li key={course.id}>
-              <Link href={`/courses/${course.id}`} className="grid grid-cols-[minmax(0,1fr)_5.25rem_5.75rem] items-center gap-x-2 px-3 py-4 hover:bg-black/5 lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3 lg:px-4">
+              <Link
+                href={`/courses/${course.id}`}
+                className="grid grid-cols-[minmax(0,1fr)_5.25rem_5.75rem] items-center gap-x-2 px-3 py-4 hover:bg-black/5 lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3 lg:px-4"
+              >
                 <span className="flex min-w-0 items-center gap-3">
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: main?.avatarColor ?? "#111111" }}>
+                  <span
+                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    style={{ background: main?.avatarColor ?? "#111111" }}
+                  >
                     {initials(main?.name ?? course.name)}
                   </span>
                   <span className="min-w-0">
@@ -103,31 +201,73 @@ export default function CoursesPage() {
                   </span>
                 </span>
                 <span className="hidden min-w-0 items-center gap-2 lg:flex">
-                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: main?.avatarColor ?? "#111111" }}>{main ? initials(main.name) : "—"}</span>
+                  <span
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={{ background: main?.avatarColor ?? "#111111" }}
+                  >
+                    {main ? initials(main.name) : "—"}
+                  </span>
                   <span className="truncate text-sm">{main?.name ?? "—"}</span>
                 </span>
                 <span className="hidden truncate text-sm lg:block">{branch}</span>
                 <span className="hidden truncate text-sm lg:block">{room?.name ?? "—"}</span>
-                <span className="hidden tabular-nums text-sm lg:block">{studentCount}/{cap}</span>
+                <span className="hidden tabular-nums text-sm lg:block">
+                  {studentCount}/{cap}
+                </span>
                 <span className="hidden tabular-nums text-sm lg:block">{classCount}</span>
-                <span><Badge tone="info">{levelLabel(course.level)}</Badge></span>
-                <span><Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge></span>
+                <span>
+                  <Badge tone="info">{levelLabel(course.level)}</Badge>
+                </span>
+                <span>
+                  <Badge tone={course.active ? "ok" : "warn"}>{course.active ? t.pages.open : t.pages.pausedCourse}</Badge>
+                </span>
               </Link>
             </li>
           );
         })}
       </ul>
       <div className="mt-3 flex items-center justify-between gap-2">
-        <p className="text-xs text-slate-500">{fill(t.students.range, { from: filtered.length === 0 ? 0 : pageSafe * pageSize + 1, to: Math.min(filtered.length, pageSafe * pageSize + paged.length), total: filtered.length })}</p>
+        <p className="text-xs text-slate-500">
+          {fill(t.students.range, {
+            from: filtered.length === 0 ? 0 : pageSafe * pageSize + 1,
+            to: Math.min(filtered.length, pageSafe * pageSize + paged.length),
+            total: filtered.length,
+          })}
+        </p>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-1 text-xs text-slate-500">
             {t.students.pageSize}
-            <select className="h-8 rounded-xl border border-[var(--border)] bg-white px-2" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}>
-              {[20, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+            <select
+              className="h-8 rounded-xl border border-[var(--border)] bg-white px-2"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(0);
+              }}
+            >
+              {[20, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
             </select>
           </label>
-          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{t.students.prev}</button>
-          <button type="button" className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40" disabled={pageSafe >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}>{t.students.next}</button>
+          <button
+            type="button"
+            className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40"
+            disabled={pageSafe <= 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            {t.students.prev}
+          </button>
+          <button
+            type="button"
+            className="h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-xs font-semibold disabled:opacity-40"
+            disabled={pageSafe >= pageCount - 1}
+            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+          >
+            {t.students.next}
+          </button>
         </div>
       </div>
     </div>

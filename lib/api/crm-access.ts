@@ -22,6 +22,7 @@ export async function putMaAccessMatrix(rows: RoleAccess[]): Promise<RoleAccess[
         items: row.items,
         tabs: row.tabs,
         tasks: row.tasks,
+        courses: row.courses,
       })),
     }),
   });

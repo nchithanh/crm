@@ -1200,13 +1200,41 @@ export async function createCourse(input: {
   if (input.weekdays.length === 0) return "weekday";
   const capacity = Math.max(1, Math.round(input.capacity ?? 12));
   const roomId = input.roomId ?? "";
+  const startDay = input.startDay?.trim() || localDayKey();
+  const count = input.sessionCount ?? 8;
+  const days = sessionDates(startDay, input.weekdays, count);
+
+  if (isMaStudioMode()) {
+    // MA: chỉ tạo course — không sinh classes (TODO generate-classes + CTA)
+    try {
+      const { apiCreateCourse } = await import("@/lib/api/crm-courses");
+      await apiCreateCourse({
+        name,
+        style: input.style.trim() || name,
+        level: input.level,
+        branchId: input.branchId,
+        teacherId: input.teacherId,
+        assistantIds: input.assistantIds,
+        roomId: roomId || undefined,
+        weekdays: input.weekdays,
+        start: input.start,
+        end: input.end,
+        startDay,
+        endDay: days[days.length - 1] ?? startDay,
+        sessionCount: count,
+        capacity,
+        description: input.description.trim(),
+      });
+      return "";
+    } catch (e) {
+      return e instanceof Error && e.message ? e.message : "fail";
+    }
+  }
+
   if (roomId) {
     const room = await db.rooms.get(roomId);
     if (!room || room.branchId !== input.branchId) return "room";
   }
-  const startDay = input.startDay?.trim() || localDayKey();
-  const count = input.sessionCount ?? 8;
-  const days = sessionDates(startDay, input.weekdays, count);
   const courseId = uid("k");
   await db.transaction("rw", [db.courses, db.classes, db.courseTeachers, db.courseRooms], async () => {
     await db.courses.add({

@@ -10,7 +10,7 @@ Slug **EN** (canonical). Path VI / legacy redirect → EN (dev: `next.config`; P
 | `/overview` | Tổng quan — chào + task gần nhất + KPI + ops strip + chart |
 | `/schedule` | Lịch = **Classes** (buổi). Kéo thả / điểm danh / đổi GV·phòng / hủy buổi. Bộ lọc drawer kiểu Google Calendar: checkbox màu multi-select theo GV / phòng (nhóm theo cơ sở) / khóa / trạng thái — không tick = tất cả |
 | `/students` · `/students/[id]` | Học viên · KPI lọc được + bảng vận hành + panel phải (tab Tổng quan / Khóa / Điểm danh / Thanh toán / Bảo lưu / Ghi chú). Tổng quan sửa được thông tin cá nhân (owner, lễ tân) |
-| `/courses` · `/courses/[id]` | Khóa · tạo qua drawer + preview sinh buổi; hub Overview + Classes / Students / Teachers / Subscriptions |
+| `/courses` · `/courses/[id]` | Khóa · tạo qua drawer + preview lịch mẫu; hub Overview + Classes / Students / Teachers / Subscriptions. **MA:** list/tạo qua API; chi tiết CTA **Sinh buổi** (calendar tuần → `generate-classes`) |
 | `/classes` · `/classes/[id]` | Buổi học · filter (khóa/GV/phòng/status/ngày) + session drawer (roster / điểm danh / đổi GV·phòng / hủy / conflict) |
 | `/teachers` · `/teachers/[id]` | Giáo viên · courses + upcoming classes |
 | `/rooms` | Phòng — tab **Lịch phòng** + **Danh sách** CRUD |

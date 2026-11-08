@@ -7,6 +7,7 @@ import { Button, inputClass } from "@/components/ui";
 import { canEditAccessMatrix, homePathForRole } from "@/lib/access";
 import {
   ALL_ROLES,
+  COURSE_ACCESS_KEYS,
   MATRIX_ROLES,
   TASK_CTA_KEYS,
   TASK_RECORD_KEYS,
@@ -20,14 +21,15 @@ import { TAB_GROUPS, type TabKey } from "@/lib/tabs";
 import { cn } from "@/lib/utils";
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
-import type { Role, TaskAccessKey, TaskVisibility } from "@/types";
+import type { CourseAccessKey, Role, TaskAccessKey, TaskVisibility } from "@/types";
 
 type Row =
   | { kind: "group"; id: string; label: string }
   | { kind: "nav"; key: AccessNavKey; label: string }
   | { kind: "tab"; key: TabKey; label: string }
   | { kind: "taskVisibility"; label: string }
-  | { kind: "taskAction"; key: TaskAccessKey; label: string };
+  | { kind: "taskAction"; key: TaskAccessKey; label: string }
+  | { kind: "courseAction"; key: CourseAccessKey; label: string };
 
 export default function AccessSettingsPage() {
   const { lang, t } = useI18n();
@@ -39,6 +41,7 @@ export default function AccessSettingsPage() {
   const setTab = useAccessStore((s) => s.setTab);
   const setTaskVisibility = useAccessStore((s) => s.setTaskVisibility);
   const setTaskAction = useAccessStore((s) => s.setTaskAction);
+  const setCourseAction = useAccessStore((s) => s.setCourseAction);
   const resetDefaults = useAccessStore((s) => s.resetDefaults);
   const canEdit = canEditAccessMatrix(user?.role);
   const [q, setQ] = useState("");
@@ -96,6 +99,17 @@ export default function AccessSettingsPage() {
     return map[key];
   };
 
+  const courseActionLabel = (key: CourseAccessKey) => {
+    const map: Record<CourseAccessKey, string> = {
+      create: t.access.courseCreate,
+      edit: t.access.courseEdit,
+      generate: t.access.courseGenerate,
+      activate: t.access.courseActivate,
+      delete: t.access.courseDelete,
+    };
+    return map[key];
+  };
+
   const rows = useMemo(() => {
     const out: Row[] = [];
     out.push({ kind: "group", id: "tasks", label: t.access.sectionTasks });
@@ -108,6 +122,11 @@ export default function AccessSettingsPage() {
     out.push({ kind: "group", id: "tasks-record", label: t.access.sectionTaskRecord });
     for (const key of TASK_RECORD_KEYS) {
       out.push({ kind: "taskAction", key, label: taskActionLabel(key) });
+    }
+
+    out.push({ kind: "group", id: "courses", label: t.access.sectionCourses });
+    for (const key of COURSE_ACCESS_KEYS) {
+      out.push({ kind: "courseAction", key, label: courseActionLabel(key) });
     }
 
     out.push({ kind: "group", id: "menu", label: t.access.sectionMenu });
@@ -142,12 +161,13 @@ export default function AccessSettingsPage() {
     });
   }, [rows, q]);
 
-  function isOn(role: Role, row: Extract<Row, { kind: "nav" | "tab" | "taskAction" }>) {
+  function isOn(role: Role, row: Extract<Row, { kind: "nav" | "tab" | "taskAction" | "courseAction" }>) {
     if (role === "boss") return true;
     const pack = byRole[role as MatrixRole];
     if (!pack) return true;
     if (row.kind === "nav") return pack.items[row.key] !== false;
     if (row.kind === "tab") return pack.tabs[row.key] !== false;
+    if (row.kind === "courseAction") return pack.courses?.actions[row.key] !== false;
     return pack.tasks?.actions[row.key] !== false;
   }
 
@@ -156,11 +176,15 @@ export default function AccessSettingsPage() {
     return byRole[role as MatrixRole]?.tasks?.visibility === "all" ? "all" : "mine";
   }
 
-  async function toggle(role: MatrixRole, row: Extract<Row, { kind: "nav" | "tab" | "taskAction" }>) {
+  async function toggle(
+    role: MatrixRole,
+    row: Extract<Row, { kind: "nav" | "tab" | "taskAction" | "courseAction" }>,
+  ) {
     if (!canEdit) return;
     const next = !isOn(role, row);
     if (row.kind === "nav") await setNav(role, row.key, next);
     else if (row.kind === "tab") await setTab(role, row.key, next);
+    else if (row.kind === "courseAction") await setCourseAction(role, row.key, next);
     else await setTaskAction(role, row.key, next);
     setToast(t.access.saved);
   }
@@ -171,7 +195,9 @@ export default function AccessSettingsPage() {
     setToast(t.access.saved);
   }
 
-  function rowHiddenEverywhere(row: Extract<Row, { kind: "nav" | "tab" | "taskAction" }>) {
+  function rowHiddenEverywhere(
+    row: Extract<Row, { kind: "nav" | "tab" | "taskAction" | "courseAction" }>,
+  ) {
     return MATRIX_ROLES.every((role) => !isOn(role, row));
   }
 
@@ -181,7 +207,7 @@ export default function AccessSettingsPage() {
     locked,
   }: {
     role: Role;
-    row: Extract<Row, { kind: "nav" | "tab" | "taskAction" }>;
+    row: Extract<Row, { kind: "nav" | "tab" | "taskAction" | "courseAction" }>;
     locked?: boolean;
   }) => {
     const on = isOn(role, row);

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   Bell,
+  BookOpen,
   ClipboardCheck,
   HeartHandshake,
   LayoutDashboard,
@@ -39,7 +40,7 @@ import { ctaOutline, ctaPrimary } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/labels";
 import { useI18n } from "@/lib/i18n";
-import { NAV_AI, NAV_GROUPS, NAV_MA_STAFF, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER } from "@/lib/nav";
+import { NAV_AI, NAV_GROUPS, NAV_MA_COURSES, NAV_MA_STAFF, NAV_SYSTEM, NAV_TOP, ZALO_FOUNDER } from "@/lib/nav";
 import { navBadgeClassDark, navBadgeClassLight, navBadgeKind, useNavBadges } from "@/lib/nav-badges";
 import { useAccessStore } from "@/stores/access-store";
 import { useAuthStore } from "@/stores/auth-store";
@@ -49,13 +50,16 @@ import type { Role } from "@/types";
 
 type MobileItem = {
   href: string;
-  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "staff" | "access" | "menu" | "care";
+  key: "overview" | "students" | "attendShort" | "enrollTab" | "tasks" | "staff" | "access" | "courses" | "menu" | "care";
   icon: typeof LayoutDashboard;
 };
 
 function mobileForRole(role: Role | undefined): MobileItem[] {
   if (isMaStudioMode()) {
     const items: MobileItem[] = [{ href: "/tasks", key: "tasks", icon: ListTodo }];
+    if (role === "boss" || useAccessStore.getState().hasNav(role, "courses")) {
+      items.push({ href: "/courses", key: "courses", icon: BookOpen });
+    }
     if (role === "boss") {
       items.push({ href: "/staff", key: "staff", icon: UserPlus });
     }
@@ -359,6 +363,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           {canSeeNavHref(user?.role, NAV_AI.href) ? renderNavLink(NAV_AI) : null}
+          {canSeeNavHref(user?.role, NAV_MA_COURSES.href) ? (
+            <div className="border-t border-white/10 pt-3">
+              <div className="space-y-0.5">{renderNavLink(NAV_MA_COURSES)}</div>
+            </div>
+          ) : null}
           {canSeeNavHref(user?.role, NAV_MA_STAFF.href) ? (
             <div className="border-t border-white/10 pt-3">
               <div className="space-y-0.5">{renderNavLink(NAV_MA_STAFF)}</div>

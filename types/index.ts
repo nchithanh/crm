@@ -20,6 +20,13 @@ export type TaskAccess = {
   actions: Record<TaskAccessKey, boolean>;
 };
 
+/** Hành động khóa học trong ma trận (Boss luôn full). */
+export type CourseAccessKey = "create" | "edit" | "generate" | "activate" | "delete";
+
+export type CourseAccess = {
+  actions: Record<CourseAccessKey, boolean>;
+};
+
 /** Ma trận phân quyền theo role — Dexie `roleAccess`. */
 export type RoleAccess = {
   id: Role;
@@ -27,6 +34,8 @@ export type RoleAccess = {
   tabs: Record<string, boolean>;
   /** Quyền module Tác vụ — thiếu → merge mặc định. */
   tasks?: TaskAccess;
+  /** Quyền write khóa / generate — thiếu → merge mặc định. */
+  courses?: CourseAccess;
 };
 
 export type LeadStage = "new" | "contacted" | "trial" | "won" | "lost";

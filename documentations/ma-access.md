@@ -22,3 +22,9 @@ SoT BE: `products/saas/backend/context/crm/access.md` (+ enforce `tasks.md`).
 - Verifier luôn sửa field / Done — rule FE+BE, không nằm matrix.
 - Path MA: `/settings/access` (+ nav). Demo vẫn Dexie `roleAccess`.
 - **Refresh session + matrix:** `syncMaSession` (`GET /me` → cập nhật `user.role`) rồi `refreshMa` khi focus/visibility + vào `/tasks` · `/settings/access` · `/staff`. Boss đổi role / khóa TK: BE đọc role từ DB mỗi request; FE sync UI; inactive → 401 logout.
+
+## Courses actions
+
+- Nav `courses` = path/list.
+- Write: FE `canCourseAction` + UI khối **Khóa học (thao tác)** trên `/settings/access`; BE `hasCourseAction`.
+- Shape: `courses.actions` = `create` · `edit` · `generate` · `activate` · `delete` (Boss luôn full; mặc định owner/reception bật). SoT BE: `context/crm/access.md`.

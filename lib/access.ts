@@ -4,7 +4,7 @@ import { getStoredAuthMode } from "@/lib/auth-mode";
 import type { TabKey } from "@/lib/tabs";
 import { taskAssigneeIds } from "@/lib/task-people";
 import { useAccessStore } from "@/stores/access-store";
-import type { Role } from "@/types";
+import type { CourseAccessKey, Role } from "@/types";
 
 function normalizePath(pathname: string) {
   if (!pathname) return "/";
@@ -32,6 +32,11 @@ function isMaAccessPath(pathname: string) {
   return path === "/settings/access" || path.startsWith("/settings/access/");
 }
 
+function isMaCoursesPath(pathname: string) {
+  const path = normalizePath(pathname);
+  return path === "/courses" || path.startsWith("/courses/");
+}
+
 /** Path MA được phép theo role. */
 export function isMaAllowedPath(pathname: string, role?: Role) {
   if (isMaTasksPath(pathname)) return true;
@@ -39,6 +44,10 @@ export function isMaAllowedPath(pathname: string, role?: Role) {
   if (isMaAccessPath(pathname)) {
     if (role === "boss") return true;
     return useAccessStore.getState().hasNav(role, "access");
+  }
+  if (isMaCoursesPath(pathname)) {
+    if (role === "boss") return true;
+    return useAccessStore.getState().hasNav(role, "courses");
   }
   return false;
 }
@@ -65,6 +74,11 @@ export function canCollect(role: Role | undefined) {
 
 export function canManageCatalog(role: Role | undefined) {
   return role === "boss" || role === "owner" || role === "reception";
+}
+
+/** Write khóa theo ma trận `courses.actions` (Boss luôn true). */
+export function canCourseAction(role: Role | undefined, key: CourseAccessKey) {
+  return useAccessStore.getState().hasCourseAction(role, key);
 }
 
 /** Tạo task theo ma trận (Boss luôn true). */
