@@ -2,6 +2,7 @@
 
 ## 2026-11-08
 
+- **Task media · PDF:** mô tả + comment nhận PDF (cùng slot ≤10 với ảnh); preview chip mở tab mới; BE `/media` `mimes` + `application/pdf`.
 - **CI · typecheck:** `npm run typecheck` (`tsc --noEmit`) trước `next build` trong Pages workflow.
 - **Tasks · quyền tạo ≠ xem all:** `canTouchTask` bỏ nhánh `create/delete` — chỉ see-all / assignee / verifier. Bật “Tạo tác vụ” không còn làm thấy/chạm mọi task.
 - **MA session · đổi role online:** BE JWT lấy role/status từ DB; FE `syncMaSession` + refresh matrix khi focus / tasks·access·staff; khóa → 401 logout. Fix reload loop: AuthGate không boot lại khi sync profile; chỉ `set` user/revision khi data đổi; throttle sync 8s.

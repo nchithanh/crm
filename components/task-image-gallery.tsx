@@ -2,12 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, X, ZoomIn } from "lucide-react";
 import { Spinner } from "@/components/ui";
+import { kindForAttachment, type AttachmentKind } from "@/lib/task-attachments";
 
 type Props = {
   urls: string[];
+  /** Song song `urls` — pending PDF blob không có .pdf trong URL. */
+  kinds?: AttachmentKind[];
   viewLabel: string;
+  openPdfLabel?: string;
   closeLabel: string;
   prevLabel: string;
   nextLabel: string;
@@ -18,9 +22,15 @@ type Props = {
   pending?: boolean;
 };
 
+function resolveKind(url: string, index: number, kinds?: AttachmentKind[]): AttachmentKind {
+  return kinds?.[index] ?? kindForAttachment(url);
+}
+
 export function TaskImageGallery({
   urls,
+  kinds,
   viewLabel,
+  openPdfLabel = "PDF",
   closeLabel,
   prevLabel,
   nextLabel,
@@ -32,13 +42,18 @@ export function TaskImageGallery({
 }: Props) {
   const [openAt, setOpenAt] = useState<number | null>(null);
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
-  const open = openAt !== null && urls[openAt];
+  const open = openAt !== null && urls[openAt] && resolveKind(urls[openAt], openAt, kinds) === "image";
   const currentSrc = openAt !== null ? urls[openAt] : "";
 
   function step(delta: number) {
     setOpenAt((i) => {
       if (i === null || urls.length < 2) return i;
-      return (i + delta + urls.length) % urls.length;
+      let next = i;
+      for (let n = 0; n < urls.length; n += 1) {
+        next = (next + delta + urls.length) % urls.length;
+        if (resolveKind(urls[next], next, kinds) === "image") return next;
+      }
+      return i;
     });
   }
 
@@ -128,40 +143,79 @@ export function TaskImageGallery({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {urls.map((src, index) => (
-          <div key={`${src}-${index}`} className="relative">
-            <button
-              type="button"
-              className="group relative block h-28 w-28 overflow-hidden rounded-xl border border-[var(--border)] bg-slate-100"
-              aria-label={viewLabel}
-              disabled={busy}
-              onClick={() => setOpenAt(index)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="h-full w-full object-cover" />
-              {pending ? (
-                <span className="pointer-events-none absolute inset-0 rounded-xl border border-dashed border-[var(--brand-500)]" />
-              ) : null}
-              <span className="pointer-events-none absolute right-1 bottom-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white">
-                <ZoomIn size={13} />
-              </span>
-            </button>
-            {busy ? (
-              <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
-                <Spinner className="text-[var(--brand-500)]" />
+        {urls.map((src, index) => {
+          const kind = resolveKind(src, index, kinds);
+          if (kind === "pdf") {
+            return (
+              <div key={`${src}-${index}`} className="relative">
+                <a
+                  href={src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group relative flex h-28 w-28 flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--brand-50)] px-2 text-center"
+                  aria-label={openPdfLabel}
+                  onClick={(e) => {
+                    if (busy) e.preventDefault();
+                  }}
+                >
+                  <FileText size={28} className="text-[var(--brand-600)]" aria-hidden />
+                  <span className="text-[11px] font-bold tracking-wide text-[var(--brand-700,#3c3b87)]">PDF</span>
+                  {pending ? (
+                    <span className="pointer-events-none absolute inset-0 rounded-xl border border-dashed border-[var(--brand-500)]" />
+                  ) : null}
+                </a>
+                {busy ? (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                    <Spinner className="text-[var(--brand-500)]" />
+                  </div>
+                ) : onRemove ? (
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 rounded-full bg-white/95 p-1 text-slate-600 shadow"
+                    aria-label={removeLabel}
+                    onClick={() => onRemove(index)}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
               </div>
-            ) : onRemove ? (
+            );
+          }
+          return (
+            <div key={`${src}-${index}`} className="relative">
               <button
                 type="button"
-                className="absolute top-1 right-1 rounded-full bg-white/95 p-1 text-slate-600 shadow"
-                aria-label={removeLabel}
-                onClick={() => onRemove(index)}
+                className="group relative block h-28 w-28 overflow-hidden rounded-xl border border-[var(--border)] bg-slate-100"
+                aria-label={viewLabel}
+                disabled={busy}
+                onClick={() => setOpenAt(index)}
               >
-                <X size={14} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="h-full w-full object-cover" />
+                {pending ? (
+                  <span className="pointer-events-none absolute inset-0 rounded-xl border border-dashed border-[var(--brand-500)]" />
+                ) : null}
+                <span className="pointer-events-none absolute right-1 bottom-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white">
+                  <ZoomIn size={13} />
+                </span>
               </button>
-            ) : null}
-          </div>
-        ))}
+              {busy ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                  <Spinner className="text-[var(--brand-500)]" />
+                </div>
+              ) : onRemove ? (
+                <button
+                  type="button"
+                  className="absolute top-1 right-1 rounded-full bg-white/95 p-1 text-slate-600 shadow"
+                  aria-label={removeLabel}
+                  onClick={() => onRemove(index)}
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
       {lightbox}
     </>

@@ -31,6 +31,7 @@ import { taskAssigneeIds, taskMatchesAssigneeFilter } from "@/lib/task-people";
 import { addTaskComment, createTask, createTaskParent, moveTaskStatus, updateTask } from "@/lib/actions";
 import { apiUploadMedia, fetchMaTask } from "@/lib/api/crm-tasks";
 import { fill } from "@/lib/copy";
+import { isAllowedTaskMedia, kindsFromFiles, TASK_MEDIA_ACCEPT } from "@/lib/task-attachments";
 import { db } from "@/lib/db";
 import { useMaTasksData } from "@/lib/hooks/use-ma-tasks-data";
 import { useI18n } from "@/lib/i18n";
@@ -799,7 +800,7 @@ function TaskDrawer({
     if (!list || list.length === 0) return;
     const next: File[] = [];
     for (const file of Array.from(list)) {
-      if (file.type.startsWith("image/")) next.push(file);
+      if (isAllowedTaskMedia(file)) next.push(file);
     }
     if (next.length === 0) {
       setError(t.task.uploadFail);
@@ -919,7 +920,7 @@ function TaskDrawer({
     if (!list || list.length === 0) return;
     const nextFiles: File[] = [];
     for (const file of Array.from(list)) {
-      if (!file.type.startsWith("image/")) continue;
+      if (!isAllowedTaskMedia(file)) continue;
       nextFiles.push(file);
     }
     if (nextFiles.length === 0) {
@@ -1189,6 +1190,7 @@ function TaskDrawer({
             <TaskImageGallery
               urls={noteImageUrls}
               viewLabel={t.task.viewImage}
+              openPdfLabel={t.task.openPdf}
               closeLabel={t.task.closeImage}
               prevLabel={t.task.prevImage}
               nextLabel={t.task.nextImage}
@@ -1200,9 +1202,11 @@ function TaskDrawer({
           {notePendingPreviews.length > 0 ? (
             <TaskImageGallery
               urls={notePendingPreviews}
+              kinds={kindsFromFiles(notePendingFiles)}
               pending
               busy={uploadingImages}
               viewLabel={t.task.viewImage}
+              openPdfLabel={t.task.openPdf}
               closeLabel={t.task.closeImage}
               prevLabel={t.task.prevImage}
               nextLabel={t.task.nextImage}
@@ -1218,7 +1222,7 @@ function TaskDrawer({
                 {t.task.noteAttach}
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept={TASK_MEDIA_ACCEPT}
                   multiple
                   className="sr-only"
                   disabled={saving || noteImageUrls.length + notePendingFiles.length >= 10}
@@ -1290,6 +1294,7 @@ function TaskDrawer({
                           <TaskImageGallery
                             urls={row.imageUrls?.length ? row.imageUrls : row.imageUrl ? [row.imageUrl] : []}
                             viewLabel={t.task.viewImage}
+                            openPdfLabel={t.task.openPdf}
                             closeLabel={t.task.closeImage}
                             prevLabel={t.task.prevImage}
                             nextLabel={t.task.nextImage}
@@ -1328,9 +1333,11 @@ function TaskDrawer({
                 {commentPreviews.length > 0 ? (
                   <TaskImageGallery
                     urls={commentPreviews}
+                    kinds={kindsFromFiles(commentImages)}
                     pending
                     busy={commentUploading}
                     viewLabel={t.task.viewImage}
+                    openPdfLabel={t.task.openPdf}
                     closeLabel={t.task.closeImage}
                     prevLabel={t.task.prevImage}
                     nextLabel={t.task.nextImage}
@@ -1346,7 +1353,7 @@ function TaskDrawer({
                       {t.task.attachImage}
                       <input
                         type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        accept={TASK_MEDIA_ACCEPT}
                         multiple
                         className="sr-only"
                         disabled={commentBusy || commentImages.length >= 10}

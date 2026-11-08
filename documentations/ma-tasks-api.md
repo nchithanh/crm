@@ -24,7 +24,7 @@ SoT endpoint BE: `products/saas/backend/context/crm/tasks.md` (+ `access.md`, `b
 - **Comment ảnh (MA):** chọn nhiều file (≤10) → lần lượt `POST /media` (R2 bucket `crm`, folder = slug tên org) → `POST /comments` kèm `image_urls` (+ text tùy chọn). Timeline hiện lưới ảnh.
 - **Nhóm việc:** `TaskParentDrawer` — POST/PATCH/DELETE `/task-parents`. Quyền `manageParents` từ ma trận (+ Boss luôn).
 - **Done:** Boss · verifier (cố định) · hoặc `markDone` trên ma trận.
-- Media: `apiUploadMedia` nén ảnh client trước upload (`lib/compress-image.ts`).
+- Media: `apiUploadMedia` nén **ảnh** client trước upload (`lib/compress-image.ts`); **PDF** gửi nguyên (`application/pdf`, cùng `/media`, ≤20MB). Preview: ảnh lightbox · PDF chip mở tab mới (`task-attachments.ts`).
 - Demo vertical (`authMode=demo`): vẫn IndexedDB như cũ.
 - Boss thêm menu tạo TK: xem `ma-staff.md`. Phân quyền MA: `ma-access.md`.
 - Task có **nhiều người phụ trách** (`assignee_ids`) + `verifier_id`. Scope list: Boss/`visibility=all` = all; còn lại = assignee ∪ verifier.
