@@ -13,6 +13,7 @@ export type MaCourse = Course & {
 type ApiCourseTeacher = { teacher_id: number; role: string };
 type ApiCourse = {
   id: number;
+  code: string;
   branch_id: number;
   name: string;
   style: string;
@@ -54,6 +55,7 @@ export function mapMaCourse(c: ApiCourse): MaCourse {
 
   return {
     id,
+    code: c.code || id,
     name: c.name,
     style: c.style || c.name,
     level: mapLevel(c.level),
@@ -91,6 +93,13 @@ export async function fetchMaCourses(opts?: { branchId?: string; active?: boolea
 
 export async function fetchMaCourse(id: string): Promise<MaCourse> {
   const res = await crmFetch<{ data: ApiCourse }>(`/courses/${id}`);
+  return mapMaCourse(res.data);
+}
+
+export async function fetchMaCourseByCode(code: string): Promise<MaCourse> {
+  const res = await crmFetch<{ data: ApiCourse }>(
+    `/courses/by-code/${encodeURIComponent(code)}`,
+  );
   return mapMaCourse(res.data);
 }
 

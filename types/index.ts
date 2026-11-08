@@ -199,6 +199,8 @@ export type Branch = {
 /** Course = khung khóa + lịch mẫu. Room optional. */
 export type Course = {
   id: string;
+  /** URL slug (MA) — detail `/courses/view/?code=` */
+  code?: string;
   name: string;
   style: string;
   level: Level;

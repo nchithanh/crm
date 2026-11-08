@@ -6,6 +6,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { CourseCreateDrawer } from "@/components/course-create-drawer";
 import { Badge, Button, inputClass } from "@/components/ui";
 import { canCourseAction, isMaStudioMode } from "@/lib/access";
+import { courseDetailHref } from "@/lib/course-href";
 import { fetchMaCourses, type MaCourse } from "@/lib/api/crm-courses";
 import { fetchMaBranches, fetchMaStaff } from "@/lib/api/crm-tasks";
 import { db } from "@/lib/db";
@@ -124,11 +125,6 @@ export default function CoursesPage() {
           <p className="crm-lead mt-1">
             {maLoading ? t.common.loading : `${filtered.length} · ${t.nav.courses}`}
           </p>
-          {maMode ? (
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              TODO: CTA Generate classes — sinh buổi chưa có trên API.
-            </p>
-          ) : null}
         </div>
         {canEdit ? (
           <Button
@@ -183,7 +179,7 @@ export default function CoursesPage() {
           return (
             <li key={course.id}>
               <Link
-                href={`/courses/${course.id}`}
+                href={courseDetailHref(course, maMode)}
                 className="grid grid-cols-[minmax(0,1fr)_5.25rem_5.75rem] items-center gap-x-2 px-3 py-4 hover:bg-black/5 lg:grid-cols-[minmax(8rem,1.2fr)_minmax(7rem,0.9fr)_minmax(6rem,0.7fr)_minmax(6rem,0.7fr)_5.5rem_4.5rem_5rem_5.5rem] lg:gap-x-3 lg:px-4"
               >
                 <span className="flex min-w-0 items-center gap-3">

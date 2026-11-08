@@ -11,14 +11,16 @@ Khi `authMode=ma`, `/courses` dùng Laravel thay Dexie.
 | `components/course-generate-classes-drawer.tsx` | Lịch + bulk tuần + list buổi (giờ riêng) → gửi `sessions` |
 | `lib/actions.ts` → `createCourse` | MA: gọi API — **không** sinh classes |
 | `app/courses/page.tsx` | List + tạo drawer |
-| `app/courses/[id]/page.tsx` | Hub MA: CTA sinh buổi, list classes từ API |
+| `app/courses/view/page.tsx` | Hub MA detail theo `?code=` (1 HTML static; không `/courses/{id}`) |
+| `lib/course-href.ts` | `courseDetailHref` — MA → view?code= |
 
 SoT BE: `products/saas/backend/context/crm/courses.md`.
 
 ## Hành vi
 
 - Tạo khóa chỉ lưu khung + lịch mẫu (`weekdays`, giờ, `session_count`).
-- Sinh buổi = CTA `/courses/[id]` → drawer → `POST /courses/{id}/generate-classes` với:
+- Detail MA: `/courses/view/?code={code}` + `GET /courses/by-code/{code}` (tránh 404 Pages với id số).
+- Sinh buổi = CTA trên detail → drawer → `POST /courses/{id}/generate-classes` với:
 
 ```json
 { "sessions": [{ "day": "YYYY-MM-DD", "start": "HH:mm", "end": "HH:mm" }] }

@@ -2,6 +2,7 @@
 
 ## 2026-11-09
 
+- **MA · Course detail by code:** BE `courses.code` + `GET …/by-code/{code}`; FE `/courses/view/?code=` (static export, hết 404 id số). Demo vẫn `/courses/[id]`.
 - **MA · Courses phân quyền:** `courses.actions` trên matrix + UI `/settings/access`; BE enforce create/edit/generate/activate/delete; cột `role_access.courses`.
 - **MA · Generate classes API:** `POST …/generate-classes` body `{ sessions: [{ day, start?, end? }] }` (compat `days[]`); FE drawer gửi giờ từng buổi. **TODO** liên kết room. Docs BE `courses.md` / `access.md` + `ma-courses-api.md` / `ma-access.md`.
 - **MA · Generate classes UX:** drawer danh sách từng buổi (bật/tắt + chỉnh giờ + reset giờ mẫu), lịch nhảy tới dòng, bulk theo tuần.
